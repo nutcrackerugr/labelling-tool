@@ -185,20 +185,16 @@ function save_labels(callback)
 	for (var key in labels)
 		if ($("#" + key + "switch").is(":checked"))
 			vlabels[labels[key]] = parseInt($("#" + key + "select").val(), 10);
-		
-	if (!$.isEmptyObject(vlabels))
-		$.ajax({
-			beforeSend: setAuth,
-			type: "POST",
-			url: api + "tweet/" + last_tweet["id"] + "/update/labels",
-			data: JSON.stringify(vlabels),
-			contentType:"application/json",
-			dataType: "json",
-			success: callback
-		});
-	else
-		if (callback)
-			callback();
+	
+	$.ajax({
+		beforeSend: setAuth,
+		type: "POST",
+		url: api + "tweet/" + last_tweet["id"] + "/update/labels",
+		data: JSON.stringify(vlabels),
+		contentType:"application/json",
+		dataType: "json",
+		success: callback
+	});
 }
 
 
