@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<link rel="shortcut icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}" />
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+		<link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+		<link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet">
+		<title>Nutcracker Tagging</title>
+	</head>
+	<body>
+		<div class="container">
+			<div class="row mt-4">
+				<div class="col-md-8">
+					<div class="media p-3 border rounded">
+						<img class="mr-3" alt="User Image" id="user_profile_pic" src="" />
+						<div class="media-body">
+							<h5 class="mt-0" id="user_name">Name <span class="text-secondary" id="user_screen_name">@screen_name</span></h5>
+							<h6 class="mt-0 text-secondary">User Description:</h6>
+							<p id="user_description">User description</p>
+							<h6 class="mt-0 text-secondary">Tweet:</h6>
+							<p id="tweet_content">Tweet content</p>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-4">
+					<form role="form" id="labelform">
+						<!-- Here goes labels selects and switches -->
+					</form>
+				</div>
+			</div>
+			<div class="row mt-4">
+				<div class="col-md-8">
+					<ul id="reasons" class="list-group">
+						<!-- Here goes AI reasons -->
+					</ul>
+				</div>
+			</div>
+			<div class="row mt-4">
+				<div class="col">
+					<div class="form-inline">						
+						<label for="page" class="sr-only">No. Tweet: </label>
+						<div class="input-group mr-1">
+							<div class="input-group-prepend">
+								<div class="input-group-text">No. Tweet</div>
+							</div>
+							<input type="number" class="form-control" id="page" name="page" min="1">
+						</div>
+						
+						<div class="btn-group">
+							<button type="button" class="btn btn-secondary" id="firstunlabelled">Go to First Unlabelled</button>
+							<button type="button" class="btn btn-primary" id="save">Save Changes</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<script src="https://code.jquery.com/jquery-3.4.1.min.js" crossorigin="anonymous"></script>
+		<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+		<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+	</body>
+</html>

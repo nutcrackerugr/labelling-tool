@@ -1,0 +1,44 @@
+.clickable:hover
+{
+	background-color: rgba(0, 123, 255, .5);
+}
+
+.clickable.selected
+{
+	background-color: rgba(0, 123, 255, 1);
+}
+
+.clickable.selected:hover
+{
+	background-color: rgba(0, 123, 255, .5);
+}
+
+.clickable.aiselected
+{
+	background-color: rgba(40, 167, 69, 1);
+}
+
+.clickable.aiselected:hover
+{
+	background-color: rgba(255, 193, 7, .5);
+}
+
+.clickable.selected.aiselected
+{
+	background-color: rgba(255, 193, 7, 1);
+}
+
+.positive
+{
+
+}
+
+.neutral
+{
+
+}
+
+.negative
+{
+
+}
