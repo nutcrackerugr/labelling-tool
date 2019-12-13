@@ -1,6 +1,7 @@
 from flask import request
 from flask_restful import Resource, reqparse
 from flask_jwt_extended import jwt_required
+from sqlalchemy import null
 
 from .models import *
 from application import db, ma, assistant_manager
@@ -70,7 +71,7 @@ class UpdateHighlights(Resource):
 	
 		t = Tweet.query.get(tid)
 		if t:
-			t.highlights = data
+			t.highlights = data if data else null()
 			try:
 				db.session.commit()
 				return {"message": "Tweet updated succesfully"}
@@ -90,7 +91,7 @@ class UpdateLabels(Resource):
 
 		t = Tweet.query.get(tid)
 		if t:
-			t.labels = data
+			t.labels = data if data else null()
 			try:
 				db.session.commit()
 				return {"message": "Tweet updated succesfully"}

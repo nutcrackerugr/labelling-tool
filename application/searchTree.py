@@ -13,7 +13,7 @@ class SearchTree():
 		self.SEARCHTREE_IS_BUILT = False
 		self.FILENAME = filename
 		
-		with open('ontologies/' + filename + ".json", 'r', encoding = "utf-8") as ontology:
+		with open('/srv/http/labelling-tool/ontologies/' + filename + ".json", 'r', encoding = "utf-8") as ontology:
 			self.tree = json.load(ontology)
 			self._searchtree = ahocorasick.Automaton()
 		
