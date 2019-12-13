@@ -87,23 +87,18 @@ class UpdateLabels(Resource):
 	@jwt_required
 	def post(self, tid):
 		data = request.get_json()
-		print(data)
-		
-		if data:
-			t = Tweet.query.get(tid)
-			if t:
-				t.labels = data
-				try:
-					db.session.commit()
-					return {"message": "Tweet updated succesfully"}
-					
-				except:
-					return {"message": "Something went wrong", "error":500}, 500
-			else:
-				return {"error":404, "message":"Not Found"}, 404
+
+		t = Tweet.query.get(tid)
+		if t:
+			t.labels = data
+			try:
+				db.session.commit()
+				return {"message": "Tweet updated succesfully"}
+				
+			except:
+				return {"message": "Something went wrong", "error":500}, 500
 		else:
-			return {"error":400, "message":"Bad Request"}, 400
-			
+			return {"error":404, "message":"Not Found"}, 404
 			
 		return jsonify(success=True), 200
 
@@ -112,20 +107,17 @@ class UpdateTags(Resource):
 	def post(self, tid):
 		data = request.get_json()
 	
-		if data:
-			t = Tweet.query.get(tid)
-			if t:
-				t.tags = data
-				try:
-					db.session.commit()
-					return {"message": "Tweet updated succesfully"}
-					
-				except:
-					return {"message": "Something went wrong", "error":500}, 500
-			else:
-				return {"error":404, "message":"Not Found"}, 404
+		t = Tweet.query.get(tid)
+		if t:
+			t.tags = data
+			try:
+				db.session.commit()
+				return {"message": "Tweet updated succesfully"}
+				
+			except:
+				return {"message": "Something went wrong", "error":500}, 500
 		else:
-			return {"error":400, "message":"Bad Request"}, 400
+			return {"error":404, "message":"Not Found"}, 404
 			
 			
 		return jsonify(success=True), 200
