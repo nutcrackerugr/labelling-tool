@@ -90,7 +90,7 @@ function getReasons(n, callback)
 						cls = data[key]["what"] == "1" ? "positive" : "neutral";
 						css_cls = data[key]["what"] == "1" ? "list-group-item-success" : "list-group-item-info";
 						
-						var whys = "Found: ";
+						var whys = "";
 						if ($.isEmptyObject(data[key]["why"]))
 							whys += "nothing"
 						else
@@ -101,7 +101,7 @@ function getReasons(n, callback)
 						}
 						
 						if (data[key]["how"] == "ontology")
-							$("#reasons").append("<li class=\"list-group-item " + css_cls + "\" data-toggle=\"tooltip\" data-placement=\"right\" title=\"" + whys + "\">" + key + " (" + data[key]["how"] + "): " + cls + ", " + data[key]["why"].length + " words were found: " + whys + " </li>");
+							$("#reasons").append("<li class=\"list-group-item " + css_cls + "\" data-toggle=\"tooltip\" data-placement=\"right\" title=\"Found: " + whys + "\">" + key + " (" + data[key]["how"] + "): " + cls + ", " + data[key]["why"].length + " words were found: " + whys + " </li>");
 						else
 							$("#reasons").append("<li class=\"list-group-item " + css_cls + "\" data-toggle=\"tooltip\" data-placement=\"right\" title=\"" + whys + "\">" + key + " (" + data[key]["how"] + "): suggested " + cls + ", because " + data[key]["why"].length + " words were found.</li>");
 					}
