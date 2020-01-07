@@ -56,7 +56,7 @@ function save_highlights(callback)
 		vhighlights.push($(this).html());
 	});
 	
-	console.log(vhighlights);
+	//console.log(vhighlights);
 
 	$.ajax({
 		beforeSend: setAuth,
@@ -100,7 +100,10 @@ function getReasons(n, callback)
 							whys = whys.slice(0, -2);
 						}
 						
-						$("#reasons").append("<li class=\"list-group-item " + css_cls + "\" data-toggle=\"tooltip\" data-placement=\"right\" title=\"" + whys + "\">" + key + " (" + data[key]["how"] + "): suggested " + cls + ", because " + data[key]["why"].length + " words were found.</li>");
+						if (data[key]["how"] == "ontology")
+							$("#reasons").append("<li class=\"list-group-item " + css_cls + "\" data-toggle=\"tooltip\" data-placement=\"right\" title=\"" + whys + "\">" + key + " (" + data[key]["how"] + "): " + cls + ", " + data[key]["why"].length + " words were found: " + whys + " </li>");
+						else
+							$("#reasons").append("<li class=\"list-group-item " + css_cls + "\" data-toggle=\"tooltip\" data-placement=\"right\" title=\"" + whys + "\">" + key + " (" + data[key]["how"] + "): suggested " + cls + ", because " + data[key]["why"].length + " words were found.</li>");
 					}
 				}
 			}
@@ -146,6 +149,12 @@ function getTweet(n, callback)
 					$("#" + labels_name[key] + "select option[value=\"" + data["labels"][key] + "\"]").prop("selected", true);
 					$("#" + labels_name[key] + "switch").prop("checked", true);
 				}
+				
+				console.log(data)
+				if (!$.isEmptyObject(data["tags"]))
+					$("#tags").val(data["tags"].join(','));
+				else
+					$("#tags").val("");
 				
 				getReasons(data["id"]);
 				
@@ -193,7 +202,18 @@ function save_labels(callback)
 		data: JSON.stringify(vlabels),
 		contentType:"application/json",
 		dataType: "json",
-		success: callback
+		success: function()
+		{
+			$.ajax({
+				beforeSend: setAuth,
+				type: "POST",
+				url: api + "tweet/" + last_tweet["id"] + "/update/tags",
+				data: JSON.stringify($("#tags").val().split(',')),
+				contentType: "application/json",
+				dataType: "json",
+				success: callback
+			});
+		}
 	});
 }
 
