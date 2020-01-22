@@ -28,7 +28,7 @@ class UserRegistration(Resource):
 				"message": "User {} was created".format(data["username"]),
 				"access_token": access_token,
 				"refresh_token": refresh_token,
-				"exp": datetime.datetime.utcnow() + timedelta(minutes=5)
+				"exp": str(datetime.utcnow() + timedelta(minutes=5))
 			}
 		
 		except:

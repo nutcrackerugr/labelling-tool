@@ -9,7 +9,7 @@
 	</head>
 	<body>
 		<div class="container">
-			<div class="row mt-4">
+			<div class="row mt-4 d-flex flex-wrap">
 				<div class="col-md-8">
 					<div class="media p-3 border rounded">
 						<img class="mr-3" alt="User Image" id="user_profile_pic" src="" />
@@ -26,19 +26,30 @@
 					<form role="form" id="labelform">
 						<!-- Here goes labels selects and switches -->
 					</form>
-					<div class="form-group">
-						<label for="tags">Tags:</label>
-						<input type="text" name="tags" id="tags" class="form-control">
-					</div>
 				</div>
-			</div>
-			<div class="row mt-4">
 				<div class="col-md-8">
 					<ul id="reasons" class="list-group">
 						<!-- Here goes AI reasons -->
 					</ul>
 				</div>
+				<div class="col-md-4">
+					<div class="form-group">
+						<label for="tags">Tags:</label>
+						<input type="text" name="tags" id="tags" class="form-control">
+						<label for="tweet_comment">Comment:</label>
+						<textarea name="tweet_comment" id="tweet_comment" class="form-control"></textarea>
+					</div>
+				</div>
 			</div>
+<!--
+			<div class="row mt-4">
+				<div class="col-md-8">
+					<ul id="reasons" class="list-group">
+						<!-- Here go AI reasons --><!--
+					</ul>
+				</div>
+			</div>
+-->
 			<div class="row mt-4">
 				<div class="col">
 					<div class="form-inline">						

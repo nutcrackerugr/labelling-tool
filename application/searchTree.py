@@ -3,6 +3,7 @@ import re
 import xml.etree.ElementTree as ElementTree
 import json
 
+import os
 
 class SearchTree():	
 	"""
@@ -13,7 +14,7 @@ class SearchTree():
 		self.SEARCHTREE_IS_BUILT = False
 		self.FILENAME = filename
 		
-		with open('/srv/http/labelling-tool/ontologies/' + filename + ".json", 'r', encoding = "utf-8") as ontology:
+		with open(os.path.abspath(os.path.dirname(os.path.dirname(__file__))) + '/ontologies/' + filename + ".json", 'r', encoding = "utf-8") as ontology:
 			self.tree = json.load(ontology)
 			self._searchtree = ahocorasick.Automaton()
 		
@@ -34,7 +35,7 @@ class SearchTree():
 		
 		return subtree
 	
-	def _build_searchtree_recursive(self, category, node):
+	def _build_searchtree_recursive(self, category, node, path):
 		"""
 		Given a tree and a category, builds recursively the search tree.
 		:param category: Uppermost category to build.
@@ -44,11 +45,11 @@ class SearchTree():
 		if "labels" in node.keys():
 			for label in node["labels"]:
 				#self._searchtree.add_word(label, category)
-				self._searchtree.add_word(label, (label, category))
+				self._searchtree.add_word(label, (label, path))
 
 		if "subcategories" in node.keys():
 			for key, subcategory in node["subcategories"].items():
-				self._build_searchtree_recursive(category, subcategory)
+				self._build_searchtree_recursive(category, subcategory, "{}/{}".format(path,key))
 	
 	def build(self, categories):
 		"""
@@ -68,7 +69,7 @@ class SearchTree():
 				node = node["subcategories"][subclass]
 			
 			# We have the subcategory. Time to generate the Search Tree
-			self._build_searchtree_recursive(category, node)
+			self._build_searchtree_recursive(category, node, category)
 		
 		self._searchtree.make_automaton()
 		self.SEARCHTREE_IS_BUILT = True

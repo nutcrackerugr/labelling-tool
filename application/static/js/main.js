@@ -96,15 +96,19 @@ function getReasons(n, callback)
 						else
 						{
 							for (var wkey in data[key]["why"])
-								whys += data[key]["why"][wkey][0] + ", ";
-							whys = whys.slice(0, -2);
+								whys += data[key]["why"][wkey][1] + "::<strong>" + data[key]["why"][wkey][0] + "</strong><br/>";
+							whys = whys.slice(0, -5);
 						}
 						
-						if (data[key]["how"] == "ontology")
-							$("#reasons").append("<li class=\"list-group-item " + css_cls + "\" data-toggle=\"tooltip\" data-placement=\"right\" title=\"Found: " + whys + "\">" + key + " (" + data[key]["how"] + "): " + cls + ", " + data[key]["why"].length + " words were found: " + whys + " </li>");
-						else
-							$("#reasons").append("<li class=\"list-group-item " + css_cls + "\" data-toggle=\"tooltip\" data-placement=\"right\" title=\"" + whys + "\">" + key + " (" + data[key]["how"] + "): suggested " + cls + ", because " + data[key]["why"].length + " words were found.</li>");
+						
+						$("#reasons").append("<li class=\"list-group-item " + css_cls + " hanging-indent\" \">"
+						                     + "Using the ontology " + key + ", the following " + data[key]["why"].length + " words were found:<br />"
+						                     + whys + " </li>"
+						                    );
 					}
+					else
+						$("#reasons").append("<li class=\"list-group-item " + css_cls + " hanging-indent\" data-toggle=\"tooltip\" data-placement=\"right\" title=\"Reasons: " + whys + "\">"
+						                     + "Using " + key + " (" + data[key]["how"] + "): suggests " + cls + " because of the following reasons: " + data[key]["why"] + " </li>");
 				}
 			}
 			
@@ -150,7 +154,8 @@ function getTweet(n, callback)
 					$("#" + labels_name[key] + "switch").prop("checked", true);
 				}
 				
-				console.log(data)
+				$("#tweet_comment").val(data["comment"] ? data["comment"] : "");
+				
 				if (!$.isEmptyObject(data["tags"]))
 					$("#tags").val(data["tags"].join(','));
 				else
@@ -211,7 +216,16 @@ function save_labels(callback)
 				data: JSON.stringify($("#tags").val().split(',')),
 				contentType: "application/json",
 				dataType: "json",
-				success: callback
+				success: function()
+				{
+					$.ajax({
+						beforeSend: setAuth,
+						type: "POST",
+						url: api + "tweet/" + last_tweet["id"] + "/update/comment",
+						data: {"comment": $("#tweet_comment").val()},
+						success: callback
+					});
+				}
 			});
 		}
 	});
@@ -285,9 +299,17 @@ $(function(){
 				html += '<div class="mr-auto">';
 				html += '<label for="label' + (k+1) + 'select">' + v["name"] + ':</label>';
 				html += '<select class="custom-select" id="label' + (k+1) + 'select">';
-				html += '<option value="-1">Negative</option>';
-				html += '<option value="0">Neutral</option>';
-				html += '<option value="1">Positive</option>';
+				
+				var option_value = 0;
+				v["values"].split(",").forEach(function(item)
+				{
+					html += '<option value="' + option_value++ + '">' + item + '</option>';
+				});
+				
+				
+				//~ html += '<option value="-1">Negative</option>';
+				//~ html += '<option value="0">Neutral</option>';
+				//~ html += '<option value="1">Positive</option>';
 				html += '</select>';
 				html += '</div>';
 				html += '<div>';
@@ -302,6 +324,13 @@ $(function(){
 			//~ html += '<button type="submit" class="btn btn-primary mt-2" id="savelabels">Save</button>';
 			
 			$("#labelform").html(html);//.append($("<button/>", {"class": "btn btn-primary mt-2", "text": "Save", "id":"savelabels"}).click(savelabels));
+			//~ $("#labelform").append(
+				//~ $("<div/>", {"class": "form-group"}).append(
+					//~ $("<label/>", {"for": "tweet_comment", "text":"Comment:"})
+				//~ ).append(
+					//~ $("<textarea/>", {"class": "form-control", "id":"tweet_comment"})
+				//~ )
+			//~ );
 		}
 	});
 	

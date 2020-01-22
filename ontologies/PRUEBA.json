@@ -1,7 +1,15 @@
 {
 	"PRUEBA": {
 		"labels":[
-			"وفيس"
-		]
+			"basic stuff"
+		],
+		"subcategories": {
+			"subprueba": {
+				"labels": [
+					"وفيس",
+					"@bankalansar1"
+				]
+			}
+		}
 	}  
 }

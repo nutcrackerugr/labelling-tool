@@ -23,6 +23,7 @@ class AssistantManager():
 			response[assistant.label] = {}
 			
 			cls, reason = assistant.get_class(text)
+
 			response[assistant.label]["why"] = reason
 			response[assistant.label]["how"] = assistant.kind
 			response[assistant.label]["what"] = cls
@@ -43,4 +44,5 @@ class OntologyAssistant(Assistant):
 	
 	def get_class(self, text):
 		tags = self.tree.search(text)
+		
 		return 1 if tags else 0, tags

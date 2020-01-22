@@ -122,6 +122,26 @@ class UpdateTags(Resource):
 			
 			
 		return jsonify(success=True), 200
+		
+class UpdateComment(Resource):
+	@jwt_required
+	def post(self, tid):
+		data = request.form["comment"]
+	
+		t = Tweet.query.get(tid)
+		if t:
+			t.comment = data
+			try:
+				db.session.commit()
+				return {"message": "Tweet updated succesfully"}
+				
+			except:
+				return {"message": "Something went wrong", "error":500}, 500
+		else:
+			return {"error":404, "message":"Not Found"}, 404
+			
+			
+		return jsonify(success=True), 200
 
 class GetUser(Resource):
 	@jwt_required

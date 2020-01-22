@@ -28,17 +28,7 @@
 	background-color: rgba(255, 193, 7, 1);
 }
 
-.positive
-{
-
-}
-
-.neutral
-{
-
-}
-
-.negative
-{
-
+.hanging-indent {
+	text-indent: -28px;
+	padding-left: 48px;
 }

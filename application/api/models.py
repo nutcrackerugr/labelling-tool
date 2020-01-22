@@ -25,6 +25,7 @@ class Tweet(db.Model):
 	labels = db.Column(db.PickleType, nullable=True)
 	highlights = db.Column(db.PickleType, nullable=True)
 	tags = db.Column(db.PickleType, nullable=True)
+	comment = db.Column(db.Text, nullable=True)
 	user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
 
 class User(db.Model):
@@ -41,6 +42,7 @@ class User(db.Model):
 class Label(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	name = db.Column(db.String(32), unique=True, nullable=False)
+	values = db.Column(db.Text, nullable=False)
 
 class LabelSchema(ma.ModelSchema):
 	class Meta:

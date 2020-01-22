@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
+from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
 
 from .assistant import AssistantManager, OntologyAssistant
@@ -8,6 +9,7 @@ from .assistant import AssistantManager, OntologyAssistant
 db = SQLAlchemy()
 ma = Marshmallow()
 jwt = JWTManager()
+
 
 assistant_manager = AssistantManager()
 ARMAS_ontology = OntologyAssistant("ARMAS")
@@ -28,6 +30,7 @@ def create_app(config="config"):
 	db.init_app(app)
 	ma.init_app(app)
 	jwt.init_app(app)
+	migrate = Migrate(app, db)
 	
 	with app.app_context():
 		# Include routes
