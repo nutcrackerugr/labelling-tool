@@ -13,6 +13,8 @@ class AppUser(db.Model):
 	username = db.Column(db.String(256), nullable=False, unique=True)
 	password = db.Column(db.String(256), nullable=False)
 	email = db.Column(db.String(256))
+	authorized = db.Column(db.Boolean, nullable=False)
+	permission_level = db.Column(db.Integer, nullable=False)
 	
 	
 	def __init__(self, username, password, email=None):
@@ -45,6 +47,9 @@ class AppUser(db.Model):
 	
 	def check_password(self, password):
 		return Bcrypt().check_password_hash(self.password, password)
+	
+	def is_authorized(self):
+		return self.authorized
 	
 	def save(self):
 		db.session.add(self)

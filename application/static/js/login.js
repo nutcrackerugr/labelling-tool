@@ -22,8 +22,11 @@ function login(e)
 		},
 		error: function(data)
 		{
+			console.log(data)
 			if ($("#errormessage").length == 0)
-				$("#cardbody").prepend('<div class="alert alert-danger" id="errormessage"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Something went wrong :(<br />Check your username and password and try again</div>');
+				$("#cardbody").prepend('<div class="alert alert-danger" id="errormessage"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Something went wrong :(<br />' + data.responseJSON["message"] + '</div>');
+			else
+				$("#errormessage").html('<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Something went wrong :(<br />' + data.responseJSON["message"] + '</div>')
 		}
 	});
 	

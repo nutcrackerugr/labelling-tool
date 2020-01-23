@@ -42,19 +42,22 @@ class UserLogin(Resource):
 		current_user = AppUser.find_by_username(data["username"])
 		
 		if not current_user:
-			return {"message": "User {} does not exist".format(data["username"])}, 401
-			
-		if current_user.check_password(data["password"]):
-			access_token = create_access_token(identity=current_user.username)
-			refresh_token = create_refresh_token(identity=current_user.username)
-			
-			return {
-				"message": "Logged in as {}".format(current_user.username),
-				"access_token": access_token,
-				"refresh_token": refresh_token
-			}, 200
+			return {"message": "Invalid credentials. Check your username and password and try again."}, 401
+		
+		if current_user.is_authorized():
+			if current_user.check_password(data["password"]):
+				access_token = create_access_token(identity=current_user.username)
+				refresh_token = create_refresh_token(identity=current_user.username)
+				
+				return {
+					"message": "Logged in as {}".format(current_user.username),
+					"access_token": access_token,
+					"refresh_token": refresh_token
+				}, 200
+			else:
+				return {"message": "Invalid credentials. Check your username and password and try again."}, 401
 		else:
-			return {"message": "Invalid credentials"}, 401
+			return {"message": "User {} has not been approved by the admin yet. If you think this is a mistake, please contact support.".format(data["username"])}, 401
 
 
 class UserLogoutAccess(Resource):
