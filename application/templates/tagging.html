@@ -8,10 +8,10 @@
 		<title>Nutcracker Tagging</title>
 	</head>
 	<body>
-		<div class="container">
-			<div class="row mt-4 d-flex flex-wrap">
-				<div class="col-md-8">
-					<div class="media p-3 border rounded">
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-6 col-xl-4 order-xl-2 mt-4">
+					<div class="media p-3 border border-secondary rounded">
 						<img class="mr-3" alt="User Image" id="user_profile_pic" src="" />
 						<div class="media-body">
 							<h5 class="mt-0" id="user_name">Name <span class="text-secondary" id="user_screen_name">@screen_name</span></h5>
@@ -22,17 +22,17 @@
 						</div>
 					</div>
 				</div>
-				<div class="col-md-4">
-					<form role="form" id="labelform">
-						<!-- Here goes labels selects and switches -->
-					</form>
-				</div>
-				<div class="col-md-8">
+				
+				<div class="col-md-6 col-xl-3 order-xl-2 mt-4">
 					<ul id="reasons" class="list-group">
 						<!-- Here goes AI reasons -->
 					</ul>
 				</div>
-				<div class="col-md-4">
+						
+				<div class="col-md-6 col-xl-3 offset-xl-1 order-xl-1 mt-4">
+					<form role="form" id="labelform">
+						<!-- Here goes labels selects and switches -->
+					</form>
 					<div class="form-group">
 						<label for="tags">Tags:</label>
 						<input type="text" name="tags" id="tags" class="form-control">
@@ -40,32 +40,40 @@
 						<textarea name="tweet_comment" id="tweet_comment" class="form-control"></textarea>
 					</div>
 				</div>
-			</div>
-<!--
-			<div class="row mt-4">
-				<div class="col-md-8">
-					<ul id="reasons" class="list-group">
-						<!-- Here go AI reasons --><!--
-					</ul>
-				</div>
-			</div>
--->
-			<div class="row mt-4">
-				<div class="col">
-					<div class="form-inline">						
-						<label for="page" class="sr-only">No. Tweet: </label>
-						<div class="input-group mr-1">
-							<div class="input-group-prepend">
-								<div class="input-group-text">No. Tweet</div>
+ 
+				
+				<div class="col-md-6 col-xl-10 offset-xl-1 order-xl-first mt-4">
+					<nav class="navbar navbar-dark bg-dark justify-content-between">
+						<a class="navbar-brand">
+							<img src="{{ url_for('static', filename='images/logo.png') }}" width="30" height="30" class="d-inline-block align-top" alt="">
+							Nutcracker Tagging System
+						</a>
+						<div class="form-inline">	
+							<div class="btn-group mr-auto">
+								<button type="button" class="btn btn-secondary" id="firstunlabelled">Go to First Unlabelled</button>
+								<button type="button" class="btn btn-primary" id="save">Save Changes</button>
 							</div>
-							<input type="number" class="form-control" id="page" name="page" min="1">
+							
+							<div class="input-group">
+								<label for="page" class="sr-only">No. Tweet: </label>
+								<div class="input-group-prepend">
+									<div class="input-group-text">No. Tweet</div>
+								</div>
+								<input type="number" class="form-control" id="page" name="page" min="1">
+							</div>
 						</div>
-						
-						<div class="btn-group">
-							<button type="button" class="btn btn-secondary" id="firstunlabelled">Go to First Unlabelled</button>
-							<button type="button" class="btn btn-primary" id="save">Save Changes</button>
-						</div>
-					</div>
+					</nav>
+				</div>
+				
+			</div>
+			<div class="row bg-dark text-light footer mt-4 p-4">
+				<div class="col-md-3 offset-md-1 text-right d-flex align-items-center justify-content-center">
+					<img src="{{ url_for('static', filename='images/ugrnegativo.png') }}" width="80%" class="d-inline-block align-top" alt="">
+				</div>
+				<div class="col-md-7 d-flex flex-column justify-content-center">
+					<span class="text-light">This is the Nutcracker app from University of Granada. The use of this system is strictly restricted to members of the Nutcracker project and we may monitor your interactions and transmissions to ensure it. We may use cookies. Accessing the website without the proper authorisation is prohibited. You explicitly accepted this disclaimer when logging in.</span>
+					<span class="text-light mt-1">This work has been financially supported by the Spanish Ministry of Economy and Competitiveness (MINECO), project FFI2016-79748-R, and cofinancied by the European Social Fund (ESF). The author was supported by the FPI 2017 predoctoral programme, from the Spanish Ministry of Economy and Competitiveness (MINECO), grant number BES-2017-081202.</span>
+					<span class="text-light mt-2">If you encounter any problems when using this site, please, contact Manuel Francisco &lt;francisco@decsai.ugr.es&gt; for support.</span>
 				</div>
 			</div>
 		</div>
