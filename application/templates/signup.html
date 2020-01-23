@@ -28,17 +28,21 @@
 				<div class="col-sm-12 col-md-10 col-lg-7 mx-auto my-auto">
 					<div class="card transparent-card shadow rounded">
 						<div class="card-body" id="cardbody">
-							<h5 class="card-title text-center">Nutcracker - Log In</h5>
-							<form class="text-center" id="loginform">
+							<h5 class="card-title text-center">Nutcracker - Sign Up</h5>
+							<form class="text-center" id="signupform">
 								<div class="form-group text-left">
 									<label for="username">Username</label>
 									<input type="text" class="form-control form-control-lg mb-2" placeholder="Enter your username" id="username" name="username">
+									<label for="email">E-mail</label>
+									<input type="email" class="form-control form-control-lg mb-2" placeholder="youremail@example.com" id="email" name="email">
 									<label for="password">Password</label>
 									<input type="password" class="form-control form-control-lg mb-2" placeholder="Enter your password" id="password" name="password" autocomplete="on">
+									<label for="password2">Repeat your password</label>
+									<input type="password" class="form-control form-control-lg mb-2" placeholder="Repeat your password" id="password2" name="password2" autocomplete="on">
 								</div>
-								<p class="card-text text-secondary">If you do not have an account, click <a href="signup">here to sign up</a>.<br />If you have forgetten your password, you need to contact support in order to set a new one.</p>
-								<p class="card-text text-secondary">This is the Nutcracker app from University of Granada. The use of this system is strictly restricted to members of the Nutcracker project and we may monitor your interactions and transmissions to ensure it. We may use cookies. Accessing the website without the proper authorisation is prohibited. You explicitly accept this disclaimer when logging in.</p>
-								<button type="submit" class="btn btn-lg btn-primary" id="loginbutton">Log In</button>
+								<p class="card-text">You cannot change your personal details once the account is created. If you need to make changes to your email or password, please, contact support.</p>
+								<p class="card-text text-secondary">This is the Nutcracker app from University of Granada. The use of this system is strictly restricted to members of the Nutcracker project and we may monitor your interactions and transmissions to ensure it. We may use cookies. Accessing the website without the proper authorisation is prohibited. You explicitly accept this disclaimer when signing up.</p>
+								<button type="submit" class="btn btn-lg btn-primary" id="signupbutton">Sign Up</button>
 							</form>
 						</div>
 					</div>
@@ -48,6 +52,6 @@
 		<script src="https://code.jquery.com/jquery-3.4.1.min.js" crossorigin="anonymous"></script>
 		<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
 		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
-		<script src="{{ url_for('static', filename='js/login.js') }}"></script>
+		<script src="{{ url_for('static', filename='js/signup.js') }}"></script>
 	</body>
 </html>

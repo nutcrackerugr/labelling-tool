@@ -1,3 +1,11 @@
+function create_error(msg)
+{
+	if ($("#errormessage").length == 0)
+		$("#cardbody").prepend('<div class="alert alert-danger" id="errormessage"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Something went wrong :(<br />' + msg + '</div>');
+	else
+		$("#errormessage").html('<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Something went wrong :(<br />' + msg + '</div>')
+}
+
 function login(e)
 {
 	var u = $("#username").val();
@@ -22,11 +30,7 @@ function login(e)
 		},
 		error: function(data)
 		{
-			console.log(data)
-			if ($("#errormessage").length == 0)
-				$("#cardbody").prepend('<div class="alert alert-danger" id="errormessage"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Something went wrong :(<br />' + data.responseJSON["message"] + '</div>');
-			else
-				$("#errormessage").html('<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Something went wrong :(<br />' + data.responseJSON["message"] + '</div>')
+			create_error(data.responseJSON["message"]);
 		}
 	});
 	

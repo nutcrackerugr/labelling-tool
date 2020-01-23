@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_bcrypt import Bcrypt
 from datetime import datetime, timedelta
+from marshmallow import post_load, fields
 
 from application import db, ma
 
@@ -13,20 +14,25 @@ class AppUser(db.Model):
 	username = db.Column(db.String(256), nullable=False, unique=True)
 	password = db.Column(db.String(256), nullable=False)
 	email = db.Column(db.String(256))
-	authorized = db.Column(db.Boolean, nullable=False)
-	permission_level = db.Column(db.Integer, nullable=False)
+	authorized = db.Column(db.Boolean, nullable=False, default=False)
+	permission_level = db.Column(db.Integer, nullable=False, default=0)
 	
 	
-	def __init__(self, username, password, email=None):
+	def __init__(self, username, password, email=None, authorized=False, permission_level=0):
 		self.username = username
 		self.password = Bcrypt().generate_password_hash(password).decode()
 		
-		if email:
-			self.email = email
+		self.email = email
+		self.authorized = authorized
+		self.permission_level = permission_level
 	
 	@classmethod
 	def find_by_username(cls, username):
 		return cls.query.filter_by(username=username).first()
+		
+	@classmethod
+	def find_by_email(cls, email):
+		return cls.query.filter_by(email=email).first()
 		
 	@classmethod
 	def return_all(cls):
@@ -96,9 +102,12 @@ class RevokedToken(db.Model):
 
 
 class AppUserSchema(ma.ModelSchema):
+	def make_appuser(self, data, **kwargs):
+		return AppUser(**data)
+	
 	class Meta:
 		model = AppUser
-		exclude = ["password"]
+		#exclude = ["password"]
 
 class RevokedTokenSchema(ma.ModelSchema):
 	class Meta:
@@ -106,5 +115,5 @@ class RevokedTokenSchema(ma.ModelSchema):
 	
 
 
-appuser_schema = AppUserSchema()
+appuser_schema = AppUserSchema(exclude=["password"])
 revokedtoken_schema = RevokedTokenSchema()

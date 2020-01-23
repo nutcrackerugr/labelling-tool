@@ -1,43 +1,46 @@
 from datetime import datetime, timedelta
-from flask_restful import Resource, reqparse
+from flask import request
+from flask_restful import Resource
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_refresh_token_required, get_jwt_identity, get_raw_jwt, jwt_required
 
 from application import jwt
-from .models import AppUser
+from .models import AppUser, AppUserSchema, appuser_schema
 
+import re
 
-parser = reqparse.RequestParser()
-parser.add_argument("username", help="This field cannot be blank", required=True)
-parser.add_argument("password", help="This field cannot be blank", required=True)
 
 class UserRegistration(Resource):
 	def post(self):
-		data = parser.parse_args()
+		data = request.get_json()
+
+		if data["password"] != data["password2"]:
+			return {"message": "Passwords do not match"}, 400
+			
+		if len(data["password"]) < 6:
+			return {"message": "Passwords needs to have at least 6 characters"}, 400
+
+		if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", data["email"]):
+			return {"message": "Invalid email address"}, 400
 		
 		if AppUser.find_by_username(data["username"]):
-			return {"message": "User {} already exists".format(data["username"])}
-		
-		new_user = AppUser(username=data["username"], password=data["password"])
+			return {"message": "User {} already exists".format(data["username"])}, 400
+			
+		if AppUser.find_by_email(data["email"]):
+			return {"message": "E-mail address {} already exists in our database".format(data["email"])}, 400
+
+		data.pop("password2", None) # Remove password2
+		new_user = AppUserSchema().load(data)
 		
 		try:
 			new_user.save()
-			access_token = create_access_token(identity=data["username"])
-			refresh_token = create_refresh_token(identity=data["username"])
-			
-			return {
-				"message": "User {} was created".format(data["username"]),
-				"access_token": access_token,
-				"refresh_token": refresh_token,
-				"exp": str(datetime.utcnow() + timedelta(minutes=5))
-			}
-		
+			return {"message": "User {} was created".format(data["username"])}
 		except:
 			return {"message": "There was a problem creating the user {}".format(data["username"])}, 500
 
 
 class UserLogin(Resource):
 	def post(self):
-		data = parser.parse_args()
+		data = request.get_json()
 		
 		current_user = AppUser.find_by_username(data["username"])
 		
