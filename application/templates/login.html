@@ -28,6 +28,16 @@
 				<div class="col-sm-12 col-md-10 col-lg-7 mx-auto my-auto">
 					<div class="card transparent-card shadow rounded">
 						<div class="card-body" id="cardbody">
+							{% with messages = get_flashed_messages() %}
+								{% if messages %}
+								<div class="alert alert-danger" id="errormessage">
+									<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Something went wrong :(<br />
+									{% for message in messages %}
+										{{ message }}<br />
+									{% endfor %}
+								</div>
+								{% endif %}
+							{% endwith %}
 							<h5 class="card-title text-center">Nutcracker - Log In</h5>
 							<form class="text-center" id="loginform">
 								<div class="form-group text-left">

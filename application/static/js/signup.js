@@ -43,7 +43,7 @@ function signup(event)
 			success: function(data)
 			{
 				clear_error();
-				$("#signupform").empty().html("<span>Your user account was created successfully. You need to wait for the site administrator to approve your account before you can log in. In case you need promptness, please, contact the Nutcracker team.</span>");
+				$("#signupform").empty().html("<span>Your user account was created successfully. You need to wait for the site administrator to approve your account before you can log in. In case you need promptness, please, contact the Nutcracker team.</span><br /><a href=\"/\">Click here to go to the login page</a>.");
 			},
 			error: function(data)
 			{

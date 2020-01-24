@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, abort
 
-from . import api
+from . import view_require_level
 
 main_bp = Blueprint("main", __name__)
 
@@ -9,8 +9,15 @@ def login():
 	return render_template("login.html")
 
 @main_bp.route("/tagging")
+@view_require_level(1)
 def tagging():
 	return render_template("tagging.html")
+	return render_template("login.html")
+
+@main_bp.route("/batchupload")
+@view_require_level(7)
+def batchupload():
+	return render_template("createbatch.html")
 
 @main_bp.route("/signup")
 def signup():

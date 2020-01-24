@@ -57,6 +57,9 @@ class AppUser(db.Model):
 	def is_authorized(self):
 		return self.authorized
 	
+	def get_permission_level(self):
+		return self.permission_level
+	
 	def save(self):
 		db.session.add(self)
 		db.session.commit()

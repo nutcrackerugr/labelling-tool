@@ -20,6 +20,8 @@ class Tweet(db.Model):
 	retweet_count = db.Column(db.Integer)
 	favorite_count = db.Column(db.Integer)
 	lang = db.Column(db.String(30), nullable=True)
+	parent_tweet = db.Column(db.String(19), unique=True)
+	is_retweet = db.Column(db.Boolean)
 	retweeted = db.Column(db.Boolean)
 	favorited = db.Column(db.Boolean)
 	labels = db.Column(db.PickleType, nullable=True)

@@ -10,7 +10,7 @@
 	<body>
 		<div class="container-fluid">
 			<div class="row">
-				<div class="col-md-6 col-xl-10 offset-xl-1 order-xl-first">
+				<div class="col-md-6 col-xl-10 offset-xl-1 order-xl-first" id="errorcol">
 					{% with messages = get_flashed_messages() %}
 						{% if messages %}
 						<div class="mt-4 alert alert-danger" id="errormessage">
@@ -24,68 +24,31 @@
 				</div>
 			</div>
 			<div class="row">
-				<div class="col-md-6 col-xl-4 order-xl-2 mt-4">
-					<div class="media p-3 border border-secondary rounded">
-						<img class="mr-3" alt="User Image" id="user_profile_pic" src="" />
-						<div class="media-body">
-							<h5 class="mt-0" id="user_name">Name <span class="text-secondary" id="user_screen_name">@screen_name</span></h5>
-							<h6 class="mt-0 text-secondary">User Description:</h6>
-							<p id="user_description">User description</p>
-							<h6 class="mt-0 text-secondary">Tweet:</h6>
-							<p id="tweet_content">Tweet content</p>
-						</div>
-					</div>
-				</div>
-				
-				<div class="col-md-6 col-xl-3 order-xl-2 mt-4">
-					<ul id="reasons" class="list-group">
-						<!-- Here goes AI reasons -->
-					</ul>
-				</div>
-						
-				<div class="col-md-6 col-xl-3 offset-xl-1 order-xl-1 mt-4">
-					<form role="form" id="labelform">
-						<!-- Here goes labels selects and switches -->
+				<div class="col-md-10 offset-md-1 col-xl-10 offset-xl-1 order-xl-1 mt-4 h-100">
+					<form role="form" id="batchform">
+						<label for="batch">Enter JSON formatted list of Tweets:</label>
+						<textarea name="batch" id="batch" class="form-control" style="min-height:500px"></textarea>
 					</form>
-					<div class="form-group">
-						<label for="tags">Tags:</label>
-						<input type="text" name="tags" id="tags" class="form-control">
-						<label for="tweet_comment">Comment:</label>
-						<textarea name="tweet_comment" id="tweet_comment" class="form-control"></textarea>
-					</div>
 				</div>
  
 				
-				<div class="col-md-6 col-xl-10 offset-xl-1 order-xl-first mt-4">
-					<nav class="navbar navbar-dark navbar-expand-xl bg-dark justify-content-between">
+				<div class="col-md-10 offset-md-1 col-xl-10 offset-xl-1 order-first mt-4">
+					<nav class="navbar navbar-dark bg-dark navbar-expand-xl justify-content-between">
 						<a class="navbar-brand">
 							<img src="{{ url_for('static', filename='images/logo.png') }}" width="30" height="30" class="d-inline-block align-top" alt="">
 							Nutcracker Tagging System
 						</a>
 						<div class="collapse navbar-collapse" id="navbarContent">
 							<ul class="navbar-nav mr-auto">
-								<li class="nav-item active">
+								<li class="nav-item">
 									<a class="nav-link" href="/tagging">Labelling Tool</a>
 								</li>
-								<li class="nav-item">
+								<li class="nav-item active">
 									<a class="nav-link" href="/batchupload">Upload Tweets</a>
 								</li>
 							</ul>
 						</div>
-						<div class="form-inline">
-							<div class="btn-group mr-auto">
-								<button type="button" class="btn btn-secondary btn-sm" id="firstunlabelled">Go to First Unlabelled</button>
-								<button type="button" class="btn btn-primary btn-sm" id="save">Save Changes</button>
-							</div>
-							
-							<div class="input-group input-group-sm">
-								<label for="page" class="sr-only">No. Tweet: </label>
-								<div class="input-group-prepend">
-									<div class="input-group-text">No. Tweet</div>
-								</div>
-								<input type="number" class="form-control form-control-sm" style="width:100px" id="page" name="page" min="1">
-							</div>
-						</div>
+						<button type="button" class="btn btn-primary" id="uploadbutton">Upload Batch</button>
 					</nav>
 				</div>
 				
@@ -104,6 +67,6 @@
 		<script src="https://code.jquery.com/jquery-3.4.1.min.js" crossorigin="anonymous"></script>
 		<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
 		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
-		<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+		<script src="{{ url_for('static', filename='js/batch.js') }}"></script>
 	</body>
 </html>

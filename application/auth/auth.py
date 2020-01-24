@@ -1,9 +1,9 @@
 from datetime import datetime, timedelta
-from flask import request
+from flask import request, jsonify
 from flask_restful import Resource
-from flask_jwt_extended import create_access_token, create_refresh_token, jwt_refresh_token_required, get_jwt_identity, get_raw_jwt, jwt_required
+from flask_jwt_extended import create_access_token, create_refresh_token, jwt_refresh_token_required, get_jwt_identity, get_raw_jwt, jwt_required, set_access_cookies, set_refresh_cookies, unset_jwt_cookies
 
-from application import jwt
+from application import jwt, require_level
 from .models import AppUser, AppUserSchema, appuser_schema
 
 import re
@@ -49,14 +49,19 @@ class UserLogin(Resource):
 		
 		if current_user.is_authorized():
 			if current_user.check_password(data["password"]):
-				access_token = create_access_token(identity=current_user.username)
-				refresh_token = create_refresh_token(identity=current_user.username)
+				access_token = create_access_token(identity=current_user)
+				refresh_token = create_refresh_token(identity=current_user)
 				
-				return {
+				resp = jsonify({
 					"message": "Logged in as {}".format(current_user.username),
 					"access_token": access_token,
-					"refresh_token": refresh_token
-				}, 200
+					"refresh_token": refresh_token,
+				})
+				
+				set_access_cookies(resp, access_token)
+				set_refresh_cookies(resp, refresh_token)
+				
+				return resp
 			else:
 				return {"message": "Invalid credentials. Check your username and password and try again."}, 401
 		else:
@@ -72,7 +77,7 @@ class UserLogoutAccess(Resource):
 			revoked_token = RevokedToken(jti=jti)
 			revoked_token.add()
 			
-			return {"message": "Access token has been revoked"}
+			return unset_jwt_cookies({"message": "Access token has been revoked"}), 200
 		
 		except:
 			return {"message": "Something went wrong"}, 500
@@ -87,7 +92,7 @@ class UserLogoutRefresh(Resource):
 			revoked_token = RevokedToken(jti=jti)
 			revoked_token.add()
 			
-			return {"message": "Refresh token has been revoked"}
+			return unset_jwt_cookies({"message": "Refresh token has been revoked"}), 200
 		
 		except:
 			return {"message": "Something went wrong"}, 500
@@ -98,10 +103,16 @@ class TokenRefresh(Resource):
 	def post(self):
 		current_user = get_jwt_identity()
 		access_token = create_access_token(identity=current_user)
-		return {"access_token": access_token}
+		
+		resp = {"access_token": access_token}
+		
+		set_access_cookies(resp, access_token)
+		
+		return resp, 200
 
 
 class AllUsers(Resource):
+	@require_level(9)
 	def get(self):
 		return AppUser.return_all()
 	
@@ -110,6 +121,6 @@ class AllUsers(Resource):
 
 
 class SecretResource(Resource):
-	@jwt_required
+	@require_level(9)
 	def get(self):
 		return {"answer": 42}
