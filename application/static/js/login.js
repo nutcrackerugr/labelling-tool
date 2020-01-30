@@ -18,7 +18,7 @@ function login(e)
 	
 	$.ajax({
 		type: "POST",
-		url: "/api/auth/login",
+		url: "api/auth/login",
 		data: JSON.stringify(payload),
 		contentType:"application/json",
 		dataType: "json",
@@ -26,7 +26,7 @@ function login(e)
 		{
 			localStorage.jwt_access = data.access_token;
 			localStorage.jwt_refresh = data.refresh_token;
-			window.location.replace("/tagging");
+			window.location.replace("tagging");
 		},
 		error: function(data)
 		{

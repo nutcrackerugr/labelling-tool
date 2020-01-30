@@ -5,6 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager, verify_jwt_in_request, get_jwt_claims
+from flask_reverse_proxy_fix.middleware import ReverseProxyPrefixFix
 
 from .assistant import AssistantManager, OntologyAssistant
 
@@ -95,6 +96,8 @@ def view_admin_required(fn):
 def create_app(config="config"):
 	app = Flask(__name__, instance_relative_config=False)
 	app.config.from_object(config)
+
+	ReverseProxyPrefixFix(app)
 	
 	db.init_app(app)
 	ma.init_app(app)
