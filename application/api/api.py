@@ -21,7 +21,7 @@ class GetTweet(Resource):
 			return {"error":404, "message":"Not Found"}, 404
 
 class CreateTweet(Resource):
-	#@require_level(7)
+	@require_level(7)
 	def post(self):
 		try:
 			data = request.get_json()
@@ -89,7 +89,7 @@ class CreateTweet(Resource):
 
 
 class CreateTweetsBatch(Resource):
-	#@require_level(7)
+	@require_level(7)
 	def post(self):
 		try:
 			batch = request.get_json()
