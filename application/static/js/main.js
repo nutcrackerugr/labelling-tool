@@ -1,9 +1,10 @@
 var baseurl = window.location.pathname.replace("tagging", "");
-
 if (!baseurl.endsWith('/'))
 	baseurl += '/';
 	
 var api = baseurl + "api/";
+
+var last_tweet, last_user, labels = {}, labels_name = {};
 
 function setAuth(xhr)
 {
