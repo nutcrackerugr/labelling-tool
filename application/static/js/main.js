@@ -7,7 +7,7 @@ function setAuth(xhr)
 	if (!localStorage.jwt_access)
 	{
 		alert("You need to log in again");
-		window.location.replace("/");
+		window.location.replace(baseurl);
 		return false;
 	}
 			
@@ -282,7 +282,7 @@ function save(e)
 
 $(function(){
 	if (!localStorage.jwt_access)
-		window.location.replace("/");
+		window.location.replace(baseurl);
 	
 	$.ajax({
 		beforeSend: setAuth,

@@ -29,7 +29,7 @@ function login(e)
 		{
 			localStorage.jwt_access = data.access_token;
 			localStorage.jwt_refresh = data.refresh_token;
-			window.location.replace("tagging");
+			window.location.replace(baseurl + "tagging");
 		},
 		error: function(data)
 		{
