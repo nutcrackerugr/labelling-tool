@@ -1,4 +1,8 @@
 var baseurl = window.location.pathname.replace("signup", "");
+
+if (!baseurl.endsWith('/'))
+	baseurl += '/';
+	
 var api = baseurl + "api/";
 
 function create_error(msg)

@@ -1,4 +1,8 @@
 var baseurl = window.location.pathname.replace("batchupload", "");
+
+if (!baseurl.endsWith('/'))
+	baseurl += '/';
+	
 var api = baseurl + "api/";
 
 function setAuth(xhr)
