@@ -1,3 +1,6 @@
+var baseurl = window.location.pathname.replace("signup", "");
+var api = baseurl + "api/";
+
 function create_error(msg)
 {
 	if ($("#errormessage").length == 0)
@@ -36,7 +39,7 @@ function signup(event)
 		
 		$.ajax({
 			type: "POST",
-			url: "/api/auth/register",
+			url: api + "auth/register",
 			data: JSON.stringify(payload),
 			contentType:"application/json",
 			dataType: "json",

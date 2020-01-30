@@ -1,3 +1,6 @@
+var baseurl = window.location.pathname.replace("batchupload", "");
+var api = baseurl + "api/";
+
 function setAuth(xhr)
 {
 	if (!localStorage.jwt_access)
@@ -36,7 +39,7 @@ function uploadbatch(event)
 		$.ajax({
 			beforeSend: setAuth,
 			type: "POST",
-			url: "/api/tweet/create/batch",
+			url: api + "tweet/create/batch",
 			data: JSON.stringify(payload),
 			contentType:"application/json",
 			dataType: "json",

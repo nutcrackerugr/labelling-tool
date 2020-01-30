@@ -1,3 +1,6 @@
+var baseurl = window.location.pathname;
+var api = baseurl + "api/";
+
 function create_error(msg)
 {
 	if ($("#errormessage").length == 0)
@@ -18,7 +21,7 @@ function login(e)
 	
 	$.ajax({
 		type: "POST",
-		url: "api/auth/login",
+		url: api + "auth/login",
 		data: JSON.stringify(payload),
 		contentType:"application/json",
 		dataType: "json",

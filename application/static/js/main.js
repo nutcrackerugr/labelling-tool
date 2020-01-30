@@ -1,4 +1,5 @@
-var api = "api/";
+var baseurl = window.location.pathname.replace("tagging", "");
+var api = baseurl + "api/";
 var last_tweet, last_user, labels = {}, labels_name = {};
 
 function setAuth(xhr)
