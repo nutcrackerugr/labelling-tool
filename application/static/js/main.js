@@ -4,18 +4,45 @@ if (!baseurl.endsWith('/'))
 	
 var api = baseurl + "api/";
 
-var last_tweet, last_user, labels = {}, labels_name = {};
+var last_tweet, last_user, labels = {}, labels_name = {}, last_time= new Date();
 
 function setAuth(xhr)
 {
-	if (!localStorage.jwt_access)
+	if (Math.floor((new Date() - last_time) / 60000) >= 5)
 	{
-		alert("You need to log in again");
-		window.location.replace(baseurl);
-		return false;
+		$.ajax({
+			async: false,
+			type: "GET",
+			url: api + "auth/token/valid",
+			success: function(){console.info("Token valid");},
+			error: function(xhr)
+			{
+				console.info("Token not valid, renewing...");
+				if (xhr.status == 403)
+				{
+					$.ajax({
+						async: false,
+						type: "POST",
+						url: api + "auth/token/refresh",
+						headers: {
+							"X-CSRF-TOKEN": Cookies.get("csrf_refresh_token")
+						},
+						success: function()
+						{
+							last_time = new Date();
+						},
+						error: function()
+						{
+							alert("Your session has expired. Please log in again");
+							window.location.replace(baseurl);
+						}
+					});
+				}
+			}
+		});
 	}
-			
-	xhr.setRequestHeader("Authorization", "Bearer " + localStorage.jwt_access);
+
+	return true;
 }
 
 function createText(text, highlights, aihighlights, callback)
@@ -67,6 +94,9 @@ function save_highlights(callback)
 		beforeSend: setAuth,
 		type: "POST",
 		url: api + "tweet/" + last_tweet["id"] + "/update/highlights",
+		headers: {
+			"X-CSRF-TOKEN": Cookies.get("csrf_access_token")
+		},
 		data: JSON.stringify(vhighlights),
 		contentType:"application/json",
 		dataType: "json",
@@ -180,9 +210,11 @@ function getTweet(n, callback)
 			if (n && n != 0)
 				alert("The tweet " + n + " does not exists");
 			else
+			{
 				alert("There are not unlabelled tweets");
 				$("#page").val(1);
 				getTweet(1);
+			}
 		},
 		complete: callback
 	});
@@ -191,11 +223,11 @@ function getTweet(n, callback)
 function changePage(e)
 {
 	var elem = $(this)
-	elem.prop("disabled", true);
-	getTweet(elem.val(), function()
-	{
-		elem.prop("disabled", false);
-	});
+	//elem.prop("disabled", true);
+	getTweet(elem.val());//, function()
+	//~ {
+		//~ elem.prop("disabled", false);
+	//~ });
 }
 
 function save_labels(callback)
@@ -209,6 +241,9 @@ function save_labels(callback)
 		beforeSend: setAuth,
 		type: "POST",
 		url: api + "tweet/" + last_tweet["id"] + "/update/labels",
+		headers: {
+			"X-CSRF-TOKEN": Cookies.get("csrf_access_token")
+		},
 		data: JSON.stringify(vlabels),
 		contentType:"application/json",
 		dataType: "json",
@@ -218,6 +253,9 @@ function save_labels(callback)
 				beforeSend: setAuth,
 				type: "POST",
 				url: api + "tweet/" + last_tweet["id"] + "/update/tags",
+				headers: {
+					"X-CSRF-TOKEN": Cookies.get("csrf_access_token")
+				},
 				data: JSON.stringify($("#tags").val().split(',')),
 				contentType: "application/json",
 				dataType: "json",
@@ -227,6 +265,9 @@ function save_labels(callback)
 						beforeSend: setAuth,
 						type: "POST",
 						url: api + "tweet/" + last_tweet["id"] + "/update/comment",
+						headers: {
+							"X-CSRF-TOKEN": Cookies.get("csrf_access_token")
+						},
 						data: {"comment": $("#tweet_comment").val()},
 						success: callback
 					});
@@ -285,8 +326,8 @@ function save(e)
 }
 
 $(function(){
-	if (!localStorage.jwt_access)
-		window.location.replace(baseurl);
+	//~ if (!localStorage.jwt_access)
+		//~ window.location.replace(baseurl);
 	
 	$.ajax({
 		beforeSend: setAuth,

@@ -21,12 +21,12 @@ assistant_manager.add_assistant(ARMAS_ontology)
 assistant_manager.add_assistant(PRUEBA_ontology)
 
 @jwt.user_claims_loader
-def add_claims_to_access_token(identity):
-	return {"username": identity.username, "permission_level": identity.permission_level}
+def add_claims_to_access_token(user):
+	return {"username": user.username, "permission_level": user.permission_level}
 
 @jwt.user_identity_loader
-def user_identity_lookup(identity):
-	return identity.username
+def user_identity_lookup(user):
+	return user.username
 
 @jwt.token_in_blacklist_loader
 def check_if_token_in_blacklist(decrypted_token):
@@ -66,31 +66,13 @@ def view_require_level(level):
 					return redirect(url_for("main.tagging"))
 				else:
 					return function(*args, **kwargs)
-			except Exception as e:
-				flash(str(e))
+			except:# Exception as e:
+				# ~ flash(str(e))
 				flash("Your session has expired. Please, log in again.")
 				return redirect(url_for("main.login"))
 		
 		return wrapper
 	return decorator
-	
-def view_admin_required(fn):
-	@wraps(fn)
-	def wrapper(*args, **kwargs):
-		try:
-			verify_jwt_in_request()
-			claims = get_jwt_claims()
-			
-			print("Checking admin...")
-			
-			if claims["permission_level"] < 7:
-				return abort(403)
-			else:
-				return fn(*args, **kwargs)
-		except:
-			return abort(403)
-		
-	return wrapper
 
 
 def create_app(config="config"):

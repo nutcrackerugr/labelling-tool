@@ -67,7 +67,7 @@ class AppUser(db.Model):
 	def generate_token(self, user_id):
 		try:
 			payload = {
-				"exp": datetime.utcnow() + timedelta(minutes=5),
+				"exp": datetime.utcnow() + timedelta(secons=30),
 				"iat": datetime.utcnow(),
 				"sub": user_id
 			}
