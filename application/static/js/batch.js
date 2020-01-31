@@ -3,18 +3,43 @@ var baseurl = window.location.pathname.replace("batchupload", "");
 if (!baseurl.endsWith('/'))
 	baseurl += '/';
 	
-var api = baseurl + "api/";
+var api = baseurl + "api/", last_time = new Date();
 
 function setAuth(xhr)
 {
-	if (!localStorage.jwt_access)
+	if (Math.floor((new Date() - last_time) / 60000) >= 5)
 	{
-		alert("You need to log in again");
-		window.location.replace("/");
-		return false;
+		$.ajax({
+			async: false,
+			type: "GET",
+			url: api + "auth/token/valid",
+			error: function(xhr)
+			{
+				if (xhr.status == 403)
+				{
+					$.ajax({
+						async: false,
+						type: "POST",
+						url: api + "auth/token/refresh",
+						headers: {
+							"X-CSRF-TOKEN": Cookies.get("csrf_refresh_token")
+						},
+						success: function()
+						{
+							last_time = new Date();
+						},
+						error: function()
+						{
+							alert("Your session has expired. Please log in again");
+							window.location.replace(baseurl);
+						}
+					});
+				}
+			}
+		});
 	}
-			
-	xhr.setRequestHeader("Authorization", "Bearer " + localStorage.jwt_access);
+
+	return true;
 }
 
 function create_error(msg)
@@ -44,6 +69,9 @@ function uploadbatch(event)
 			beforeSend: setAuth,
 			type: "POST",
 			url: api + "tweet/create/batch",
+			headers: {
+				"X-CSRF-TOKEN": Cookies.get("csrf_access_token")
+			},
 			data: JSON.stringify(payload),
 			contentType:"application/json",
 			dataType: "json",

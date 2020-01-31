@@ -14,10 +14,8 @@ function setAuth(xhr)
 			async: false,
 			type: "GET",
 			url: api + "auth/token/valid",
-			success: function(){console.info("Token valid");},
 			error: function(xhr)
 			{
-				console.info("Token not valid, renewing...");
 				if (xhr.status == 403)
 				{
 					$.ajax({
@@ -88,8 +86,6 @@ function save_highlights(callback)
 		vhighlights.push($(this).html());
 	});
 	
-	//console.log(vhighlights);
-
 	$.ajax({
 		beforeSend: setAuth,
 		type: "POST",
