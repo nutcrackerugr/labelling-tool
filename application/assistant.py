@@ -43,6 +43,6 @@ class OntologyAssistant(Assistant):
 		self.tree.build([self.filename])
 	
 	def get_class(self, text):
-		tags = self.tree.search(text)
+		tags = self.tree.search(text.lower())
 		
 		return 1 if tags else 0, tags

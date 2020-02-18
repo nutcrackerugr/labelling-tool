@@ -5,11 +5,13 @@
 				"labels": [
 					"pp",
 					"partido popular",
-					"peperos"
+					"peperos",
+					"@populares"
 				],
 				"subcategories": {
 					"miembros": {
 						"labels": [
+							"@pablocasado_",
 							"rajoy",
 							"casado",
 							"pablo casado",
@@ -32,11 +34,13 @@
 					"cs",
 					"ciudadanos",
 					"c's",
-					"ciudagramos"
+					"ciudagramos",
+					"@CiudadanosCs"
 				],
 				"subcategories": {
 					"miembros": {
 						"labels": [
+							"@Albert_Rivera",
 							"rivera",
 							"albert",
 							"albert rivera",
@@ -57,13 +61,17 @@
 			"psoe": {
 				"labels": [
 					"psoe",
-					"socialistas"
+					"socialistas",
+					"@psoe",
+					"#VotaPSOE"
 				],
 				"subcategories": {
 					"miembros": {
 						"labels": [
+							"@sanchezcastejon",
 							"sanchez",
 							"sánchez",
+							"pedro",
 							"pedro sánchez",
 							"pdr snchz",
 							"gonzález",
@@ -88,15 +96,21 @@
 				"labels": [
 					"unidas podemos",
 					"podemos",
-					"up"
+					"up",
+					"@iunida",
+					"@ahorapodemos",
+					"#YoVotoUnidasPodemos"
 				],
 				"subcategories": {
 					"miembros": {
 						"labels": [
+							"@Pablo_Iglesias_",
 							"iglesias",
 							"pablo iglesias",
+							"@IreneMontero",
 							"montero",
 							"irene montero",
+							"@pnique",
 							"echenique",
 							"monedero"
 						]
@@ -113,11 +127,13 @@
 			},
 			"vox": {
 				"labels": [
-					"vox"
+					"vox",
+					"@vox_es"
 				],
 				"subcategories": {
 					"miembros": {
 						"labels": [
+							"@Santi_ABASCAL",
 							"abascal",
 							"santi",
 							"santiago abascal",
