@@ -42,6 +42,14 @@ html, body
 	padding-left: 48px;
 }
 
+.profile-pic {
+	color: white;
+	font-size: 12px;
+	width: 48px;
+	height: 48px;
+	background-image: url('../images/notfound.png');
+}
+
 @media (min-width: 576px) {
 	html {
 		font-size: 1.2rem;
