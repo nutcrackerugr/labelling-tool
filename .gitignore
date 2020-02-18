@@ -29,3 +29,4 @@ venv
 build
 
 config.py
+*config.py
