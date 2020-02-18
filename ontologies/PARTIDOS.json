@@ -1,0 +1,140 @@
+{
+	"PARTIDOS": {
+		"subcategories": {
+			"pp": {
+				"labels": [
+					"pp",
+					"partido popular",
+					"peperos"
+				],
+				"subcategories": {
+					"miembros": {
+						"labels": [
+							"rajoy",
+							"casado",
+							"pablo casado",
+							"bárcenas",
+							"barcenas",
+							"m.rajoy"
+						]
+					},
+					"relacionados": {
+						"labels": [
+							"gurtel",
+							"corrupción",
+							"corrupto"
+						]
+					}
+				}
+			},
+			"ciudadanos": {
+				"labels": [
+					"cs",
+					"ciudadanos",
+					"c's",
+					"ciudagramos"
+				],
+				"subcategories": {
+					"miembros": {
+						"labels": [
+							"rivera",
+							"albert",
+							"albert rivera",
+							"adoquin",
+							"adoquín",
+							"arrimadas"
+						]
+					},
+					"relacionados": {
+						"labels": [
+							"adoquin",
+							"adoquín",
+							"adoquines"
+						]
+					}
+				}
+			},
+			"psoe": {
+				"labels": [
+					"psoe",
+					"socialistas"
+				],
+				"subcategories": {
+					"miembros": {
+						"labels": [
+							"sanchez",
+							"sánchez",
+							"pedro sánchez",
+							"pdr snchz",
+							"gonzález",
+							"zapatero",
+							"chávez",
+							"griñán",
+							"chavez",
+							"griñan"
+						]
+					},
+					"relacionados": {
+						"labels": [
+							"plagio",
+							"tesis",
+							"eres",
+							"ere"
+						]
+					}
+				}
+			},
+			"podemos": {
+				"labels": [
+					"unidas podemos",
+					"podemos",
+					"up"
+				],
+				"subcategories": {
+					"miembros": {
+						"labels": [
+							"iglesias",
+							"pablo iglesias",
+							"montero",
+							"irene montero",
+							"echenique",
+							"monedero"
+						]
+					},
+					"relacionados": {
+						"labels": [
+							"venezuela",
+							"maduro",
+							"chalet",
+							"galapagar"
+						]
+					}
+				}
+			},
+			"vox": {
+				"labels": [
+					"vox"
+				],
+				"subcategories": {
+					"miembros": {
+						"labels": [
+							"abascal",
+							"santi",
+							"santiago abascal",
+							"santi abascal",
+							"smith",
+							"ortega smith"
+						]
+					},
+					"relacionados": {
+						"labels": [
+							"facha",
+							"fachas",
+							"fascismo"
+						]
+					}
+				}
+			}
+		}
+	}  
+}

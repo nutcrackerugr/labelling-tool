@@ -16,9 +16,9 @@ jwt = JWTManager()
 
 assistant_manager = AssistantManager()
 ARMAS_ontology = OntologyAssistant("ARMAS")
-PRUEBA_ontology = OntologyAssistant("PRUEBA")
+PARTIDOS_ontology = OntologyAssistant("PARTIDOS")
 assistant_manager.add_assistant(ARMAS_ontology)
-assistant_manager.add_assistant(PRUEBA_ontology)
+assistant_manager.add_assistant(PARTIDOS_ontology)
 
 @jwt.user_claims_loader
 def add_claims_to_access_token(user):
