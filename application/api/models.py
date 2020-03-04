@@ -33,8 +33,11 @@ class Tweet(db.Model):
 	user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
 
 	@classmethod
-	def get_by_user(cls, uid):
-		return Tweet.query.join(User).filter(uid).all()
+	def get_by_user(cls, uid, limit=None):
+		if limit:
+			return Tweet.query.join(User).filter(uid).limit(limit)
+		else:
+			return Tweet.query.join(User).filter(uid).all()
 	
 	@classmethod
 	def create_by_batch_json(cls, filename):
