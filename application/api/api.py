@@ -5,6 +5,9 @@ from sqlalchemy import null
 
 from .models import *
 from application import db, ma, assistant_manager, require_level
+
+print("Uploading batch")
+Tweet.create_by_batch_json("#Debatea5RTVE_20191105-005113.stream.json")
 	
 	
 class GetTweet(Resource):
@@ -16,6 +19,17 @@ class GetTweet(Resource):
 			tweet = Tweet.query.filter_by(labels=None).first()
 		
 		if tweet:
+			return tweet_schema.dump(tweet)
+		else:
+			return {"error":404, "message":"Not Found"}, 404
+
+class GetAuthorTweets(Resource):
+	@require_level(1)
+	def get(self, uid):
+		if uid != 0:
+			tweets = Tweet.get_by_user(uid)
+		
+		if tweets:
 			return tweet_schema.dump(tweet)
 		else:
 			return {"error":404, "message":"Not Found"}, 404
@@ -86,6 +100,17 @@ class CreateTweet(Resource):
 			
 		except:
 			return {"message": "Something went wrong. Check your JSON and try again.", "error": 500}, 500
+
+
+class CreateTweetsFromFile(Resource):
+	@require_level(7)
+	def get(self, filename):
+		try:
+			Tweet.create_by_batch_json(filename)
+			return {"message": "Tweets created succesfully"}
+			
+		except:
+			return {"message": "Something went wrong", "error": 500}, 500
 
 
 class CreateTweetsBatch(Resource):
