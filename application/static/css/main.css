@@ -3,6 +3,21 @@ html, body
 	background-color: #f8f9fa;
 }
 
+.keyboard-key
+{
+	min-width: 22px;
+	border: 1px solid gray;
+	border-radius: 5px;
+	display: inline-block;
+	text-align: center;
+	font-size: .8rem;
+}
+
+.media, #othertweets .list-group-item
+{
+	background-color: #f8f9fa;
+}
+
 .footer {
 	font-size: .8rem;
 }
@@ -74,4 +89,8 @@ html, body
 	.hanging-indent {
 		font-size: .8rem;
 	}
+}
+
+.small-text {
+	font-size: .8rem;
 }

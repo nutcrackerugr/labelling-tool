@@ -149,6 +149,23 @@ function getReasons(n, callback)
 	});
 }
 
+function getOtherTweets(uid, callback)
+{
+	$.ajax({
+		beforeSend: setAuth,
+		type: "GET",
+		url: api + "user/" + uid + "/tweets/5",
+		success: function(data)
+		{
+			$("#othertweets").empty();
+			$.each(data, function(k, v)
+			{
+				$("#othertweets").append("<li class=\"list-group-item\">" + v["full_text"] + "</li>");
+			});
+		}
+	});
+}
+
 function getTweet(n, callback)
 {
 	n = !n ? 0 : n;
@@ -158,6 +175,13 @@ function getTweet(n, callback)
 		beforeSend: setAuth,
 		type: "GET",
 		url: url,
+		statusCode: {
+			403: function(xhr)
+			{
+				alert("Your session has expired. Please log in again");
+				window.location.replace(baseurl);
+			}
+		},
 		success: function(data)
 		{
 			if ($.isEmptyObject(data))
@@ -193,6 +217,7 @@ function getTweet(n, callback)
 					$("#tags").val("");
 				
 				getReasons(data["id"]);
+				getOtherTweets(data["user"]);
 				
 				
 				if (!n || n == 0)
@@ -380,6 +405,29 @@ $(function(){
 	$("#page").change(changePage);
 	$("#firstunlabelled").click(function(){getTweet(0)}); //Called inside a lambda to avoid passing e to getTweet
 	$("#save").click(save);
-	$('[data-toggle="tooltip"]').tooltip()
+	$('[data-toggle="tooltip"]').tooltip();
+	
+	$(document).keydown(function(e)
+	{
+		switch (e.key)
+		{
+			case "ArrowRight":
+			case "n":
+				$("#page").val(parseInt($("#page").val()) + 1).trigger("change");
+				break;
+				
+			case "ArrowLeft":
+			case "p":
+				$("#page").val(parseInt($("#page").val()) - 1).trigger("change");
+				break;
+			
+			case "s":
+				$("#save").trigger("click");
+				break;
+				
+			case "h":
+				$("#keyboard_shortcuts").toggle();
+		}
+	});
 });
 

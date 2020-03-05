@@ -35,9 +35,9 @@ class Tweet(db.Model):
 	@classmethod
 	def get_by_user(cls, uid, limit=None):
 		if limit:
-			return Tweet.query.join(User).filter(uid).limit(limit)
+			return Tweet.query.filter_by(user_id=uid).limit(limit).all()
 		else:
-			return Tweet.query.join(User).filter(uid).all()
+			return Tweet.query.filter_by(user_id=uid).all()
 	
 	@classmethod
 	def create_by_batch_json(cls, filename):

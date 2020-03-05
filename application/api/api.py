@@ -23,12 +23,13 @@ class GetTweet(Resource):
 
 class GetAuthorTweets(Resource):
 	@require_level(1)
-	def get(self, uid):
+	def get(self, uid, limit=5):
 		if uid != 0:
-			tweets = Tweet.get_by_user(uid, limit=5)
+			tweets = Tweet.get_by_user(uid, limit=limit)
+			print(tweets)
 		
 		if tweets:
-			return tweet_schema.dump(tweet)
+			return tweet_schema.dump(tweets, many=True)
 		else:
 			return {"error":404, "message":"Not Found"}, 404
 

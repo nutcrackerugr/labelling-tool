@@ -25,6 +25,15 @@
 			</div>
 			<div class="row">
 				<div class="col-md-6 col-xl-4 order-xl-2 mt-4">
+					<div class="media p-3 border border-secondary rounded mb-4" id="keyboard_shortcuts">
+						<div class="media-body">
+							<h6 class="mt-0 text-secondary">Keyboard Shortcuts</h6>
+							<span class="keyboard-key">n</span> / <span class="keyboard-key">&#8594;</span> next tweet<br />
+							<span class="keyboard-key">p</span> / <span class="keyboard-key">&#8592;</span> previous tweet<br />
+							<span class="keyboard-key">s</span> save labels<br />
+							<span class="keyboard-key">h</span> toggle this dialog<br />
+						</div>
+					</div>
 					<div class="media p-3 border border-secondary rounded sticky-top">
 						<img class="mr-3 profile-pic" alt="User Image" id="user_profile_pic" src="" />
 						<div class="media-body">
@@ -33,6 +42,22 @@
 							<p id="user_description">User description</p>
 							<h6 class="mt-0 text-secondary">Tweet:</h6>
 							<p id="tweet_content">Tweet content</p>
+						</div>
+					</div>
+					<div class="media p-3 border border-secondary rounded mt-4">
+						<div class="media-body">
+							<p class="text-muted text-justify small-text">
+								<i class="fa fa-exclamation-triangle" aria-hidden="true"></i>&nbsp;
+								Please note the tweets shown below are for providing context on who
+								the user is. The user or the related tweets must not be tagged. The
+								assigment of labels should be made based on the content of the
+								original tweet and the biased opinion that can be formed by reading
+								the related tweets.
+							</p>
+							<h6 class="mt-0 text-secondary">Other tweets:</h6>
+							<ul id="othertweets" class="list-group list-group-flush">
+								
+							</ul>
 						</div>
 					</div>
 				</div>
@@ -105,6 +130,7 @@
 		<script src="https://cdn.jsdelivr.net/npm/js-cookie@beta/dist/js.cookie.min.js"></script>
 		<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
 		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+		<script src="{{ url_for('static', filename='js/jquery.hotkeys.js') }}"></script>
 		<script src="{{ url_for('static', filename='js/main.js') }}"></script>
 	</body>
 </html>
