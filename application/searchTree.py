@@ -10,11 +10,11 @@ class SearchTree():
 	Search Tree that performs a semantic search using pre-defined
 	ontologies.
 	"""
-	def __init__(self, filename):
+	def __init__(self, filename, path=""):
 		self.SEARCHTREE_IS_BUILT = False
 		self.FILENAME = filename
 		
-		with open(os.path.abspath(os.path.dirname(os.path.dirname(__file__))) + '/ontologies/' + filename + ".json", 'r', encoding = "utf-8") as ontology:
+		with open(path + filename + ".json", 'r', encoding = "utf-8") as ontology:
 			self.tree = json.load(ontology)
 			self._searchtree = ahocorasick.Automaton()
 		

@@ -1,5 +1,6 @@
 from .searchTree import SearchTree
 
+
 class Assistant():
 	
 	def __init__(self, label, kind=None):
@@ -32,14 +33,18 @@ class AssistantManager():
 
 
 class OntologyAssistant(Assistant):
-	def __init__(self, label, kind="ontology", filename=None):
+	def __init__(self, label, kind="ontology", app=None, filename=None):
 		self.label = label
 		self.kind = kind
 		
 		if not filename:
 			self.filename = label
-			
-		self.tree = SearchTree(self.filename)
+		
+		if app:
+			self.tree = SearchTree(self.filename, path=app.config["ONTOLOGIES_PATH"])
+		else:
+			self.tree = SearchTree(self.filename)
+
 		self.tree.build([self.filename])
 	
 	def get_class(self, text):

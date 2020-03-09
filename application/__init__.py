@@ -15,10 +15,7 @@ jwt = JWTManager()
 
 
 assistant_manager = AssistantManager()
-ARMAS_ontology = OntologyAssistant("ARMAS")
-PARTIDOS_ontology = OntologyAssistant("PARTIDOS")
-assistant_manager.add_assistant(ARMAS_ontology)
-assistant_manager.add_assistant(PARTIDOS_ontology)
+
 
 @jwt.user_claims_loader
 def add_claims_to_access_token(user):
@@ -85,6 +82,12 @@ def create_app(config="config"):
 	ma.init_app(app)
 	jwt.init_app(app)
 	migrate = Migrate(app, db)
+	
+	# Assistants
+	ARMAS_ontology = OntologyAssistant("ARMAS", app=app)
+	PARTIDOS_ontology = OntologyAssistant("PARTIDOS", app=app)
+	assistant_manager.add_assistant(ARMAS_ontology)
+	assistant_manager.add_assistant(PARTIDOS_ontology)
 	
 	with app.app_context():
 		# Include routes

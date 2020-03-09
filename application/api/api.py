@@ -26,7 +26,6 @@ class GetAuthorTweets(Resource):
 	def get(self, uid, limit=5):
 		if uid != 0:
 			tweets = Tweet.get_by_user(uid, limit=limit)
-			print(tweets)
 		
 		if tweets:
 			return tweet_schema.dump(tweets, many=True)
@@ -179,7 +178,6 @@ class CreateTweetsBatch(Resource):
 					return {"message": "Something went wrong", "error": 500}, 500
 					
 		except Exception as e:
-			print(e)
 			return {"message": "Something went wrong. Check your JSON and try again.", "error": 500}, 500
 
 

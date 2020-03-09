@@ -49,7 +49,7 @@ class AppUser(db.Model):
 			return {"message": "{} row(s) deleted".format(num_rows_deleted)}
 		
 		except:
-			return {"message": "Something went wrong"}
+			return {"message": "Something went wrong", "error": 500}
 	
 	def check_password(self, password):
 		return Bcrypt().check_password_hash(self.password, password)
@@ -76,7 +76,7 @@ class AppUser(db.Model):
 			
 			return jwt_string
 		except Exception as e:
-			return str(e) #	OJOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+			return {"message": "Something went wrong", "error": 500}
 	
 	@staticmethod
 	def decode_token(token):
@@ -85,9 +85,9 @@ class AppUser(db.Model):
 			return payload["sub"]
 			
 		except jwt.ExpiredSignatureError:
-			return "Session expired. Please log in again"
+			return {"message": "Session expired. Please log in again", "error": 401}
 		except jwt.InvalidTokenError:
-			return "Invalid session. Please log in again"
+			return {"message": "Invalid session. Please log in again", "error": 401}
 
 
 class RevokedToken(db.Model):
