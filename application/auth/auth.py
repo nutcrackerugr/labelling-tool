@@ -41,11 +41,15 @@ class UserRegistration(Resource):
 class UserLogin(Resource):
 	def post(self):
 		data = request.get_json()
-		
+
 		current_user = AppUser.find_by_username(data["username"])
 		
 		if not current_user:
-			return {"message": "Invalid credentials. Check your username and password and try again."}, 401
+			# This to bypass stupid's complaints...
+			current_user = AppUser.find_by_email(data["username"])
+
+			if not current_user:
+				return {"message": "Invalid credentials. Check your username and password and try again."}, 401
 		
 		if current_user.is_authorized():
 			if current_user.check_password(data["password"]):
