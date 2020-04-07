@@ -6,6 +6,14 @@ var api = baseurl + "api/";
 
 var last_tweet, last_user, labels = {}, labels_name = {}, last_time= new Date();
 
+function stopPropagation(e)
+{
+	//~ e.preventDefault();
+	e.stopImmediatePropagation();
+	//~ e.cancelBubble = true;
+	//~ return false;
+}
+
 function setAuth(xhr)
 {
 	if (Math.floor((new Date() - last_time) / 60000) >= 5)
@@ -429,5 +437,8 @@ $(function(){
 				$("#keyboard_shortcuts").toggle();
 		}
 	});
+
+	$("#tags").keydown(stopPropagation);
+	$("#tweet_comment").keydown(stopPropagation);
 });
 
