@@ -440,5 +440,6 @@ $(function(){
 
 	$("#tags").keydown(stopPropagation);
 	$("#tweet_comment").keydown(stopPropagation);
+	$("#page").keydown(stopPropagation);
 });
 
