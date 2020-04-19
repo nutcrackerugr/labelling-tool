@@ -1,3 +1,5 @@
+import sys
+
 from functools import wraps
 
 from flask import Flask, jsonify, abort, redirect, url_for, flash
@@ -28,7 +30,7 @@ def user_identity_lookup(user):
 @jwt.token_in_blacklist_loader
 def check_if_token_in_blacklist(decrypted_token):
 	jti = decrypted_token["jti"]
-	return auth.models.RevokedToken.is_jti_blacklisted(jti)
+	return models.RevokedToken.is_jti_blacklisted(jti)
 	
 
 def require_level(level):
@@ -43,8 +45,9 @@ def require_level(level):
 					return {"message": "You do not have enough privileges to access this resource."}, 403
 				else:
 					return function(*args, **kwargs)
-			except:
-				return {"message": "Session has expired. Log in again."}, 403
+			except Exception as e:
+				sys.stderr.write("require_level Exception: {}\n".format(e))
+				return {"message": "Unauthorised or expired session. Log in again."}, 403
 		
 		return wrapper
 	return decorator
@@ -63,8 +66,8 @@ def view_require_level(level):
 					return redirect(url_for("main.tagging"))
 				else:
 					return function(*args, **kwargs)
-			except:# Exception as e:
-				# ~ flash(str(e))
+			except Exception as e:
+				sys.stderr.write("view_require_level Exception: {}\n".format(e))
 				flash("Your session has expired. Please, log in again.")
 				return redirect(url_for("main.login"))
 		

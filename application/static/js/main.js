@@ -86,28 +86,6 @@ function span_click(e)
 	$(this).toggleClass("selected");
 }
 
-function save_highlights(callback)
-{
-	vhighlights = []
-	$("#tweet_content span.selected").each(function()
-	{
-		vhighlights.push($(this).html());
-	});
-	
-	$.ajax({
-		beforeSend: setAuth,
-		type: "POST",
-		url: api + "tweet/" + last_tweet["id"] + "/update/highlights",
-		headers: {
-			"X-CSRF-TOKEN": Cookies.get("csrf_access_token")
-		},
-		data: JSON.stringify(vhighlights),
-		contentType:"application/json",
-		dataType: "json",
-		success: callback
-	});
-}
-
 function getReasons(n, callback)
 {	
 	$.ajax({
@@ -176,6 +154,8 @@ function getOtherTweets(uid, callback)
 
 function getTweet(n, callback)
 {
+	$("#logo").addClass("fa-spin");
+	//If no tweet was specified, get the first unlabelled by querying with tid=0
 	n = !n ? 0 : n;
 	var url = api + "tweet/" + n;
 		
@@ -193,13 +173,22 @@ function getTweet(n, callback)
 		success: function(data)
 		{
 			if ($.isEmptyObject(data))
-				alert("The tweet " + n + " does not exists");
+				alert("There was a problem loading the tweet " + n);
 			else
 			{
+				url = api + "tweet/" + data["id"];
+				//Get author details
 				$.ajax({
 					beforeSend: setAuth,
 					type: "GET",
 					url: api + "user/" + data["user"],
+					statusCode: {
+						403: function(xhr)
+						{
+							alert("Your session has expired. Please log in again");
+							window.location.replace(baseurl);
+						}
+					},
 					success: function(userdata)
 					{
 						$("#user_description").html(userdata["description"]);
@@ -208,36 +197,82 @@ function getTweet(n, callback)
 						last_user = userdata;
 					}
 				});
-				
-				createText(data["full_text"], data["highlights"], data["aihighlights"]);
-				$("input:checkbox").prop("checked", false);
-				for (var key in data["labels"])
-				{
-					$("#" + labels_name[key] + "select option[value=\"" + data["labels"][key] + "\"]").prop("selected", true);
-					$("#" + labels_name[key] + "switch").prop("checked", true);
-				}
-				
-				$("#tweet_comment").val(data["comment"] ? data["comment"] : "");
-				
-				if (!$.isEmptyObject(data["tags"]))
-					$("#tags").val(data["tags"].join(','));
-				else
-					$("#tags").val("");
-				
+
+				//Get last annotation details
+				$.ajax({
+					beforeSend: setAuth,
+					type: "GET",
+					url: url + "/annotation",
+					statusCode: {
+						403: function(xhr)
+						{
+							alert("Your session has expired. Please log in again");
+							window.location.replace(baseurl);
+						}
+					},
+					success: function(annotationdata)
+					{
+						data["highlights"] = annotationdata["highlights"];
+						data["aihighlights"] = annotationdata["aihighlights"];
+						data["labels"] = annotationdata["labels"];
+						data["tags"] = annotationdata["tags"];
+						data["comment"] = annotationdata["comment"];
+
+						$("#last_annotation").html("Last annotation on " + annotationdata["timestamp"] + " by " + annotationdata["appuser"]["username"]);
+					},
+					error: function()
+					{
+						data["highlights"] = [];
+						data["aihighlights"] = [];
+						data["labels"] = [];
+						data["tags"] = [];
+						data["comment"] = undefined;
+
+						$("#last_annotation").html("There are not previous annotations for this tweet");
+					},
+					complete: function()
+					{
+						//Draw tweet text adding the highlight-with-click feature
+						createText(data["full_text"], data["highlights"], data["aihighlights"]);
+
+						//Save-switch to false for all the tags
+						$("input:checkbox").prop("checked", false);
+
+						//Save-switch to true for all existing tags
+						for (var key in data["labels"])
+						{
+							$("#" + labels_name[key] + "select option[value=\"" + data["labels"][key] + "\"]").prop("selected", true);
+							$("#" + labels_name[key] + "switch").prop("checked", true);
+						}
+
+						//Write comment
+						$("#tweet_comment").val(data["comment"] ? data["comment"] : "");
+
+						//Collection of tags to string
+						if (!$.isEmptyObject(data["tags"]))
+							$("#tags").val(data["tags"].join(','));
+						else
+							$("#tags").val("");
+					}
+				});
+
+				//Get assistants info and other tweets
 				getReasons(data["id"]);
 				getOtherTweets(data["user"]);
 				
-				
+
+				//Set tweet number
 				if (!n || n == 0)
 					$("#page").val(data["id"]);
-					
+
+				//Global variable
 				last_tweet = data;
 			}
 		},
 		error: function()
 		{
 			if (n && n != 0)
-				alert("The tweet " + n + " does not exists");
+				alert("There was a problem loading the tweet " + n);
 			else
 			{
 				alert("There are not unlabelled tweets");
@@ -245,7 +280,13 @@ function getTweet(n, callback)
 				getTweet(1);
 			}
 		},
-		complete: callback
+		complete: function()
+		{
+			$("#logo").removeClass("fa-spin");
+
+			if (callback)
+				callback();
+		}
 	});
 }
 
@@ -259,83 +300,52 @@ function changePage(e)
 	//~ });
 }
 
-function save_labels(callback)
+function save_all(callback)
 {
+	var url = api + "tweet/" + last_tweet["id"];
+	
+	//Data
+	payload = {}
+
+	//Highlighted words
+	vhighlights = []
+	$("#tweet_content span.selected").each(function()
+	{
+		vhighlights.push($(this).html());
+	});
+	payload["highlights"] = vhighlights;
+
+	//Annotation values
 	vlabels = {}
 	for (var key in labels)
 		if ($("#" + key + "switch").is(":checked"))
 			vlabels[labels[key]] = parseInt($("#" + key + "select").val(), 10);
-	
+	payload["labels"] = vlabels;
+
+	//Tags and comment
+	payload["tags"] = $("#tags").val().split(',');
+	payload["comment"] = $("#tweet_comment").val();
+
 	$.ajax({
 		beforeSend: setAuth,
 		type: "POST",
-		url: api + "tweet/" + last_tweet["id"] + "/update/labels",
+		url: url + "/annotation/create",
+		statusCode: {
+			403: function(xhr)
+			{
+				alert("Your session has expired. Please log in again");
+				//~ window.location.replace(baseurl);
+			}
+		},
 		headers: {
 			"X-CSRF-TOKEN": Cookies.get("csrf_access_token")
 		},
-		data: JSON.stringify(vlabels),
-		contentType:"application/json",
+		data: JSON.stringify(payload),
+		contentType: "application/json",
 		dataType: "json",
-		success: function()
-		{
-			$.ajax({
-				beforeSend: setAuth,
-				type: "POST",
-				url: api + "tweet/" + last_tweet["id"] + "/update/tags",
-				headers: {
-					"X-CSRF-TOKEN": Cookies.get("csrf_access_token")
-				},
-				data: JSON.stringify($("#tags").val().split(',')),
-				contentType: "application/json",
-				dataType: "json",
-				success: function()
-				{
-					$.ajax({
-						beforeSend: setAuth,
-						type: "POST",
-						url: api + "tweet/" + last_tweet["id"] + "/update/comment",
-						headers: {
-							"X-CSRF-TOKEN": Cookies.get("csrf_access_token")
-						},
-						data: {"comment": $("#tweet_comment").val()},
-						success: callback
-					});
-				}
-			});
-		}
+		success: callback
 	});
 }
-
-
-//~ function getUnlabelledTweet()
-//~ {
-	//~ $.getJSON(api + "get_tweet/", function(data)
-	//~ {
-		//~ if ($.isEmptyObject(data))
-			//~ alert("There are no more unlabelled tweets :))");
-		//~ else
-		//~ {
-			//~ $.getJSON(api + "get_user/" + data["user"], function(userdata)
-			//~ {
-				//~ $("#user_description").html(userdata["description"]);
-				//~ $("#user_profile_pic").attr("src", userdata["profile_image_url_https"]);
-				//~ $("#user_name").html(userdata["name"] + ' <span class="text-secondary">@' + userdata["screen_name"] + '</span>');
-				//~ last_user = userdata;
-			//~ });
-			
-			//~ createText(data["full_text"], data["highlights"], data["aihighlights"]);
-			//~ $("input:checkbox").prop("checked", false);
-			//~ for (var key in data["labels"])
-			//~ {
-				//~ $("#" + labels_name[key] + "select option[value=\"" + data["labels"][key] + "\"]").prop("selected", true);
-				//~ $("#" + labels_name[key] + "switch").prop("checked", true);
-			//~ }
-			
-			//~ $("#page").val(data["id"]);
-			//~ last_tweet = data;
-		//~ }
-	//~ });
-//~ }
 
 function save(e)
 {
@@ -350,14 +360,11 @@ function save(e)
 		}, 1000);
 	}
 	
-	save_highlights();
-	save_labels(success);
+	save_all(success);
 }
 
 $(function(){
-	//~ if (!localStorage.jwt_access)
-		//~ window.location.replace(baseurl);
-	
+	//Get labels and insert them in DOM
 	$.ajax({
 		beforeSend: setAuth,
 		url: api + "labels",
@@ -381,10 +388,6 @@ $(function(){
 					html += '<option value="' + option_value++ + '">' + item + '</option>';
 				});
 				
-				
-				//~ html += '<option value="-1">Negative</option>';
-				//~ html += '<option value="0">Neutral</option>';
-				//~ html += '<option value="1">Positive</option>';
 				html += '</select>';
 				html += '</div>';
 				html += '<div>';
@@ -396,21 +399,15 @@ $(function(){
 				html += '</div>';
 			});
 			
-			//~ html += '<button type="submit" class="btn btn-primary mt-2" id="savelabels">Save</button>';
-			
-			$("#labelform").html(html);//.append($("<button/>", {"class": "btn btn-primary mt-2", "text": "Save", "id":"savelabels"}).click(savelabels));
-			//~ $("#labelform").append(
-				//~ $("<div/>", {"class": "form-group"}).append(
-					//~ $("<label/>", {"for": "tweet_comment", "text":"Comment:"})
-				//~ ).append(
-					//~ $("<textarea/>", {"class": "form-control", "id":"tweet_comment"})
-				//~ )
-			//~ );
+			$("#labelform").html(html);
 		}
 	});
-	
+
+	//Get last labelled tweet
 	getTweet(0);
 	$("#page").change(changePage);
+
+	//Assign event handlers
 	$("#firstunlabelled").click(function(){getTweet(0)}); //Called inside a lambda to avoid passing e to getTweet
 	$("#save").click(save);
 	$('[data-toggle="tooltip"]').tooltip();

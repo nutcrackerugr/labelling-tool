@@ -78,13 +78,14 @@
 						<label for="tweet_comment">Comment:</label>
 						<textarea name="tweet_comment" id="tweet_comment" class="form-control"></textarea>
 					</div>
+					<span id="last_annotation"></span>
 				</div>
  
 				
 				<div class="col-md-6 col-xl-10 offset-xl-1 order-xl-first mt-4">
 					<nav class="navbar navbar-dark navbar-expand-xl bg-dark justify-content-between">
 						<a class="navbar-brand">
-							<img src="{{ url_for('static', filename='images/logo.png') }}" width="30" height="30" class="d-inline-block align-top" alt="">
+							<img src="{{ url_for('static', filename='images/logo.png') }}" width="30" height="30" id="logo" class="d-inline-block align-top" alt="">
 							Nutcracker Tagging System
 						</a>
 						<div class="collapse navbar-collapse" id="navbarContent">
@@ -99,7 +100,7 @@
 						</div>
 						<div class="form-inline">
 							<div class="btn-group mr-auto">
-								<button type="button" class="btn btn-secondary btn-sm" id="firstunlabelled">Go to First Unlabelled</button>
+								<button type="button" class="btn btn-secondary btn-sm" id="firstunlabelled">Resume Work</button>
 								<button type="button" class="btn btn-primary btn-sm" id="save">Save Changes</button>
 							</div>
 							

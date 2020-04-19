@@ -4,7 +4,7 @@ from flask_restful import Resource
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_refresh_token_required, get_jwt_identity, get_raw_jwt, jwt_required, set_access_cookies, set_refresh_cookies, unset_jwt_cookies
 
 from application import jwt, require_level
-from .models import AppUser, AppUserSchema, appuser_schema
+from application.models import AppUser, AppUserSchema, appuser_schema
 
 import re
 
@@ -45,7 +45,7 @@ class UserLogin(Resource):
 		current_user = AppUser.find_by_username(data["username"])
 		
 		if not current_user:
-			# This to bypass stupid's complaints...
+			# This is to bypass stupid's complaints...
 			current_user = AppUser.find_by_email(data["username"])
 
 			if not current_user:

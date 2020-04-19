@@ -1,9 +1,9 @@
 from flask import request
 from flask_restful import Resource
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy import null
 
-from .models import *
+from application.models import *
 from application import db, ma, assistant_manager, require_level
 
 	
@@ -11,13 +11,33 @@ from application import db, ma, assistant_manager, require_level
 class GetTweet(Resource):
 	@require_level(1)
 	def get(self, tid):
+		tweet = None
+		
 		if tid != 0:
 			tweet = Tweet.query.get(tid)
 		else:
-			tweet = Tweet.query.filter_by(labels=None).first()
+			username = get_jwt_identity()
+			appuser = AppUser.query.filter_by(username=username).scalar()
+			annotation = Annotation.query.filter_by(appuser_id=appuser.id).order_by(Annotation.timestamp.desc()).first()
+
+			if annotation:
+				tweet = Tweet.query.filter_by(id=annotation.tweet_id).first()
+			else:
+				tweet = Tweet.query.first()
+
 		
 		if tweet:
 			return tweet_schema.dump(tweet)
+		else:
+			return {"error":404, "message":"Not Found"}, 404
+
+class GetAnnotation(Resource):
+	@require_level(1)
+	def get(self, tid):
+		annotation = Annotation.get_last_annotation_for_tweet(tid)
+
+		if annotation:
+			return annotation_schema.dump(annotation)
 		else:
 			return {"error":404, "message":"Not Found"}, 404
 
@@ -180,85 +200,38 @@ class CreateTweetsBatch(Resource):
 		except Exception as e:
 			return {"message": "Something went wrong. Check your JSON and try again.", "error": 500}, 500
 
-
-class UpdateHighlights(Resource):
+class CreateAnnotation(Resource):
 	@require_level(1)
 	def post(self, tid):
-		data = request.get_json()
-	
-		t = Tweet.query.get(tid)
-		if t:
-			t.highlights = data if data else null()
-			try:
-				db.session.commit()
-				return {"message": "Tweet updated succesfully"}
-				
-			except:
-				return {"message": "Something went wrong", "error":500}, 500
-		else:
-			return {"error":404, "message":"Not Found"}, 404
-			
-			
-		return jsonify(success=True), 200
+		try:
+			data = request.get_json()
+			username = get_jwt_identity()
 
-class UpdateLabels(Resource):
-	@require_level(1)
-	def post(self, tid):
-		data = request.get_json()
+			user = AppUser.query.filter_by(username=username).scalar()
 
-		t = Tweet.query.get(tid)
-		if t:
-			t.labels = data if data else null()
-			try:
-				db.session.commit()
-				return {"message": "Tweet updated succesfully"}
-				
-			except:
-				return {"message": "Something went wrong", "error":500}, 500
-		else:
-			return {"error":404, "message":"Not Found"}, 404
-			
-		return jsonify(success=True), 200
+			a = Annotation(
+				tweet_id=tid,
+				appuser_id=user.id,
+				labels=data["labels"],
+				highlights=data["highlights"],
+				tags=data["tags"],
+				comment=data["comment"]
+			)
 
-class UpdateTags(Resource):
-	@require_level(1)
-	def post(self, tid):
-		data = request.get_json()
-	
-		t = Tweet.query.get(tid)
-		if t:
-			t.tags = data
+			user.annotations.append(a)
+			db.session.add(a)
+
 			try:
 				db.session.commit()
-				return {"message": "Tweet updated succesfully"}
+				return {"message": "Annotation created succesfully"}
 				
 			except:
-				return {"message": "Something went wrong", "error":500}, 500
-		else:
-			return {"error":404, "message":"Not Found"}, 404
-			
-			
-		return jsonify(success=True), 200
-		
-class UpdateComment(Resource):
-	@require_level(1)
-	def post(self, tid):
-		data = request.form["comment"]
-	
-		t = Tweet.query.get(tid)
-		if t:
-			t.comment = data
-			try:
-				db.session.commit()
-				return {"message": "Tweet updated succesfully"}
-				
-			except:
-				return {"message": "Something went wrong", "error":500}, 500
-		else:
-			return {"error":404, "message":"Not Found"}, 404
-			
-			
-		return jsonify(success=True), 200
+				return {"message": "Something went wrong", "error": 500}, 500
+
+		except Exception as e:
+			print(e)
+			return {"message": "Something went wrong. Check your JSON and try again.", "error": 500}, 500
+
 
 class GetUser(Resource):
 	@require_level(1)

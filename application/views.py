@@ -12,7 +12,6 @@ def login():
 @view_require_level(1)
 def tagging():
 	return render_template("tagging.html")
-	return render_template("login.html")
 
 @main_bp.route("/batchupload")
 @view_require_level(7)
