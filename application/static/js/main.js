@@ -8,10 +8,7 @@ var last_tweet, last_user, labels = {}, labels_name = {}, last_time= new Date();
 
 function stopPropagation(e)
 {
-	//~ e.preventDefault();
 	e.stopImmediatePropagation();
-	//~ e.cancelBubble = true;
-	//~ return false;
 }
 
 function setAuth(xhr)
@@ -241,7 +238,15 @@ function getTweet(n, callback)
 						//Save-switch to true for all existing tags
 						for (var key in data["labels"])
 						{
-							$("#" + labels_name[key] + "select option[value=\"" + data["labels"][key] + "\"]").prop("selected", true);
+							if (typeof data["labels"][key] == "object")
+							{
+								var checkboxes = $("input[name='" + key + "']");
+								for (var number of data["labels"][key])
+									$(checkboxes[number]).prop("checked", true);
+							}
+							else
+								$("#" + labels_name[key] + "select option[value=\"" + data["labels"][key] + "\"]").prop("selected", true);
+							
 							$("#" + labels_name[key] + "switch").prop("checked", true);
 						}
 
@@ -319,7 +324,21 @@ function save_all(callback)
 	vlabels = {}
 	for (var key in labels)
 		if ($("#" + key + "switch").is(":checked"))
-			vlabels[labels[key]] = parseInt($("#" + key + "select").val(), 10);
+		{
+			select = $("#" + key + "select");
+			if (select.length != 0)
+				vlabels[labels[key]] = parseInt(select.val(), 10);
+			else
+			{
+				selected_values = [];
+				$.each($("input[name='" + labels[key] + "']:checked"), function() {
+					selected_values.push(parseInt($(this).val(), 10));
+				});
+
+				vlabels[labels[key]] = selected_values;
+			}
+		}
+	
 	payload["labels"] = vlabels;
 
 	//Tags and comment
@@ -377,18 +396,37 @@ $(function(){
 			{
 				labels["label" + (k+1)] = v["name"];
 				labels_name[v["name"]] = "label" + (k+1);
-				html += '<div class="form-group mb-2 d-flex align-items-end">';
+
+				
+				html += '<div class="form-group mb-2 d-flex align-items-end p-1 border-top">';
 				html += '<div class="mr-auto">';
-				html += '<label for="label' + (k+1) + 'select">' + v["name"] + ':</label>';
-				html += '<select class="custom-select" id="label' + (k+1) + 'select">';
 				
-				var option_value = 0;
-				v["values"].split(",").forEach(function(item)
+				if (v["multiple"])
 				{
-					html += '<option value="' + option_value++ + '">' + item + '</option>';
-				});
-				
-				html += '</select>';
+					var option_value = 0;
+					html += '<label>' + v["name"] + "</label>";
+					v["values"].split(",").forEach(function(item)
+					{
+						html += '<div class="form-check">';
+						html += '<input class="form-check-input" type="checkbox" value="' + option_value++ + '" id="' + item + '" name="' + v["name"] + '">';
+						html += '<label class="form-check-label" for="' + item + '">' + item + '</label>';
+						html += '</div>';
+					});
+				}
+				else
+				{
+					html += '<label for="label' + (k+1) + 'select">' + v["name"] + ':</label>';
+					html += '<select class="custom-select" id="label' + (k+1) + 'select">';
+					
+					var option_value = 0;
+					v["values"].split(",").forEach(function(item)
+					{
+						html += '<option value="' + option_value++ + '">' + item + '</option>';
+					});
+					
+					html += '</select>';
+				}
+
 				html += '</div>';
 				html += '<div>';
 				html += '<div class="custom-control custom-switch align-middle">';

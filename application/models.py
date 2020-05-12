@@ -145,6 +145,7 @@ class Label(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	name = db.Column(db.String(32), unique=True, nullable=False)
 	values = db.Column(db.Text, nullable=False)
+	multiple = db.Column(db.Boolean, nullable=False, default=False)
 
 class AppUser(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
@@ -276,7 +277,7 @@ class AnnotationSchema(ma.ModelSchema):
 	highlights = fields.List(fields.String(), attribute="highlights")
 	aihighlights = fields.List(fields.String())
 	tags = fields.List(fields.String(), attribute="tags")
-	labels = fields.Dict(keys=fields.String(), values=fields.Integer(), attribute="labels")
+	labels = fields.Dict(keys=fields.String(), attribute="labels")
 	
 	class Meta:
 		model = Annotation
