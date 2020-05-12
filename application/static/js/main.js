@@ -21,7 +21,7 @@ function setAuth(xhr)
 			url: api + "auth/token/valid",
 			error: function(xhr)
 			{
-				if (xhr.status == 403)
+				if (xhr.status == 403 || xhr.status == 401)
 				{
 					$.ajax({
 						async: false,

@@ -6,6 +6,8 @@ from sqlalchemy import null
 from application.models import *
 from application import db, ma, assistant_manager, require_level
 
+from datetime import datetime, timedelta
+
 	
 	
 class GetTweet(Resource):
@@ -209,17 +211,25 @@ class CreateAnnotation(Resource):
 
 			user = AppUser.query.filter_by(username=username).scalar()
 
-			a = Annotation(
-				tweet_id=tid,
-				appuser_id=user.id,
-				labels=data["labels"],
-				highlights=data["highlights"],
-				tags=data["tags"],
-				comment=data["comment"]
-			)
+			last_annotation = Annotation.query.filter_by(tweet_id=tid).order_by(Annotation.timestamp.desc()).first()
 
-			user.annotations.append(a)
-			db.session.add(a)
+			if last_annotation.appuser_id == user.id and last_annotation.timestamp + timedelta(minutes=5) > datetime.utcnow():
+				last_annotation.timestamp = datetime.utcnow()
+				last_annotation.labels = data["labels"]
+				last_annotation.highlights = data["highlights"]
+				last_annotation.tags = data["tags"]
+				last_annotation.comment = data["comment"]
+			else:
+				a = Annotation(
+					tweet_id=tid,
+					appuser_id=user.id,
+					labels=data["labels"],
+					highlights=data["highlights"],
+					tags=data["tags"],
+					comment=data["comment"]
+				)
+				user.annotations.append(a)
+				db.session.add(a)
 
 			try:
 				db.session.commit()
