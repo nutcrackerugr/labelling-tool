@@ -110,7 +110,7 @@ def create_app(config="config"):
 		@app.template_filter('autoversion')
 		def autoversion_filter(filename):
 			# determining fullpath might be project specific
-			fullpath = os.path.join("application/", filename[1:])
+			fullpath = os.path.join(os.path.dirname(__file__) + "/", filename[1:])
 			try:
 				timestamp = str(os.path.getmtime(fullpath))
 			except OSError:
