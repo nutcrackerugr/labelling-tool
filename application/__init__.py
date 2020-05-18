@@ -1,3 +1,4 @@
+import os
 import sys
 
 from functools import wraps
@@ -105,6 +106,17 @@ def create_app(config="config"):
 		
 		from application.api import api_bp
 		app.register_blueprint(api_bp, url_prefix="/api")
+
+		@app.template_filter('autoversion')
+		def autoversion_filter(filename):
+			# determining fullpath might be project specific
+			fullpath = os.path.join("application/", filename[1:])
+			try:
+				timestamp = str(os.path.getmtime(fullpath))
+			except OSError:
+				return filename
+			newfilename = "{0}?v={1}".format(filename, timestamp)
+			return newfilename
 	
 	return app
 
