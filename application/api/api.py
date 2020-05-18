@@ -213,7 +213,7 @@ class CreateAnnotation(Resource):
 
 			last_annotation = Annotation.query.filter_by(tweet_id=tid).order_by(Annotation.timestamp.desc()).first()
 
-			if last_annotation.appuser_id == user.id and last_annotation.timestamp + timedelta(minutes=5) > datetime.utcnow():
+			if last_annotation and last_annotation.appuser_id == user.id and last_annotation.timestamp + timedelta(minutes=5) > datetime.utcnow():
 				last_annotation.timestamp = datetime.utcnow()
 				last_annotation.labels = data["labels"]
 				last_annotation.highlights = data["highlights"]
