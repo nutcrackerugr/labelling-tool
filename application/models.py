@@ -125,7 +125,7 @@ class Annotation(db.Model):
 	@classmethod
 	def get_last_annotation_for_tweet(cls, tid):
 		return Annotation.query.filter_by(tweet_id=tid).order_by(Annotation.timestamp.desc()).first()
-	
+
 
 class User(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
@@ -141,11 +141,14 @@ class User(db.Model):
 	def get_tweets(self):
 		return Tweet.query.join(User).filter(self.id).all()
 
+
 class Label(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	name = db.Column(db.String(32), unique=True, nullable=False)
 	values = db.Column(db.Text, nullable=False)
 	multiple = db.Column(db.Boolean, nullable=False, default=False)
+	bgcolorhex = db.Column(db.String(6), nullable=True)
+
 
 class AppUser(db.Model):
 	id = db.Column(db.Integer, primary_key=True)

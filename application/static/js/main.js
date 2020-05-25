@@ -215,7 +215,7 @@ function getTweet(n, callback)
 						data["tags"] = annotationdata["tags"];
 						data["comment"] = annotationdata["comment"];
 
-						$("#last_annotation").html("Last annotation on " + annotationdata["timestamp"] + " by " + annotationdata["appuser"]["username"]);
+						$("#last_annotation").html("Last annotation on " + annotationdata["timestamp"]);// + " by " + annotationdata["appuser"]["username"]);
 					},
 					error: function()
 					{
@@ -397,8 +397,14 @@ $(function(){
 				labels["label" + (k+1)] = v["name"];
 				labels_name[v["name"]] = "label" + (k+1);
 
+				if (v["bgcolorhex"])
+				{
+					html += '<div class="text-muted text-justify small-text p-1 border-top" style="background-color:#' + v["bgcolorhex"] + '"><i class="fa fa-exclamation-triangle" /> The following is a general category, just in case you cannot annotate specific ones. Leave blank otherwise</div>'
+					html += '<div class="form-group mb-2 d-flex align-items-end p-1" style="background-color:#' + v["bgcolorhex"] + '">';
+				}
+				else
+					html += '<div class="form-group mb-2 d-flex align-items-end p-1 border-top">';
 				
-				html += '<div class="form-group mb-2 d-flex align-items-end p-1 border-top">';
 				html += '<div class="mr-auto">';
 				
 				if (v["multiple"])

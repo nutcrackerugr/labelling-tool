@@ -43,6 +43,31 @@ class GetAnnotation(Resource):
 		else:
 			return {"error":404, "message":"Not Found"}, 404
 
+class TransformAnnotationToMultivalue(Resource):
+	# @require_level(8)
+	def get(self, label):
+		try:
+			label_instance = db.session.query(Label).filter_by(name=label).scalar()
+
+			if not label_instance.multiple:
+				for annotation in Annotation.query.all():
+					if label in annotation.labels.keys():
+						# Pickled attributes need to be replaced in order to trigger updates
+						labels_copy = dict(annotation.labels)
+						labels_copy[label] = [labels_copy[label]]
+						annotation.labels = labels_copy
+
+				label_instance.multiple = True
+
+				db.session.commit()
+			else:
+				return {"message": "The label is already multiple", "error": 500}, 500
+
+			return {"message": "Annotations transformed to multiple for label {}".format(label)}
+		except:
+			return {"message": "Something went wrong", "error": 500}, 500
+		
+
 class GetAuthorTweets(Resource):
 	@require_level(1)
 	def get(self, uid, limit=5):
