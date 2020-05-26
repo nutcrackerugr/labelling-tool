@@ -44,7 +44,7 @@ class GetAnnotation(Resource):
 			return {"error":404, "message":"Not Found"}, 404
 
 class TransformAnnotationToMultivalue(Resource):
-	# @require_level(8)
+	@require_level(8)
 	def get(self, label):
 		try:
 			label_instance = db.session.query(Label).filter_by(name=label).scalar()
