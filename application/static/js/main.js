@@ -4,7 +4,7 @@ if (!baseurl.endsWith('/'))
 	
 var api = baseurl + "api/";
 
-var last_tweet, last_user, labels = {}, labels_name = {}, last_time= new Date();
+var last_tweet, last_user, labels = [], last_time = 0;
 
 function stopPropagation(e)
 {
@@ -33,6 +33,7 @@ function setAuth(xhr)
 						success: function()
 						{
 							last_time = new Date();
+							console.info("Token renewed")
 						},
 						error: function()
 						{
@@ -240,14 +241,14 @@ function getTweet(n, callback)
 						{
 							if (typeof data["labels"][key] == "object")
 							{
-								var checkboxes = $("input[name='" + key + "']");
+								var checkboxes = $("input[name='label-" + key.replace(/ /g, "_") + "-option']");
 								for (var number of data["labels"][key])
 									$(checkboxes[number]).prop("checked", true);
 							}
 							else
-								$("#" + labels_name[key] + "select option[value=\"" + data["labels"][key] + "\"]").prop("selected", true);
+								$("#" + key.replace(/ /g, "_") + 'select option[value="' + data["labels"][key] + '"]').prop("selected", true);
 							
-							$("#" + labels_name[key] + "switch").prop("checked", true);
+							$("#label-" + key.replace(/ /g, "_") + "-switch").prop("checked", true);
 						}
 
 						//Write comment
@@ -322,22 +323,23 @@ function save_all(callback)
 
 	//Annotation values
 	vlabels = {}
-	for (var key in labels)
-		if ($("#" + key + "switch").is(":checked"))
+	for (const label of labels)
+		if ($("#label-" + label + "-switch").is(":checked"))
 		{
-			select = $("#" + key + "select");
+			select = $("#label-" + label + "-select");
 			if (select.length != 0)
-				vlabels[labels[key]] = parseInt(select.val(), 10);
+				vlabels[label] = parseInt(select.val(), 10);
 			else
 			{
 				selected_values = [];
-				$.each($("input[name='" + labels[key] + "']:checked"), function() {
+				$.each($("input[name='label-" + label + "-option']:checked"), function() {
 					selected_values.push(parseInt($(this).val(), 10));
 				});
 
-				vlabels[labels[key]] = selected_values;
+				vlabels[label] = selected_values;
 			}
 		}
+
 	
 	payload["labels"] = vlabels;
 
@@ -382,68 +384,110 @@ function save(e)
 	save_all(success);
 }
 
+function createLabelComponent(name, disclaimer, labeltag, options, bgcolorhex)
+{
+	if (!bgcolorhex)
+		bgcolorhex = "f8f9fa";
+	let html = "";
+	
+	html += '<div class="row py-2 border-top" style="background-color: #' + bgcolorhex + ';">';
+	html += '<div class="col">';
+	
+	if (disclaimer)
+        html += '<div class="row"><div class="col"><div class="text-muted text-justify small-text mb-1">' + disclaimer + '</div></div></div>';
+	
+	html += '<div class="row"><div class="col">' + labeltag + '</div>';
+	html += '<div class="col-auto"><div class="custom-control custom-switch align-middle">';
+	html += '<input type="checkbox" class="custom-control-input" id="label-' + name.replace(/ /g, '_') + '-switch" checked>';
+	html += '<label class="custom-control-label" for="label-' + name.replace(/ /g, '_') + '-switch">Save?</label></div></div></div>';
+	html += '<div class="row"><div class="col">';
+	html += options;
+	html += '</div></div></div></div>'
+
+	return html;
+}
+
+function createLabel(name, disclaimer, v)
+{
+	let labeltag = "", options = "";
+
+	if (v["multiple"])
+	{
+		let option_value = 0;
+		labeltag += '<label>' + v["name"] + "</label>";
+		v["values"].split(",").forEach(function(item)
+		{
+			options += '<div class="form-check">';
+			options += '<input class="form-check-input" type="checkbox" value="' + option_value++ + '" id="' + item.replace(/ /g, '_') + '" name="label-' + name.replace(/ /g, '_') + '-option">';
+			options += '<label class="form-check-label" for="' + item.replace(/ /g, '_') + '">' + item + '</label>';
+			options += '</div>';
+		});
+	}
+	else
+	{
+		labeltag += '<label for="label-' + name.replace(/ /g, '_') + '-select">' + v["name"] + ':</label>';
+		options += '<select class="custom-select" id="label-' + name.replace(/ /g, '_') + '-select">';
+		
+		let option_value = 0;
+		v["values"].split(",").forEach(function(item)
+		{
+			options += '<option value="' + option_value++ + '">' + item + '</option>';
+		});
+		
+		options += '</select>';
+	}
+
+	return createLabelComponent(name, disclaimer, labeltag, options, v["bgcolorhex"]);
+}
+
 $(function(){
+	//Renew tokens if necessary
+	setAuth();
+
 	//Get labels and insert them in DOM
 	$.ajax({
 		beforeSend: setAuth,
 		url: api + "labels",
 		success: function(data)
 		{
-			labels = {}
-			var html = "";
+			labels = [];
 			
 			$.each(data, function(k, v)
 			{
-				labels["label" + (k+1)] = v["name"];
-				labels_name[v["name"]] = "label" + (k+1);
+				let html = "", html2 = "", disclaimer='<i class="fa fa-exclamation-triangle" /> The following is a general category, just in case you cannot annotate specific ones. Leave blank otherwise';
 
-				if (v["bgcolorhex"])
+				switch (v["kind"])
 				{
-					html += '<div class="text-muted text-justify small-text p-1 border-top" style="background-color:#' + v["bgcolorhex"] + '"><i class="fa fa-exclamation-triangle" /> The following is a general category, just in case you cannot annotate specific ones. Leave blank otherwise</div>'
-					html += '<div class="form-group mb-2 d-flex align-items-end p-1" style="background-color:#' + v["bgcolorhex"] + '">';
-				}
-				else
-					html += '<div class="form-group mb-2 d-flex align-items-end p-1 border-top">';
-				
-				html += '<div class="mr-auto">';
-				
-				if (v["multiple"])
-				{
-					var option_value = 0;
-					html += '<label>' + v["name"] + "</label>";
-					v["values"].split(",").forEach(function(item)
-					{
-						html += '<div class="form-check">';
-						html += '<input class="form-check-input" type="checkbox" value="' + option_value++ + '" id="' + item + '" name="' + v["name"] + '">';
-						html += '<label class="form-check-label" for="' + item + '">' + item + '</label>';
-						html += '</div>';
-					});
-				}
-				else
-				{
-					html += '<label for="label' + (k+1) + 'select">' + v["name"] + ':</label>';
-					html += '<select class="custom-select" id="label' + (k+1) + 'select">';
+					//Single-labels
+					case 1:
+						$("#single-labels").append(createLabel(v["name"], undefined, v));
+						labels.push(v["name"].replace(/ /g, '_'));
+						break;
 					
-					var option_value = 0;
-					v["values"].split(",").forEach(function(item)
-					{
-						html += '<option value="' + option_value++ + '">' + item + '</option>';
-					});
+					//Single-labels with disclaimer
+					case 2:
+						$("#single-labels").append(createLabel(v["name"], disclaimer, v));
+						labels.push(v["name"].replace(/ /g, '_'));
+						break;
 					
-					html += '</select>';
-				}
+					//Double-labels
+					case 3:
+						$("#double-labels-1").append(createLabel(v["name"], undefined, v));
+						$("#double-labels-2").append(createLabel(v["name"] + "2", undefined, v));
+						labels.push(v["name"].replace(/ /g, '_'));
+						labels.push((v["name"] + "2").replace(/ /g, '_'));
+						break;
 
-				html += '</div>';
-				html += '<div>';
-				html += '<div class="custom-control custom-switch align-middle">';
-				html += '<input type="checkbox" class="custom-control-input" id="label' + (k+1) + 'switch" checked>';
-				html += '<label class="custom-control-label" for="label' + (k+1) + 'switch">Save?</label>';
-				html += '</div>';
-				html += '</div>';
-				html += '</div>';
+					//Double-labels with disclaimer
+					case 4:
+						$("#double-labels-1").append(createLabel(v["name"], disclaimer, v));
+						$("#double-labels-2").append(createLabel(v["name"] + "2", disclaimer, v));
+
+						labels.push(v["name"].replace(/ /g, '_'));
+						labels.push((v["name"] + "2").replace(/ /g, '_'));
+						break;
+				}
 			});
-			
-			$("#labelform").html(html);
 		}
 	});
 

@@ -13,6 +13,11 @@ html, body
 	font-size: .8rem;
 }
 
+#maintweet {
+	background-color: #bee5eb;
+	border: 1px solid rgba(0,0,0,.125);
+}
+
 .media, #othertweets .list-group-item
 {
 	background-color: #f8f9fa;

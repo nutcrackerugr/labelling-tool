@@ -10,81 +10,7 @@
 	<body>
 		<div class="container-fluid">
 			<div class="row">
-				<div class="col-md-6 col-xl-10 offset-xl-1 order-xl-first">
-					{% with messages = get_flashed_messages() %}
-						{% if messages %}
-						<div class="mt-4 alert alert-danger" id="errormessage">
-							<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Something went wrong :(<br />
-							{% for message in messages %}
-								{{ message }}<br />
-							{% endfor %}
-						</div>
-						{% endif %}
-					{% endwith %}
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-md-6 col-xl-4 order-xl-2 mt-4">
-					<div class="media p-3 border border-secondary rounded mb-4" id="keyboard_shortcuts">
-						<div class="media-body">
-							<h6 class="mt-0 text-secondary">Keyboard Shortcuts</h6>
-							<span class="keyboard-key">n</span> / <span class="keyboard-key">&#8594;</span> next tweet<br />
-							<span class="keyboard-key">p</span> / <span class="keyboard-key">&#8592;</span> previous tweet<br />
-							<span class="keyboard-key">s</span> save changes<br />
-							<span class="keyboard-key">h</span> toggle this dialog<br />
-							<br />
-							<span>Check the updated guidelines <a href="{{ url_for('static', filename='ag.pdf') }}"> here</a>.</span>
-						</div>
-					</div>
-					<div class="media p-3 border border-secondary rounded sticky-top">
-						<img class="mr-3 profile-pic" alt="User Image" id="user_profile_pic" src="" />
-						<div class="media-body">
-							<h5 class="mt-0" id="user_name">Name <span class="text-secondary" id="user_screen_name">@screen_name</span></h5>
-							<h6 class="mt-0 text-secondary">User Description:</h6>
-							<p id="user_description">User description</p>
-							<h6 class="mt-0 text-secondary">Tweet:</h6>
-							<p id="tweet_content">Tweet content</p>
-						</div>
-					</div>
-					<div class="media p-3 border border-secondary rounded mt-4">
-						<div class="media-body">
-							<p class="text-muted text-justify small-text">
-								<i class="fa fa-exclamation-triangle" aria-hidden="true"></i>&nbsp;
-								Please note the tweets shown below are for providing context on who
-								the user is. The user or the related tweets must not be tagged. The
-								assigment of labels should be made based on the content of the
-								original tweet and the biased opinion that can be formed by reading
-								the related tweets.
-							</p>
-							<h6 class="mt-0 text-secondary">Other tweets:</h6>
-							<ul id="othertweets" class="list-group list-group-flush">
-								
-							</ul>
-						</div>
-					</div>
-				</div>
-				
-				<div class="col-md-6 col-xl-3 order-xl-2 mt-4">
-					<ul id="reasons" class="list-group">
-						<!-- Here goes AI reasons -->
-					</ul>
-				</div>
-						
-				<div class="col-md-6 col-xl-3 offset-xl-1 order-xl-1 mt-4">
-					<form role="form" id="labelform">
-						<!-- Here goes labels selects and switches -->
-					</form>
-					<div class="form-group p-1 border-top">
-						<label for="tags">Tags:</label>
-						<input type="text" name="tags" id="tags" class="form-control" placeholder="Tags separated with comma, e.g.: noise,delete,not relevant">
-						<label for="tweet_comment" class="mt-1">Comment:</label>
-						<textarea name="tweet_comment" id="tweet_comment" class="form-control"></textarea>
-					</div>
-					<span id="last_annotation"></span>
-				</div>
- 
-				
-				<div class="col-md-6 col-xl-10 offset-xl-1 order-xl-first mt-4">
+				<div class="col-xl-10 offset-xl-1 mt-4">
 					<nav class="navbar navbar-dark navbar-expand-xl bg-dark justify-content-between">
 						<a class="navbar-brand">
 							<img src="{{ url_for('static', filename='images/logo.png') }}" width="30" height="30" id="logo" class="d-inline-block align-top" alt="">
@@ -116,7 +42,102 @@
 						</div>
 					</nav>
 				</div>
-				
+				<div class="col-md-6 col-xl-10 offset-xl-1 mt-4">
+					{% with messages = get_flashed_messages() %}
+						{% if messages %}
+						<div class="mt-4 alert alert-danger" id="errormessage">
+							<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Something went wrong :(<br />
+							{% for message in messages %}
+								{{ message }}<br />
+							{% endfor %}
+						</div>
+						{% endif %}
+					{% endwith %}
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-xl-10 offset-xl-1">
+					<div class="row">
+						<!-- Main Column -->
+						<div class="col-md-12 col-lg mt-4">
+							<div class="media p-3 border border-secondary rounded mb-4" id="keyboard_shortcuts">
+								<div class="media-body">
+									<h6 class="mt-0 text-secondary">Keyboard Shortcuts</h6>
+									<span class="keyboard-key">n</span> / <span class="keyboard-key">&#8594;</span> next tweet<br />
+									<span class="keyboard-key">p</span> / <span class="keyboard-key">&#8592;</span> previous tweet<br />
+									<span class="keyboard-key">s</span> save changes<br />
+									<span class="keyboard-key">h</span> toggle this dialog<br />
+									<br />
+									<span>Check the updated guidelines <a href="{{ url_for('static', filename='ag.pdf') }}"> here</a>.</span>
+								</div>
+							</div>
+							<ul id="reasons" class="list-group mb-4">
+								<!-- Here goes AI reasons -->
+							</ul>
+							<div class="media p-3 rounded sticky-top" id="maintweet">
+								<img class="mr-3 profile-pic" alt="User Image" id="user_profile_pic" src="" />
+								<div class="media-body">
+									<h5 class="mt-0" id="user_name">Name <span class="text-secondary" id="user_screen_name">@screen_name</span></h5>
+									<h6 class="mt-0 text-secondary">User Description:</h6>
+									<p id="user_description">User description</p>
+									<h6 class="mt-0 text-secondary">Tweet:</h6>
+									<p id="tweet_content">Tweet content</p>
+								</div>
+							</div>
+							<div class="media p-3 border border-secondary rounded mt-4">
+								<div class="media-body">
+									<p class="text-muted text-justify small-text">
+										<i class="fa fa-exclamation-triangle" aria-hidden="true"></i>&nbsp;
+										Please note the tweets shown below are for providing context on who
+										the user is. The user or the related tweets must not be tagged. The
+										assigment of labels should be made based on the content of the
+										original tweet and the biased opinion that can be formed by reading
+										the related tweets.
+									</p>
+									<h6 class="mt-0 text-secondary">Other tweets:</h6>
+									<ul id="othertweets" class="list-group list-group-flush">
+										
+									</ul>
+								</div>
+							</div>
+						</div>
+						
+						<!-- Labels Column -->
+						<div class="col-lg col-md-12 mt-4">
+							<div id="labelform">
+								<div class="row">
+									<div class="col" id="single-labels">
+										<h5>Objective Information & Inteded Meaning</h5>
+										<!-- Here goes labels selects and switches -->
+									</div>
+								</div>
+								<div class="row mt-4">
+									<div class="col" id="double-labels-1">
+										<h5>Denotation</h5>
+										<!-- Here goes labels selects and switches -->
+									</div>
+									<div class="col" id="double-labels-2">
+										<h5>Connotation</h5>
+										<!-- Here goes labels selects and switches -->
+									</div>
+								</div>
+								<div class="row">
+									<div class="col form-group p-1 border-top">
+										<label for="tags">Tags:</label>
+										<input type="text" name="tags" id="tags" class="form-control" placeholder="Tags separated with comma, e.g.: noise,delete,not relevant">
+										<label for="tweet_comment" class="mt-1">Comment:</label>
+										<textarea name="tweet_comment" id="tweet_comment" class="form-control"></textarea>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col">
+										<span id="last_annotation"></span>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
 			</div>
 			<div class="row bg-dark text-light footer mt-4 p-4">
 				<div class="col-md-3 offset-md-1 text-right d-flex align-items-center justify-content-center">
