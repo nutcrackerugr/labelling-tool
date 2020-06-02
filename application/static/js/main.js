@@ -246,7 +246,7 @@ function getTweet(n, callback)
 									$(checkboxes[number]).prop("checked", true);
 							}
 							else
-								$("#" + key.replace(/ /g, "_") + 'select option[value="' + data["labels"][key] + '"]').prop("selected", true);
+								$("#label-" + key.replace(/ /g, "_") + '-select option[value="' + data["labels"][key] + '"]').prop("selected", true);
 							
 							$("#label-" + key.replace(/ /g, "_") + "-switch").prop("checked", true);
 						}
