@@ -396,7 +396,7 @@ function createLabelComponent(name, disclaimer, labeltag, options, bgcolorhex)
 	if (disclaimer)
         html += '<div class="row"><div class="col"><div class="text-muted text-justify small-text mb-1">' + disclaimer + '</div></div></div>';
 	
-	html += '<div class="row"><div class="col">' + labeltag + '</div>';
+	html += '<div class="row"><div class="col-auto">' + labeltag + '</div>';
 	html += '<div class="col-auto"><div class="custom-control custom-switch align-middle">';
 	html += '<input type="checkbox" class="custom-control-input" id="label-' + name.replace(/ /g, '_') + '-switch" checked>';
 	html += '<label class="custom-control-label" for="label-' + name.replace(/ /g, '_') + '-switch">Save?</label></div></div></div>';
