@@ -497,7 +497,7 @@ $(function(){
 
 	//Assign event handlers
 	$("#firstunlabelled").click(function(){getTweet(0)}); //Called inside a lambda to avoid passing e to getTweet
-	$("#save").click(save);
+	$("#save_1, #save_2").click(save);
 	$('[data-toggle="tooltip"]').tooltip();
 	
 	$(document).keydown(function(e)
@@ -515,7 +515,7 @@ $(function(){
 				break;
 			
 			case "s":
-				$("#save").trigger("click");
+				$("#save_1").trigger("click");
 				break;
 				
 			case "h":
