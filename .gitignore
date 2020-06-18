@@ -31,3 +31,6 @@ build
 config.py
 *config.py
 dumps/*
+graph/*
+debatea5rtve.json
+debatearv.json

@@ -16,4 +16,7 @@ apir.add_resource(api.GetAuthorTweets,                 "/user/<int:uid>/tweets/<
 apir.add_resource(api.GetLabels,                       "/labels")
 apir.add_resource(api.GetAssistantsSuggestions,        "/tweet/<int:tid>/suggestions")
 apir.add_resource(api.TransformAnnotationToMultivalue, "/annotation/transformtomultivalue/<string:label>")
+apir.add_resource(api.RepairRetweets,                  "/repair/retweets/<string:filepath>")
+apir.add_resource(api.RankRetweets,                    "/rank/retweets")
+apir.add_resource(api.CreateGraph,                     "/graph/create")
 

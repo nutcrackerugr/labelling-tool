@@ -42,6 +42,10 @@ function setAuth(xhr)
 						}
 					});
 				}
+			},
+			success: function()
+			{
+				last_time = new Date();
 			}
 		});
 	}
@@ -118,6 +122,27 @@ function getReasons(n, callback)
 						
 						$("#reasons").append("<li class=\"list-group-item " + css_cls + " hanging-indent\" \">"
 						                     + "Using the ontology " + key + ", the following " + data[key]["why"].length + " words were found:<br />"
+						                     + whys + " </li>"
+						                    );
+					}
+					else if (data[key]["how"] == "extended_properties")
+					{
+						cls = data[key]["what"] == "1" ? "positive" : "neutral";
+						css_cls = data[key]["what"] == "1" ? "list-group-item-success" : "list-group-item-info";
+						
+						var whys = "";
+						if ($.isEmptyObject(data[key]["why"]))
+							whys += "we do not have enough information yet"
+						else
+						{
+							for (var wkey in data[key]["why"])
+								whys += "For category <strong>" + wkey + "</strong>: " + data[key]["why"][wkey]["value_name"] + " (" + data[key]["why"][wkey]["value"] + ")<br/>";
+							whys = whys.slice(0, -5);
+						}
+						
+						$("#reasons").append("<button class=\"btn btn-primary\" type=\"button\" data-toggle=\"collapse\" data-target=\"#expandedPropertiesReasons\">Show Expanded Properties</button>");
+						$("#reasons").append("<li class=\"list-group-item " + css_cls + " hanging-indent collapse\" id=\"expandedPropertiesReasons\">"
+						                     + "This user's neighbourhood suggests the following " + Object.keys(data[key]["why"]).length + " properties:<br />"
 						                     + whys + " </li>"
 						                    );
 					}

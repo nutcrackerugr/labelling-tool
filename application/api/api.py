@@ -1,4 +1,4 @@
-from flask import request
+from flask import request, current_app
 from flask_restful import Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy import null
@@ -8,7 +8,29 @@ from application import db, ma, assistant_manager, require_level
 
 from datetime import datetime, timedelta
 
-	
+from application.tasks.tweets import repair_retweets, rank_retweets
+from application.tasks.relations import create_graph
+
+
+class RepairRetweets(Resource):
+	@require_level(8)
+	def get(self, filepath):
+		result = repair_retweets.delay(filepath)
+		return {"message": "Task scheduled successfully", "task": result.id}, 201
+
+
+class RankRetweets(Resource):
+	@require_level(7)
+	def get(self):
+		result = rank_retweets.delay()
+		return {"message": "Task scheduled successfully", "task": result.id}, 201
+
+
+class CreateGraph(Resource):
+	def get(self):
+		result = create_graph.delay(path=current_app.config["GRAPH_PATH"])
+		return {"message": "Task scheduled successfully", "task": result.id}, 201
+
 	
 class GetTweet(Resource):
 	@require_level(1)
@@ -109,9 +131,9 @@ class CreateTweet(Resource):
 						else:
 							text = data["text"]
 				
-						if "retweet_status" in data.keys():
+						if "retweeted_status" in data.keys():
 							is_retweet = True
-							parent_tweet = data["retweet_status"]["id_str"]
+							parent_tweet = data["retweeted_status"]["id_str"]
 						else:
 							is_retweet = False
 							parent_tweet = None
@@ -189,9 +211,9 @@ class CreateTweetsBatch(Resource):
 						else:
 							text = data["text"]
 				
-						if "retweet_status" in data.keys():
+						if "retweeted_status" in data.keys():
 							is_retweet = True
-							parent_tweet = data["retweet_status"]["id_str"]
+							parent_tweet = data["retweeted_status"]["id_str"]
 						else:
 							is_retweet = False
 							parent_tweet = None
@@ -283,7 +305,7 @@ class GetLabels(Resource):
 class GetAssistantsSuggestions(Resource):
 	@require_level(1)
 	def get(self, tid):
-		text = db.session.query(Tweet.full_text).filter_by(id=tid).scalar()
-		response = assistant_manager.run(text)
+		details = db.session.query(Tweet.user_id, Tweet.full_text).filter_by(id=tid).first()
+		response = assistant_manager.run(*details)
 		
 		return response, 200

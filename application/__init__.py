@@ -8,13 +8,16 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager, verify_jwt_in_request, get_jwt_claims
-from flask_reverse_proxy_fix.middleware import ReverseProxyPrefixFix
+from celery import Celery
+# from flask_reverse_proxy_fix.middleware import ReverseProxyPrefixFix
 
-from .assistant import AssistantManager, OntologyAssistant
+from .assistant import AssistantManager, OntologyAssistant, ExtendedPropertiesAssistant
 
 db = SQLAlchemy()
 ma = Marshmallow()
 jwt = JWTManager()
+celery = Celery()
+
 
 
 assistant_manager = AssistantManager()
@@ -76,22 +79,42 @@ def view_require_level(level):
 	return decorator
 
 
+def init_celery(app=None):
+	app = app or create_app()
+	celery.conf.broker_url = app.config["CELERY_BROKER_URL"]
+	celery.conf.result_backend = app.config["CELERY_RESULT_BACKEND"]
+	celery.conf.update(app.config)
+
+	class ContextTask(celery.Task):
+		"""Make celery tasks work with Flask app context"""
+
+		def __call__(self, *args, **kwargs):
+			with app.app_context():
+				return self.run(*args, **kwargs)
+
+	celery.Task = ContextTask
+	return celery
+
+
 def create_app(config="config"):
 	app = Flask(__name__, instance_relative_config=False)
 	app.config.from_object(config)
 
-	ReverseProxyPrefixFix(app)
+	# ReverseProxyPrefixFix(app)
 	
 	db.init_app(app)
 	ma.init_app(app)
 	jwt.init_app(app)
+	init_celery(app)
 	migrate = Migrate(app, db)
 	
 	# Assistants
 	ARMAS_ontology = OntologyAssistant("ARMAS", app=app)
 	PARTIDOS_ontology = OntologyAssistant("PARTIDOS", app=app)
+	EXTENDED_PROPERTIES_assistant = ExtendedPropertiesAssistant("Extended Properties")
 	assistant_manager.add_assistant(ARMAS_ontology)
 	assistant_manager.add_assistant(PARTIDOS_ontology)
+	assistant_manager.add_assistant(EXTENDED_PROPERTIES_assistant)
 	
 	with app.app_context():
 		# Include routes

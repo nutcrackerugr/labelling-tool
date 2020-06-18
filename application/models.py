@@ -27,7 +27,7 @@ class Tweet(db.Model):
 	retweet_count = db.Column(db.Integer)
 	favorite_count = db.Column(db.Integer)
 	lang = db.Column(db.String(30), nullable=True)
-	parent_tweet = db.Column(db.String(19), unique=True)
+	parent_tweet = db.Column(db.String(19))
 	is_retweet = db.Column(db.Boolean)
 	retweeted = db.Column(db.Boolean)
 	favorited = db.Column(db.Boolean)
@@ -37,6 +37,8 @@ class Tweet(db.Model):
 	comment = db.Column(db.Text, nullable=True)
 	user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
 	annotations = db.relationship("Annotation", backref="tweet", lazy=True)
+	rank = db.Column(db.Float, nullable=False, default=0, index=True)
+
 
 	@classmethod
 	def get_by_user(cls, uid, limit=None):
@@ -140,6 +142,17 @@ class User(db.Model):
 
 	def get_tweets(self):
 		return Tweet.query.join(User).filter(self.id).all()
+
+
+class UserAnnotation(db.Model):
+	user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, primary_key=True)
+	appuser_id = db.Column(db.Integer, db.ForeignKey("app_user.id"), nullable=False, primary_key=True)
+	timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, primary_key=True)
+	extended_labels = db.Column(db.PickleType, nullable=True)
+
+	@classmethod
+	def get_last_annotation_for_user(cls, uid):
+		return UserAnnotation.query.filter_by(user_id=uid).order_by(UserAnnotation.timestamp.desc()).first()
 
 
 class Label(db.Model):
@@ -247,27 +260,31 @@ class RevokedToken(db.Model):
 		return bool(query)
 
 
-class AppUserSchema(ma.ModelSchema):
+class AppUserSchema(ma.SQLAlchemyAutoSchema):
 	def make_appuser(self, data, **kwargs):
 		return AppUser(**data)
 	
 	class Meta:
 		model = AppUser
+		load_instance = True
 		#exclude = ["password"]
 
-class RevokedTokenSchema(ma.ModelSchema):
+class RevokedTokenSchema(ma.SQLAlchemyAutoSchema):
 	class Meta:
 		model = RevokedToken
+		load_instance = True
 
-class LabelSchema(ma.ModelSchema):
+class LabelSchema(ma.SQLAlchemyAutoSchema):
 	class Meta:
 		model = Label
+		load_instance = True
 
-class UserSchema(ma.ModelSchema):
+class UserSchema(ma.SQLAlchemyAutoSchema):
 	class Meta:
 		model = User
+		load_instance = True
 		
-class TweetSchema(ma.ModelSchema):
+class TweetSchema(ma.SQLAlchemyAutoSchema):
 	highlights = fields.List(fields.String(), attribute="highlights")
 	aihighlights = fields.List(fields.String())
 	tags = fields.List(fields.String(), attribute="tags")
@@ -276,8 +293,10 @@ class TweetSchema(ma.ModelSchema):
 	class Meta:
 		model = Tweet
 		exclude = ["annotations"]
+		load_instance = True
+		include_relationships = True
 
-class AnnotationSchema(ma.ModelSchema):
+class AnnotationSchema(ma.SQLAlchemyAutoSchema):
 	highlights = fields.List(fields.String(), attribute="highlights")
 	aihighlights = fields.List(fields.String())
 	tags = fields.List(fields.String(), attribute="tags")
@@ -286,6 +305,7 @@ class AnnotationSchema(ma.ModelSchema):
 	class Meta:
 		model = Annotation
 		datetimeformat = "%d-%m-%Y %H:%M"
+		load_instance = True
 	
 	appuser = ma.Nested(AppUserSchema(only=("username",)))
 
