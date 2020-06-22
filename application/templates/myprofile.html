@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html class="h-100">
 	<head>
 		<link rel="shortcut icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}" />
 		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
@@ -7,8 +7,8 @@
 		<link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet">
 		<title>Nutcracker Tagging</title>
 	</head>
-	<body>
-		<div class="container-fluid">
+	<body class="h-100">
+		<div class="container-fluid" style="min-height: 100%">
 			<div class="row">
 				<div class="col-xl-10 offset-xl-1 mt-4">
 					<nav class="navbar navbar-dark navbar-expand-xl bg-dark justify-content-between">
@@ -26,6 +26,9 @@
 								</li>
 								<li class="nav-item">
 									<a class="nav-link" href="{{ url_for('main.tagging') }}">Review</a>
+								</li>
+								<li class="nav-item">
+									<a class="nav-link" href="{{ url_for('main.search') }}">Search</a>
 								</li>
 								<li class="nav-item">
 									<a class="nav-link" href="{{ url_for('main.batchupload') }}">Upload</a>
@@ -52,7 +55,7 @@
 			</div>
 			<div class="row">
 				<div class="col-xl-10 offset-xl-1">
-					<div class="row">
+					<div class="row mainrow">
 						<!-- Main Column -->
 						<div class="col">
 							<div class="media p-3 border border-secondary rounded">

@@ -24,6 +24,11 @@ def tagging():
 def tagging_specific(tid):
 	return render_template("tagging.html", specific_tid=tid)
 
+@main_bp.route("/search")
+@view_require_level(1)
+def search():
+	return render_template("search.html")
+
 @main_bp.route("/annotate")
 @view_require_level(1)
 def rank_tagging():

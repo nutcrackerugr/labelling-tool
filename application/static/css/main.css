@@ -18,13 +18,28 @@ html, body
 	border: 1px solid rgba(0,0,0,.125);
 }
 
+.tweetcard {
+	background-color: #bee5eb;
+	border: 1px solid rgba(0,0,0,.125);
+}
+
 .media, #othertweets .list-group-item
 {
 	background-color: #f8f9fa;
 }
 
+.mainrow {
+	overflow: auto;
+	padding-bottom: 500px;
+}
+
 .footer {
 	font-size: .8rem;
+	position: relative;
+	margin-top: -500px;
+	height: 500px;
+	clear: both;
+	padding-top: 20px;
 }
 
 .clickable:hover
@@ -98,4 +113,8 @@ html, body
 
 .small-text {
 	font-size: .8rem;
+}
+
+.card-columns {
+	column-count: 2;
 }
