@@ -9,9 +9,15 @@ from application import db, ma, assistant_manager, require_level
 from datetime import datetime, timedelta
 
 from application.tasks.tweets import repair_retweets, rank_retweets, rank_tweets_first_time
-from application.tasks.relations import create_graph
+from application.tasks.relations import test_task, create_graph
 
 import random
+
+class TestCelery(Resource):
+	@require_level(9)
+	def get(self):
+		result = test_task.delay()
+		return {"message": "Task scheduled successfully", "task": result.id}, 201
 
 class RepairRetweets(Resource):
 	@require_level(8)

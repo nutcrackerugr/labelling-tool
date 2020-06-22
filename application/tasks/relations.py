@@ -14,6 +14,10 @@ from itertools import combinations
 import json
 
 
+@celery.task()
+def test_task():
+    print("It works!")
+    return True
 
 @celery.task()
 def create_graph(name = "default", path = ""):
