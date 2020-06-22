@@ -1,10 +1,11 @@
-var baseurl = window.location.pathname.replace("tagging", "");
+var lastIndexBaseUrl = Math.max(window.location.pathname.indexOf("annotate"), window.location.pathname.indexOf("review"));
+var baseurl = window.location.pathname.substring(0, lastIndexBaseUrl);
 if (!baseurl.endsWith('/'))
 	baseurl += '/';
 	
 var api = baseurl + "api/";
 
-var last_tweet, last_user, labels = [], last_time = 0;
+var last_tweet, last_user, labels = [], last_time = 0, automatic_order = false, already_annotated = true;
 
 function stopPropagation(e)
 {
@@ -175,6 +176,113 @@ function getOtherTweets(uid, callback)
 	});
 }
 
+function create_tweet(data)
+{
+	if ($.isEmptyObject(data))
+		alert("There was a problem loading the tweet " + n);
+	else
+	{
+		url = api + "tweet/" + data["id"];
+		//Get author details
+		$.ajax({
+			beforeSend: setAuth,
+			type: "GET",
+			url: api + "user/" + data["user"],
+			statusCode: {
+				403: function(xhr)
+				{
+					alert("Your session has expired. Please log in again");
+					window.location.replace(baseurl);
+				}
+			},
+			success: function(userdata)
+			{
+				$("#user_description").html(userdata["description"]);
+				$("#user_profile_pic").attr("src", userdata["profile_image_url_https"]);
+				$("#user_name").html(userdata["name"] + ' <span class="text-secondary">@' + userdata["screen_name"] + '</span>');
+				last_user = userdata;
+			}
+		});
+
+		//Get last annotation details
+		$.ajax({
+			beforeSend: setAuth,
+			type: "GET",
+			url: url + "/annotation",
+			statusCode: {
+				403: function(xhr)
+				{
+					alert("Your session has expired. Please log in again");
+					window.location.replace(baseurl);
+				}
+			},
+			success: function(annotationdata)
+			{
+				data["highlights"] = annotationdata["highlights"];
+				data["aihighlights"] = annotationdata["aihighlights"];
+				data["labels"] = annotationdata["labels"];
+				data["tags"] = annotationdata["tags"];
+				data["comment"] = annotationdata["comment"];
+
+				$("#last_annotation").html("Last annotation on " + annotationdata["timestamp"]);// + " by " + annotationdata["appuser"]["username"]);
+			},
+			error: function()
+			{
+				data["highlights"] = [];
+				data["aihighlights"] = [];
+				data["labels"] = [];
+				data["tags"] = [];
+				data["comment"] = undefined;
+
+				$("#last_annotation").html("There are not previous annotations for this tweet");
+			},
+			complete: function()
+			{
+				//Draw tweet text adding the highlight-with-click feature
+				createText(data["full_text"], data["highlights"], data["aihighlights"]);
+
+				//Save-switch to false for all the tags
+				$("input:checkbox").prop("checked", false);
+
+				//Save-switch to true for all existing tags
+				for (var key in data["labels"])
+				{
+					if (typeof data["labels"][key] == "object")
+					{
+						var checkboxes = $("input[name='label-" + key.replace(/ /g, "_") + "-option']");
+						for (var number of data["labels"][key])
+							$(checkboxes[number]).prop("checked", true);
+					}
+					else
+						$("#label-" + key.replace(/ /g, "_") + '-select option[value="' + data["labels"][key] + '"]').prop("selected", true);
+					
+					$("#label-" + key.replace(/ /g, "_") + "-switch").prop("checked", true);
+				}
+
+				//Write comment
+				$("#tweet_comment").val(data["comment"] ? data["comment"] : "");
+
+				//Collection of tags to string
+				if (!$.isEmptyObject(data["tags"]))
+					$("#tags").val(data["tags"].join(','));
+				else
+					$("#tags").val("");
+			}
+		});
+
+		//Get assistants info and other tweets
+		getReasons(data["id"]);
+		getOtherTweets(data["user"]);
+		
+
+		//Set tweet number
+		$("#page").val(data["id"]);
+
+		//Global variable
+		last_tweet = data;
+	}
+}
+
 function getTweet(n, callback)
 {
 	$("#logo").addClass("fa-spin");
@@ -193,113 +301,7 @@ function getTweet(n, callback)
 				window.location.replace(baseurl);
 			}
 		},
-		success: function(data)
-		{
-			if ($.isEmptyObject(data))
-				alert("There was a problem loading the tweet " + n);
-			else
-			{
-				url = api + "tweet/" + data["id"];
-				//Get author details
-				$.ajax({
-					beforeSend: setAuth,
-					type: "GET",
-					url: api + "user/" + data["user"],
-					statusCode: {
-						403: function(xhr)
-						{
-							alert("Your session has expired. Please log in again");
-							window.location.replace(baseurl);
-						}
-					},
-					success: function(userdata)
-					{
-						$("#user_description").html(userdata["description"]);
-						$("#user_profile_pic").attr("src", userdata["profile_image_url_https"]);
-						$("#user_name").html(userdata["name"] + ' <span class="text-secondary">@' + userdata["screen_name"] + '</span>');
-						last_user = userdata;
-					}
-				});
-
-				//Get last annotation details
-				$.ajax({
-					beforeSend: setAuth,
-					type: "GET",
-					url: url + "/annotation",
-					statusCode: {
-						403: function(xhr)
-						{
-							alert("Your session has expired. Please log in again");
-							window.location.replace(baseurl);
-						}
-					},
-					success: function(annotationdata)
-					{
-						data["highlights"] = annotationdata["highlights"];
-						data["aihighlights"] = annotationdata["aihighlights"];
-						data["labels"] = annotationdata["labels"];
-						data["tags"] = annotationdata["tags"];
-						data["comment"] = annotationdata["comment"];
-
-						$("#last_annotation").html("Last annotation on " + annotationdata["timestamp"]);// + " by " + annotationdata["appuser"]["username"]);
-					},
-					error: function()
-					{
-						data["highlights"] = [];
-						data["aihighlights"] = [];
-						data["labels"] = [];
-						data["tags"] = [];
-						data["comment"] = undefined;
-
-						$("#last_annotation").html("There are not previous annotations for this tweet");
-					},
-					complete: function()
-					{
-						//Draw tweet text adding the highlight-with-click feature
-						createText(data["full_text"], data["highlights"], data["aihighlights"]);
-
-						//Save-switch to false for all the tags
-						$("input:checkbox").prop("checked", false);
-
-						//Save-switch to true for all existing tags
-						for (var key in data["labels"])
-						{
-							if (typeof data["labels"][key] == "object")
-							{
-								var checkboxes = $("input[name='label-" + key.replace(/ /g, "_") + "-option']");
-								for (var number of data["labels"][key])
-									$(checkboxes[number]).prop("checked", true);
-							}
-							else
-								$("#label-" + key.replace(/ /g, "_") + '-select option[value="' + data["labels"][key] + '"]').prop("selected", true);
-							
-							$("#label-" + key.replace(/ /g, "_") + "-switch").prop("checked", true);
-						}
-
-						//Write comment
-						$("#tweet_comment").val(data["comment"] ? data["comment"] : "");
-
-						//Collection of tags to string
-						if (!$.isEmptyObject(data["tags"]))
-							$("#tags").val(data["tags"].join(','));
-						else
-							$("#tags").val("");
-					}
-				});
-
-				//Get assistants info and other tweets
-				getReasons(data["id"]);
-				getOtherTweets(data["user"]);
-				
-
-				//Set tweet number
-				if (!n || n == 0)
-					$("#page").val(data["id"]);
-
-				//Global variable
-				last_tweet = data;
-			}
-		},
+		success: create_tweet,
 		error: function()
 		{
 			if (n && n != 0)
@@ -321,6 +323,44 @@ function getTweet(n, callback)
 	});
 }
 
+function getRankedTweet(callback)
+{
+	if (already_annotated)
+	{
+		$("#logo").addClass("fa-spin");
+		//If no tweet was specified, get the first unlabelled by querying with tid=0
+		var url = api + "tweet/nextinrank";
+			
+		$.ajax({
+			beforeSend: setAuth,
+			type: "GET",
+			url: url,
+			statusCode: {
+				403: function(xhr)
+				{
+					alert("Your session has expired. Please log in again");
+					window.location.replace(baseurl);
+				}
+			},
+			success: create_tweet,
+			error: function()
+			{
+				alert("There was a problem loading the next tweet");
+			},
+			complete: function()
+			{
+				already_annotated = false;
+				$("#logo").removeClass("fa-spin");
+
+				if (callback)
+					callback();
+			}
+		});
+	}
+	else
+		alert("You need to annotate this tweet to continue with the next one");
+}
+
 function changePage(e)
 {
 	var elem = $(this)
@@ -333,6 +373,7 @@ function changePage(e)
 
 function save_all(callback)
 {
+	already_annotated = true;
 	var url = api + "tweet/" + last_tweet["id"];
 	
 	//Data
@@ -516,12 +557,30 @@ $(function(){
 		}
 	});
 
-	//Get last labelled tweet
-	getTweet(0);
-	$("#page").change(changePage);
+	//Check if we are in rankedtagging or not
+	var next_tweet_button = $("#next_tweet");
+	if (next_tweet_button.length)
+		automatic_order = true;
+		
 
-	//Assign event handlers
-	$("#firstunlabelled").click(function(){getTweet(0)}); //Called inside a lambda to avoid passing e to getTweet
+	//Get last labelled tweet
+	if (automatic_order)
+	{
+		getRankedTweet();
+		next_tweet_button.click(function(){getRankedTweet()});
+	}
+	else
+	{
+		if (typeof specific_tid !== "undefined")
+			getTweet(specific_tid);
+		else
+			getTweet(0);
+		
+		$("#page").change(changePage);
+
+		$("#firstunlabelled").click(function(){getTweet(0)}); //Called inside a lambda to avoid passing e to getTweet
+	}
+
 	$("#save_1, #save_2").click(save);
 	$('[data-toggle="tooltip"]').tooltip();
 	
@@ -531,12 +590,16 @@ $(function(){
 		{
 			case "ArrowRight":
 			case "n":
-				$("#page").val(parseInt($("#page").val()) + 1).trigger("change");
+				if (!automatic_order)
+					$("#page").val(parseInt($("#page").val()) + 1).trigger("change");
+				else
+					getRankedTweet();
 				break;
 				
 			case "ArrowLeft":
 			case "p":
-				$("#page").val(parseInt($("#page").val()) - 1).trigger("change");
+				if (!automatic_order)
+					$("#page").val(parseInt($("#page").val()) - 1).trigger("change");
 				break;
 			
 			case "s":

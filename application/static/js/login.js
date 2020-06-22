@@ -33,7 +33,7 @@ function login(e)
 		{
 			localStorage.jwt_access = data.access_token;
 			localStorage.jwt_refresh = data.refresh_token;
-			window.location.replace(baseurl + "tagging");
+			window.location.replace(baseurl + "annotate");
 		},
 		error: function(data)
 		{

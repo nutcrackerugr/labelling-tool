@@ -12,30 +12,32 @@
 			<div class="row">
 				<div class="col-xl-10 offset-xl-1 mt-4">
 					<nav class="navbar navbar-dark navbar-expand-xl bg-dark justify-content-between">
+						<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+							<span class="navbar-toggler-icon"></span>
+						</button>
 						<a class="navbar-brand">
 							<img src="{{ url_for('static', filename='images/logo.png') }}" width="30" height="30" id="logo" class="d-inline-block align-top" alt="">
 							Nutcracker Tagging System
 						</a>
 						<div class="collapse navbar-collapse" id="navbarContent">
 							<ul class="navbar-nav mr-auto">
-								<ul class="navbar-nav mr-auto">
-									<li class="nav-item">
-										<a class="nav-link" href="{{ url_for('main.rank_tagging') }}">Annotate</a>
-									</li>
-									<li class="nav-item active">
-										<a class="nav-link" href="{{ url_for('main.tagging') }}">Review</a>
-									</li>
-									<li class="nav-item">
-										<a class="nav-link" href="{{ url_for('main.batchupload') }}">Upload</a>
-									</li>
-									<li class="nav-item">
-										<a class="nav-link" href="{{ url_for('main.myprofile') }}">My Profile</a>
-									</li>
-								</ul>
+								<li class="nav-item active">
+									<a class="nav-link" href="{{ url_for('main.rank_tagging') }}">Annotate</a>
+								</li>
+								<li class="nav-item">
+									<a class="nav-link" href="{{ url_for('main.tagging') }}">Review</a>
+								</li>
+								<li class="nav-item">
+									<a class="nav-link" href="{{ url_for('main.batchupload') }}">Upload</a>
+								</li>
+								<li class="nav-item">
+									<a class="nav-link" href="{{ url_for('main.myprofile') }}">My Profile</a>
+								</li>
+							</ul>
 						</div>
 						<div class="form-inline">
 							<div class="btn-group mr-auto">
-								<button type="button" class="btn btn-secondary btn-sm" id="firstunlabelled">Resume Work</button>
+								<button type="button" class="btn btn-secondary btn-sm" id="next_tweet">Next tweet</button>
 								<button type="button" class="btn btn-primary btn-sm" id="save_1">Save Changes</button>
 							</div>
 							
@@ -44,24 +46,22 @@
 								<div class="input-group-prepend">
 									<div class="input-group-text">No. Tweet</div>
 								</div>
-								<input type="number" class="form-control form-control-sm" style="width:100px" id="page" name="page" min="1">
+								<input type="number" class="form-control form-control-sm" style="width:100px" id="page" name="page" min="1" disabled="true" />
 							</div>
 						</div>
 					</nav>
 				</div>
 				<div class="col-xl-10 offset-xl-1 mt-4">
-					<div class="mt-4 alert alert-danger" id="errormessage">
-						<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> <strong>Warning</strong><br />
-						Do not use this page to annotate normally. You should only use <strong>Review</strong> to check on your own work and/or that of others.
-						{% with messages = get_flashed_messages() %}
-							{% if messages %}
+					{% with messages = get_flashed_messages() %}
+						{% if messages %}
+						<div class="mt-4 alert alert-danger" id="errormessage">
 							<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Something went wrong :(<br />
 							{% for message in messages %}
 								{{ message }}<br />
 							{% endfor %}
-							{% endif %}
-						{% endwith %}
 						</div>
+						{% endif %}
+					{% endwith %}
 				</div>
 			</div>
 			<div class="row">
@@ -73,7 +73,7 @@
 								<div class="media-body">
 									<h6 class="mt-0 text-secondary">Keyboard Shortcuts</h6>
 									<span class="keyboard-key">n</span> / <span class="keyboard-key">&#8594;</span> next tweet<br />
-									<span class="keyboard-key">p</span> / <span class="keyboard-key">&#8592;</span> previous tweet<br />
+									<!--<span class="keyboard-key">p</span> / <span class="keyboard-key">&#8592;</span> previous tweet<br />-->
 									<span class="keyboard-key">s</span> save changes<br />
 									<span class="keyboard-key">h</span> toggle this dialog<br />
 									<br />
@@ -105,7 +105,7 @@
 									</p>
 									<h6 class="mt-0 text-secondary">Other tweets:</h6>
 									<ul id="othertweets" class="list-group list-group-flush">
-										
+										<!-- Other tweets from the same author -->
 									</ul>
 								</div>
 							</div>
@@ -167,7 +167,6 @@
 		<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
 		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
 		<script src="{{ url_for('static', filename='js/jquery.hotkeys.js') }}"></script>
-		<script>var specific_tid = {{ specific_tid }};</script>
 		<script src="{{ url_for('static', filename='js/main.js')|autoversion }}"></script>
 	</body>
 </html>

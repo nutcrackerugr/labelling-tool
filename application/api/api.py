@@ -55,6 +55,18 @@ class GetTweet(Resource):
 		else:
 			return {"error":404, "message":"Not Found"}, 404
 
+
+class GetNextTweetByRanking(Resource):
+	@require_level(1)
+	def get(self):
+		tweet = db.session.query(Tweet).order_by(Tweet.rank.desc()).first()
+
+		if tweet and tweet.rank >= 0:
+			return tweet_schema.dump(tweet)
+		else:
+			return {"error": 404, "message": "No more tweets"}
+
+
 class GetAnnotation(Resource):
 	@require_level(1)
 	def get(self, tid):
@@ -255,6 +267,9 @@ class CreateAnnotation(Resource):
 		try:
 			data = request.get_json()
 			username = get_jwt_identity()
+
+			tweet = Tweet.query.filter_by(id=tid).scalar()
+			tweet.rank *= -1
 
 			user = AppUser.query.filter_by(username=username).scalar()
 

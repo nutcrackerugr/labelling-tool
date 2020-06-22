@@ -1,6 +1,8 @@
 from application import celery, db
 from application.models import Tweet
 
+from collections import Counter
+
 @celery.task()
 def repair_retweets(filepath):
     import json
@@ -31,4 +33,28 @@ def rank_retweets():
     db.session.commit()
 
 
-    
+
+@celery.task()
+def rank_tweets_first_time():
+    # Set default importance
+    db.session.query(Tweet).update({Tweet.rank: 1})
+
+    # Rank negative tweets that are RT (only originals are important)
+    db.session.query(Tweet).filter_by(is_retweet=True).update({Tweet.rank: -1})
+
+    # Rank originals from retweets depending on their importance (no. of RT)
+    parents = db.session.query(Tweet).filter_by(is_retweet=True).all()
+
+    if parents:
+        retweet_count = Counter([parent.parent_tweet for parent in parents])
+
+        for parent in parents:
+            if retweet_count[parent.id_str] > 1:
+                parent.rank = retweet_count[parent.id_str]
+
+    try:
+        db.session.commit()
+        return {"message": "Tweets ranked successfully"}
+    except Exception as e:
+        print(e)
+        return {"message": "Something went wrong in async task", "error": 500}, 500

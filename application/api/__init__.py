@@ -7,6 +7,7 @@ api_bp = Blueprint("api", __name__)
 apir = Api(api_bp)
 
 apir.add_resource(api.GetTweet,                        "/tweet/<int:tid>")
+apir.add_resource(api.GetNextTweetByRanking,           "/tweet/nextinrank")
 apir.add_resource(api.GetAnnotation,                   "/tweet/<int:tid>/annotation")
 apir.add_resource(api.CreateAnnotation,                "/tweet/<int:tid>/annotation/create")
 apir.add_resource(api.CreateTweet,                     "/tweet/create")

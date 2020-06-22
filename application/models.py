@@ -167,6 +167,7 @@ class Label(db.Model):
 class AppUser(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	username = db.Column(db.String(256), nullable=False, unique=True)
+	name = db.Column(db.String(256), nullable=True)
 	password = db.Column(db.String(256), nullable=False)
 	email = db.Column(db.String(256))
 	authorized = db.Column(db.Boolean, nullable=False, default=False)

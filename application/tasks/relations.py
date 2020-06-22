@@ -49,10 +49,8 @@ def create_graph(name = "default", path = ""):
 
 #@celery.task()
 def expand_properties(properties, name = "default", path = "", steps = 1, alpha = .2):
-    print("Reading graph")
     G = nx.read_gpickle("{}{}".format(path, name))
 
-    print("Querying database for last annotations")
     maximum_timestamps = db.session.query(Annotation.tweet_id, 
         Annotation.appuser_id, func.max(Annotation.timestamp).label("timestamp")
         ).group_by(Annotation.tweet_id).subquery()
@@ -63,20 +61,17 @@ def expand_properties(properties, name = "default", path = "", steps = 1, alpha 
         )).all()
 
     # Compute p_direct
-    print("Computing p_direct")
     dir_props = defaultdict(lambda : defaultdict(float))
     for annotation in annotations:
         for prop in properties:
             if prop in annotation.labels.keys():
                 dir_props[annotation.tweet.user.id_str][prop] += annotation.labels[prop] * 2 - 1
-    print(json.dumps(dir_props, indent=2))
 
     # Beware: not thread-safe
     ext_props = deepcopy(dir_props)
     ext_props_aux = defaultdict(lambda : defaultdict(float))
 
     # Compute p_extended
-    print("Compute p_extended")
     involved_users = set(dir_props.keys())
     involved_neighbours = set()
     for i in range(steps):
@@ -90,7 +85,6 @@ def expand_properties(properties, name = "default", path = "", steps = 1, alpha 
         involved_neighbours = set()
         
         # Property expansion
-        print("Expanding...")
         for user in involved_users:
             edges = G.edges(user)
             if edges:
@@ -104,10 +98,8 @@ def expand_properties(properties, name = "default", path = "", steps = 1, alpha 
         # Prepare for next iteration
         ext_props = ext_props_aux
         ext_props_aux = defaultdict(lambda : defaultdict(float))
-        print(json.dumps(ext_props, indent=2))
 
         # Create annotations
-        print("Creating user annotations")
         timestamp = datetime.utcnow()
         for uid_str in ext_props.keys():
             uid = db.session.query(User.id).filter_by(id_str=uid_str).scalar()
@@ -116,7 +108,6 @@ def expand_properties(properties, name = "default", path = "", steps = 1, alpha 
 
         try:
             db.session.commit()
-            print("Done")
             return {"message": "Properties extended successfully"}
         except Exception as e:
             print(e)
