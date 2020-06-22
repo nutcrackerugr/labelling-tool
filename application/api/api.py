@@ -1,7 +1,7 @@
 from flask import request, current_app
 from flask_restful import Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from sqlalchemy import null
+from sqlalchemy import null, and_
 
 from application.models import *
 from application import db, ma, assistant_manager, require_level
@@ -30,6 +30,15 @@ class CreateGraph(Resource):
 	def get(self):
 		result = create_graph.delay(path=current_app.config["GRAPH_PATH"])
 		return {"message": "Task scheduled successfully", "task": result.id}, 201
+
+
+class SearchInText(Resource):
+	def get(self, q):
+		words = q.split(" ")
+		conditions = [Tweet.full_text.ilike(f"%{word}%") for word in words]
+		results = db.session.query(Tweet).filter(and_(*conditions)).limit(30).all()
+
+		return tweet_schema.dump(results, many=True)
 
 	
 class GetTweet(Resource):

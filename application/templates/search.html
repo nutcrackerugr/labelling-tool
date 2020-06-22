@@ -4,13 +4,43 @@
 		<link rel="shortcut icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}" />
 		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 		<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
-		<link href="{{ url_for('static', filename='css/main.css')|autoversion }}" rel="stylesheet">
+		<link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet">
 		<title>Nutcracker Tagging</title>
 	</head>
 	<body>
 		<div class="container-fluid">
 			<div class="row">
-				<div class="col-md-10 offset-md-1 col-xl-10 offset-xl-1 order-first" id="errorcol">
+				<div class="col-xl-10 offset-xl-1 mt-4">
+					<nav class="navbar navbar-dark navbar-expand-xl bg-dark justify-content-between">
+						<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+							<span class="navbar-toggler-icon"></span>
+						</button>
+						<a class="navbar-brand">
+							<img src="{{ url_for('static', filename='images/logo.png') }}" width="30" height="30" id="logo" class="d-inline-block align-top" alt="">
+							Nutcracker Tagging System
+						</a>
+						<div class="collapse navbar-collapse" id="navbarContent">
+							<ul class="navbar-nav mr-auto">
+								<li class="nav-item">
+									<a class="nav-link" href="{{ url_for('main.rank_tagging') }}">Annotate</a>
+								</li>
+								<li class="nav-item">
+									<a class="nav-link" href="{{ url_for('main.tagging') }}">Review</a>
+								</li>
+								<li class="nav-item active">
+									<a class="nav-link" href="{{ url_for('main.search') }}">Search</a>
+								</li>
+								<li class="nav-item">
+									<a class="nav-link" href="{{ url_for('main.batchupload') }}">Upload</a>
+								</li>
+								<li class="nav-item">
+									<a class="nav-link" href="{{ url_for('main.myprofile') }}">My Profile</a>
+								</li>
+							</ul>
+						</div>
+					</nav>
+				</div>
+				<div class="col-xl-10 offset-xl-1 mt-4">
 					{% with messages = get_flashed_messages() %}
 						{% if messages %}
 						<div class="mt-4 alert alert-danger" id="errormessage">
@@ -24,43 +54,25 @@
 				</div>
 			</div>
 			<div class="row">
-				<div class="col-md-10 offset-md-1 col-xl-10 offset-xl-1 order-xl-1 mt-4 h-100">
-					<form role="form" id="batchform">
-						<label for="batch">Enter JSON formatted list of Tweets:</label>
-						<textarea name="batch" id="batch" class="form-control" style="min-height:500px"></textarea>
-					</form>
-				</div>
- 
-				
-				<div class="col-md-10 offset-md-1 col-xl-10 offset-xl-1 order-first mt-4">
-					<nav class="navbar navbar-dark bg-dark navbar-expand-xl justify-content-between">
-						<a class="navbar-brand">
-							<img src="{{ url_for('static', filename='images/logo.png') }}" width="30" height="30" class="d-inline-block align-top" alt="">
-							Nutcracker Tagging System
-						</a>
-						<div class="collapse navbar-collapse" id="navbarContent">
-							<ul class="navbar-nav mr-auto">
-								<li class="nav-item">
-									<a class="nav-link" href="{{ url_for('main.rank_tagging') }}">Annotate</a>
-								</li>
-								<li class="nav-item">
-									<a class="nav-link" href="{{ url_for('main.tagging') }}">Review</a>
-								</li>
-								<li class="nav-item">
-									<a class="nav-link" href="{{ url_for('main.search') }}">Search</a>
-								</li>
-								<li class="nav-item active">
-									<a class="nav-link" href="{{ url_for('main.batchupload') }}">Upload</a>
-								</li>
-								<li class="nav-item">
-									<a class="nav-link" href="{{ url_for('main.myprofile') }}">My Profile</a>
-								</li>
-							</ul>
+				<div class="col-xl-10 offset-xl-1">
+					<div class="row">
+						<!-- Main Column -->
+						<div class="col">
+							<div>
+								<span class="text-secondary"><i class="fa fa-lightbulb-o"></i> Input words that you want to find in tweets (order-insensitive, case-insensitive). This tool will show 30 tweets at much. If you do not find what you are looking for, try refining the search.</span>
+							</div>
+							<form class="form-inline d-flex mt-1" id="searchform">
+								<input class="form-control mr-sm-2 flex-fill" type="search" placeholder="Enter keywords here" aria-label="Search" id="searchinput">
+								<button class="btn btn-outline-success my-2 my-sm-0" type="submit" id="searchbutton">Search</button>
+							</form>					
 						</div>
-						<button type="button" class="btn btn-primary" id="uploadbutton">Upload Batch</button>
-					</nav>
+					</div>
+					<div class="row mainrow">
+						<div class="card-columns mt-4" id="cards">
+							
+						</div>
+					</div>
 				</div>
-				
 			</div>
 			<div class="row bg-dark text-light footer mt-4 p-4">
 				<div class="col-md-3 offset-md-1 text-right d-flex align-items-center justify-content-center">
@@ -77,6 +89,7 @@
 		<script src="https://cdn.jsdelivr.net/npm/js-cookie@beta/dist/js.cookie.min.js"></script>
 		<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
 		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
-		<script src="{{ url_for('static', filename='js/batch.js')|autoversion }}"></script>
+		<script src="{{ url_for('static', filename='js/jquery.hotkeys.js') }}"></script>
+		<script src="{{ url_for('static', filename='js/search.js')|autoversion }}"></script>
 	</body>
 </html>
