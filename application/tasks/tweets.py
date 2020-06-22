@@ -51,6 +51,11 @@ def rank_tweets_first_time():
         for parent in parents:
             if retweet_count[parent.id_str] > 1:
                 parent.rank = retweet_count[parent.id_str]
+    
+    # Rank negatively those tweets that are already annotated
+    annotations = db.session.query(Annotation.tweet_id).all()
+    already_annotated_ids = list(set(list(zip(*annotations))[0]))
+    db.session.query(Tweet).filter(Tweet.id.in_(already_annotated_ids)).update({Tweet.rank: -1 * Tweet.rank})
 
     try:
         db.session.commit()

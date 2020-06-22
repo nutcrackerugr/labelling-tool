@@ -8,7 +8,7 @@ from application import db, ma, assistant_manager, require_level
 
 from datetime import datetime, timedelta
 
-from application.tasks.tweets import repair_retweets, rank_retweets
+from application.tasks.tweets import repair_retweets, rank_retweets, rank_tweets_first_time
 from application.tasks.relations import create_graph
 
 import random
@@ -21,19 +21,28 @@ class RepairRetweets(Resource):
 
 
 class RankRetweets(Resource):
-	@require_level(7)
+	@require_level(8)
 	def get(self):
 		result = rank_retweets.delay()
 		return {"message": "Task scheduled successfully", "task": result.id}, 201
 
 
-class CreateGraph(Resource):
+class RankTweetsFirstTime(Resource):
+	@require_level(8)
 	def get(self):
-		result = create_graph.delay(path=current_app.config["GRAPH_PATH"])
+		result = rank_tweets_first_time.delay()
+		return {"message": "Task scheduled successfuly", "task": result.id}, 201
+
+
+class CreateGraph(Resource):
+	@require_level(8)
+	def get(self, name):
+		result = create_graph.delay(path=current_app.config["GRAPH_PATH"], name=name)
 		return {"message": "Task scheduled successfully", "task": result.id}, 201
 
 
 class SearchInText(Resource):
+	@require_level(1)
 	def get(self, q):
 		words = q.split(" ")
 		conditions = [Tweet.full_text.ilike(f"%{word}%") for word in words]

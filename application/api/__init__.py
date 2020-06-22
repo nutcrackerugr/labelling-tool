@@ -12,7 +12,7 @@ apir.add_resource(api.GetAnnotation,                   "/tweet/<int:tid>/annotat
 apir.add_resource(api.CreateAnnotation,                "/tweet/<int:tid>/annotation/create")
 apir.add_resource(api.CreateTweet,                     "/tweet/create")
 apir.add_resource(api.CreateTweetsBatch,               "/tweet/create/batch")
-apir.add_resource(api.SearchInText,                "/tweet/search/<string:q>")
+apir.add_resource(api.SearchInText,                    "/tweet/search/<string:q>")
 apir.add_resource(api.GetUser,                         "/user/<int:uid>")
 apir.add_resource(api.GetAuthorTweets,                 "/user/<int:uid>/tweets/<int:limit>")
 apir.add_resource(api.GetLabels,                       "/labels")
@@ -20,5 +20,6 @@ apir.add_resource(api.GetAssistantsSuggestions,        "/tweet/<int:tid>/suggest
 apir.add_resource(api.TransformAnnotationToMultivalue, "/annotation/transformtomultivalue/<string:label>")
 apir.add_resource(api.RepairRetweets,                  "/repair/retweets/<string:filepath>")
 apir.add_resource(api.RankRetweets,                    "/rank/retweets")
-apir.add_resource(api.CreateGraph,                     "/graph/create")
+apir.add_resource(api.RankTweetsFirstTime,             "/rank/firsttime")
+apir.add_resource(api.CreateGraph,                     "/graph/create/<string:name>")
 
