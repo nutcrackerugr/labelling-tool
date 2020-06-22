@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 from application.tasks.tweets import repair_retweets, rank_retweets
 from application.tasks.relations import create_graph
 
+import random
 
 class RepairRetweets(Resource):
 	@require_level(8)
@@ -59,10 +60,14 @@ class GetTweet(Resource):
 class GetNextTweetByRanking(Resource):
 	@require_level(1)
 	def get(self):
-		tweet = db.session.query(Tweet).order_by(Tweet.rank.desc()).first()
+		# Select 5 of the best ranked and select one randomly
+		tweets = db.session.query(Tweet).order_by(Tweet.rank.desc()).limit(5).all()
 
-		if tweet and tweet.rank >= 0:
-			return tweet_schema.dump(tweet)
+		if tweets:
+			tweet = random.choice(tweets)
+
+			if tweet.rank >= 0:
+				return tweet_schema.dump(tweet)
 		else:
 			return {"error": 404, "message": "No more tweets"}
 
