@@ -47,8 +47,10 @@ def rank_tweets_first_time():
 
     if parents:
         retweet_count = Counter([parent.parent_tweet for parent in parents])
-        mapping = [{"id_str" : key, "rank": value} for key, value in list(retweet_count.most_common()) if value > 1]
-        db.session.bulk_update_mappings(Tweet, mapping)
+        
+        for id_str, rank in retweet_count.most_common():
+            if rank > 1:
+                db.session.query(Tweet).filter_by(id_str=id_str).update({Tweet.rank: rank})
     
     # Rank negatively those tweets that are already annotated
     annotations = db.session.query(Annotation.tweet_id).all()
