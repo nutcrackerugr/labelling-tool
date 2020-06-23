@@ -82,7 +82,7 @@ def view_require_level(level):
 def init_celery(app=None):
 	app = app or create_app()
 	celery.conf.broker_url = app.config["CELERY_BROKER_URL"]
-	celery.conf.result_backend = app.config["CELERY_RESULT_BACKEND"]
+	#celery.conf.result_backend = app.config["CELERY_RESULT_BACKEND"]
 	celery.conf.update(app.config)
 
 	class ContextTask(celery.Task):
