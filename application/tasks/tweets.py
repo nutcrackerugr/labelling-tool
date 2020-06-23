@@ -1,5 +1,5 @@
 from application import celery, db
-from application.models import Tweet
+from application.models import Annotation, Tweet
 
 from collections import Counter
 
