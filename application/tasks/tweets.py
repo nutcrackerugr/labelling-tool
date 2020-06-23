@@ -55,7 +55,22 @@ def rank_tweets_first_time():
     # Rank negatively those tweets that are already annotated
     annotations = db.session.query(Annotation.tweet_id).all()
     already_annotated_ids = list(set(list(zip(*annotations))[0]))
-    db.session.query(Tweet).filter(Tweet.id.in_(already_annotated_ids)).update({Tweet.rank: -1 * Tweet.rank}, synchronize_session="fetch")
+    db.session.query(Tweet).filter(and_(Tweet.id.in_(already_annotated_ids), Tweet.rank < 0)).update({Tweet.rank: -1 * Tweet.rank}, synchronize_session="fetch")
+
+    try:
+        db.session.commit()
+        return {"message": "Tweets ranked successfully"}
+    except Exception as e:
+        print(e)
+        return {"message": "Something went wrong in async task", "error": 500}, 500
+
+
+@celery.task()
+def rank_negative_annotated_tweets():
+    # Rank negatively those tweets that are already annotated
+    annotations = db.session.query(Annotation.tweet_id).all()
+    already_annotated_ids = list(set(list(zip(*annotations))[0]))
+    db.session.query(Tweet).filter(and_(Tweet.id.in_(already_annotated_ids), Tweet.rank < 0)).update({Tweet.rank: -1 * Tweet.rank}, synchronize_session="fetch")
 
     try:
         db.session.commit()

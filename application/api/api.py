@@ -298,7 +298,8 @@ class CreateAnnotation(Resource):
 			username = get_jwt_identity()
 
 			tweet = Tweet.query.filter_by(id=tid).scalar()
-			tweet.rank *= -1
+			if tweet.rank > 0:
+				tweet.rank *= -1
 
 			user = AppUser.query.filter_by(username=username).scalar()
 
