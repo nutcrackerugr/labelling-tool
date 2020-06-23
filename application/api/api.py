@@ -21,8 +21,8 @@ class TestCelery(Resource):
 
 class RepairRetweets(Resource):
 	@require_level(8)
-	def get(self, filepath):
-		result = repair_retweets.delay(filepath)
+	def get(self, filename):
+		result = repair_retweets.delay("{}{}".format(current_app.config["DUMPS_PATH"], filename))
 		return {"message": "Task scheduled successfully", "task": result.id}, 201
 
 

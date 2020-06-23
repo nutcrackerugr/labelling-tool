@@ -507,7 +507,6 @@ function createLabel(name, disclaimer, v)
 
 function createSearchResults(data)
 {
-	console.log(data)
 	if ($.isEmptyObject(data))
 		alert("There are not any results")
 	else
