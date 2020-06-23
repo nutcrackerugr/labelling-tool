@@ -3,6 +3,8 @@ from application.models import Annotation, Tweet
 
 from collections import Counter
 
+from sqlaclhemy import and_
+
 @celery.task()
 def repair_retweets(filepath):
     import json
