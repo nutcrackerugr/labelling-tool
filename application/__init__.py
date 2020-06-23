@@ -9,9 +9,33 @@ from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager, verify_jwt_in_request, get_jwt_claims
 from celery import Celery
-# from flask_reverse_proxy_fix.middleware import ReverseProxyPrefixFix
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from .assistant import AssistantManager, OntologyAssistant, ExtendedPropertiesAssistant
+
+
+class ReverseProxyPrefixFix(object):
+	def __init__(self, app: Flask):
+			self.app = app.wsgi_app
+			self.prefix = None
+
+			if 'REVERSE_PROXY_PATH' in app.config:
+				self.prefix = app.config['REVERSE_PROXY_PATH']
+
+			self.app = ProxyFix(self.app)
+
+			app.wsgi_app = self
+	
+	def __call__(self, environ, start_response):
+		if self.prefix is not None:
+			environ['SCRIPT_NAME'] = self.prefix
+			path_info = environ['PATH_INFO']
+			if path_info.startswith(self.prefix):
+				environ['PATH_INFO'] = path_info[len(self.prefix):]
+
+		return self.app(environ, start_response)
+
+
 
 db = SQLAlchemy()
 ma = Marshmallow()
@@ -100,7 +124,7 @@ def create_app(config="config"):
 	app = Flask(__name__, instance_relative_config=False)
 	app.config.from_object(config)
 
-	# ReverseProxyPrefixFix(app)
+	ReverseProxyPrefixFix(app)
 	
 	db.init_app(app)
 	ma.init_app(app)
