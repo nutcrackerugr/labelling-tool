@@ -55,7 +55,7 @@ def rank_tweets_first_time():
     # Rank negatively those tweets that are already annotated
     annotations = db.session.query(Annotation.tweet_id).all()
     already_annotated_ids = list(set(list(zip(*annotations))[0]))
-    db.session.query(Tweet).filter(Tweet.id.in_(already_annotated_ids)).update({Tweet.rank: -1 * Tweet.rank})
+    db.session.query(Tweet).filter(Tweet.id.in_(already_annotated_ids)).update({Tweet.rank: -1 * Tweet.rank}, synchronize_session="fetch")
 
     try:
         db.session.commit()
