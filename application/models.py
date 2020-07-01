@@ -157,11 +157,13 @@ class UserAnnotation(db.Model):
 
 class Label(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
+	order = db.Column(db.Float, index=True, nullable=False)
 	name = db.Column(db.String(32), unique=True, nullable=False)
 	values = db.Column(db.Text, nullable=False)
 	multiple = db.Column(db.Boolean, nullable=False, default=False)
 	bgcolorhex = db.Column(db.String(6), nullable=False, default="f8f9fa")
 	kind = db.Column(db.Integer, primary_key=True)
+	help_text = db.Column(db.Text, nullable=True)
 
 
 class AppUser(db.Model):

@@ -350,7 +350,7 @@ class GetUser(Resource):
 class GetLabels(Resource):
 	@require_level(1)
 	def get(self):
-		labels = Label.query.all()
+		labels = Label.query.order_by(Label.order).all()
 		return label_schema.dump(labels, many=True)
 
 class GetAssistantsSuggestions(Resource):

@@ -450,11 +450,15 @@ function save(e)
 	save_all(success);
 }
 
-function createLabelComponent(name, disclaimer, labeltag, options, bgcolorhex)
+function createLabelComponent(name, disclaimer, labeltag, options, bgcolorhex, help_text)
 {
 	if (!bgcolorhex)
 		bgcolorhex = "f8f9fa";
 	let html = "";
+
+	if (!help_text || help_text === null)
+		help_text = "No help available for this label";
+	
 	
 	html += '<div class="row py-2 border-top" style="background-color: #' + bgcolorhex + ';">';
 	html += '<div class="col">';
@@ -462,7 +466,8 @@ function createLabelComponent(name, disclaimer, labeltag, options, bgcolorhex)
 	if (disclaimer)
         html += '<div class="row"><div class="col"><div class="text-muted text-justify small-text mb-1">' + disclaimer + '</div></div></div>';
 	
-	html += '<div class="row"><div class="col-auto">' + labeltag + '</div>';
+	html += '<div class="row"><div class="col-auto"><i class="fa fa-question-circle" data-toggle="tooltip" data-placement="left" title="' + help_text + '" /></div>';
+	html += '<div class="col-auto"><span class="font-weight-bold">' + labeltag + '</span></div>';
 	html += '<div class="col-auto"><div class="custom-control custom-switch align-middle">';
 	html += '<input type="checkbox" class="custom-control-input" id="label-' + name.replace(/ /g, '_') + '-switch" checked>';
 	html += '<label class="custom-control-label" for="label-' + name.replace(/ /g, '_') + '-switch">Save?</label></div></div></div>';
@@ -491,7 +496,7 @@ function createLabel(name, disclaimer, v)
 	}
 	else
 	{
-		labeltag += '<label for="label-' + name.replace(/ /g, '_') + '-select">' + v["name"] + ':</label>';
+		labeltag += '<label for="label-' + name.replace(/ /g, '_') + '-select">' + v["name"] + '</label>';
 		options += '<select class="custom-select" id="label-' + name.replace(/ /g, '_') + '-select">';
 		
 		let option_value = 0;
@@ -503,7 +508,7 @@ function createLabel(name, disclaimer, v)
 		options += '</select>';
 	}
 
-	return createLabelComponent(name, disclaimer, labeltag, options, v["bgcolorhex"]);
+	return createLabelComponent(name, disclaimer, labeltag, options, v["bgcolorhex"], v["help_text"]);
 }
 
 $(function(){
