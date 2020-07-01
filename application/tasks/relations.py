@@ -51,7 +51,7 @@ def create_graph(name = "default", path = ""):
     nx.write_gpickle(G, "{}{}_{}.gpickle".format(path, name, time.strftime("%Y%m%d-%H%M%S")))
 
 
-#@celery.task()
+@celery.task()
 def expand_properties(properties, name = "default", path = "", steps = 1, alpha = .2):
     G = nx.read_gpickle("{}{}".format(path, name))
 
