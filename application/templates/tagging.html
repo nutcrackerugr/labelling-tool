@@ -18,23 +18,25 @@
 						</a>
 						<div class="collapse navbar-collapse" id="navbarContent">
 							<ul class="navbar-nav mr-auto">
-								<ul class="navbar-nav mr-auto">
-									<li class="nav-item">
-										<a class="nav-link" href="{{ url_for('main.rank_tagging') }}">Annotate</a>
-									</li>
-									<li class="nav-item active">
-										<a class="nav-link" href="{{ url_for('main.tagging') }}">Review</a>
-									</li>
-									<li class="nav-item">
-										<a class="nav-link" href="{{ url_for('main.search') }}">Search</a>
-									</li>
-									<li class="nav-item">
-										<a class="nav-link" href="{{ url_for('main.batchupload') }}">Upload</a>
-									</li>
-									<li class="nav-item">
-										<a class="nav-link" href="{{ url_for('main.myprofile') }}">My Profile</a>
-									</li>
-								</ul>
+								<li class="nav-item">
+									<a class="nav-link" href="{{ url_for('main.rank_tagging') }}">Annotate</a>
+								</li>
+								<li class="nav-item active">
+									<a class="nav-link" href="{{ url_for('main.tagging') }}">Review</a>
+								</li>
+								<li class="nav-item">
+									<a class="nav-link" href="{{ url_for('main.review_ua') }}">Check Deductions</a>
+								</li>
+								<li class="nav-item">
+									<a class="nav-link" href="{{ url_for('main.search') }}">Search</a>
+								</li>
+								<li class="nav-item">
+									<a class="nav-link" href="{{ url_for('main.batchupload') }}">Upload</a>
+								</li>
+								<li class="nav-item">
+									<a class="nav-link" href="{{ url_for('main.myprofile') }}">My Profile</a>
+								</li>
+							</ul>
 						</div>
 						<div class="form-inline">
 							<div class="btn-group mr-auto">

@@ -91,7 +91,7 @@ def view_require_level(level):
 				
 				if claims["permission_level"] < level:
 					flash("You do not have enough privileges to access the requested resource.")
-					return redirect(url_for("main.tagging"))
+					return redirect(url_for("main.rank_tagging"))
 				else:
 					return function(*args, **kwargs)
 			except Exception as e:

@@ -15,6 +15,8 @@ apir.add_resource(api.CreateTweetsBatch,               "/tweet/create/batch")
 apir.add_resource(api.SearchInText,                    "/tweet/search/<string:q>")
 apir.add_resource(api.GetUser,                         "/user/<int:uid>")
 apir.add_resource(api.GetAuthorTweets,                 "/user/<int:uid>/tweets/<int:limit>")
+apir.add_resource(api.GetUnreviewedUserAnnotation,    "/user/annotation/unreviewed") #POST
+apir.add_resource(api.ReviewUserAnnotation,            "/user/annotation/review") #POST
 apir.add_resource(api.GetLabels,                       "/labels")
 apir.add_resource(api.GetAssistantsSuggestions,        "/tweet/<int:tid>/suggestions")
 apir.add_resource(api.TransformAnnotationToMultivalue, "/annotation/transformtomultivalue/<string:label>")

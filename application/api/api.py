@@ -360,3 +360,48 @@ class GetAssistantsSuggestions(Resource):
 		response = assistant_manager.run(*details)
 		
 		return response, 200
+
+class GetUnreviewedUserAnnotation(Resource):
+	@require_level(1)
+	def get(self):
+		ua = UserAnnotation.get_last_unreviewed_annotation()
+		return userannotation_schema.dump(ua)
+
+class ReviewUserAnnotation(Resource):
+	@require_level(1)
+	def post(self):
+		try:
+			data = request.get_json()
+			username = get_jwt_identity()
+
+			ua = UserAnnotation.query.get((data["user_id"], data["appuser_id"], data["timestamp"]))
+
+			if not ua.reviewed:
+				appuser = AppUser.query.filter_by(username=username).scalar()
+				
+				ua.reviewed = True
+				ua.decision = int(data["decision"])
+				ua.reviewed_by = appuser.id
+
+				if ua.decision == -1:
+					for tweet in ua.user.tweets:
+						if not tweet.is_retweet:
+							tweet.rank = 99999 - abs(tweet.rank) # just to put them over the top without losing the real score
+				
+				try:
+					db.session.commit()
+				except:
+					return {"message": "Something went wrong", "error": 500}, 500
+				
+			else:
+				if ua.decision != data["decision"]:
+					uaid = f"{ua.user_id},{ua.appuser_id},{ua.timestamp}"
+					return {"message": "This annotation was already reviewed and it had a different decision. Contact support and provide the following reference: <UserAnnotation:{}>".format(uaid), "error": 500}, 500
+
+			return {"message": "Annotation reviewed successfully"}, 200
+
+
+
+		except Exception as e:
+			print(e)
+			return {"message": "Something went wrong. Check your JSON and try again.", "error": 500}, 500

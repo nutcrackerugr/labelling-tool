@@ -9,6 +9,7 @@ from flask_bcrypt import Bcrypt
 from flask_marshmallow import Marshmallow
 from flask_sqlalchemy import SQLAlchemy
 from marshmallow import fields, post_load
+from sqlalchemy import func, and_
 
 from application import db, ma
 
@@ -139,9 +140,7 @@ class User(db.Model):
 	protected = db.Column(db.Boolean, nullable=False)
 	profile_image_url_https = db.Column(db.Text, nullable=True)
 	tweets = db.relationship("Tweet", backref="user", lazy=True)
-
-	def get_tweets(self):
-		return Tweet.query.join(User).filter(self.id).all()
+	user_annotations = db.relationship("UserAnnotation", back_populates="user", lazy=True)
 
 
 class UserAnnotation(db.Model):
@@ -149,10 +148,65 @@ class UserAnnotation(db.Model):
 	appuser_id = db.Column(db.Integer, db.ForeignKey("app_user.id"), nullable=False, primary_key=True)
 	timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, primary_key=True)
 	extended_labels = db.Column(db.PickleType, nullable=True)
+	reviewed = db.Column(db.Boolean, nullable=False, default=False)
+	reviewed_by = db.Column(db.Integer, db.ForeignKey("app_user.id"), nullable=True)
+	decision = db.Column(db.Integer, default=0)
+	user = db.relationship("User", back_populates="user_annotations", lazy=True)
 
 	@classmethod
 	def get_last_annotation_for_user(cls, uid):
 		return UserAnnotation.query.filter_by(user_id=uid).order_by(UserAnnotation.timestamp.desc()).first()
+	
+	@classmethod
+	def get_last_set_of_annotations(cls):
+		maximum_timestamps = db.session.query(UserAnnotation.user_id, 
+			UserAnnotation.appuser_id, func.max(UserAnnotation.timestamp).label("timestamp")
+			).group_by(UserAnnotation.user_id).subquery()
+		uannotations = db.session.query(UserAnnotation).join(maximum_timestamps, and_(
+			maximum_timestamps.c.user_id == UserAnnotation.user_id, and_(
+				maximum_timestamps.c.appuser_id == UserAnnotation.appuser_id,
+				maximum_timestamps.c.timestamp == UserAnnotation.timestamp)
+			)).all()
+		
+		return uannotations
+	
+	@classmethod
+	def get_unreviewed_annotations(cls, limit=20):
+		maximum_timestamps = db.session.query(
+			UserAnnotation.user_id, 
+			UserAnnotation.appuser_id,
+			func.max(UserAnnotation.timestamp).label("timestamp")
+			).group_by(UserAnnotation.user_id).subquery()
+		
+		uannotations = db.session.query(UserAnnotation).join(
+			maximum_timestamps, and_(
+				maximum_timestamps.c.user_id == UserAnnotation.user_id, and_(
+					maximum_timestamps.c.appuser_id == UserAnnotation.appuser_id,
+					maximum_timestamps.c.timestamp == UserAnnotation.timestamp
+					)
+				)	
+			).filter(UserAnnotation.reviewed == False).limit(limit).all()
+		
+		return uannotations
+	
+	@classmethod
+	def get_last_unreviewed_annotation(cls):
+		maximum_timestamps = db.session.query(
+			UserAnnotation.user_id, 
+			UserAnnotation.appuser_id,
+			func.max(UserAnnotation.timestamp).label("timestamp")
+			).group_by(UserAnnotation.user_id).subquery()
+		
+		uannotation = db.session.query(UserAnnotation).join(
+			maximum_timestamps, and_(
+				maximum_timestamps.c.user_id == UserAnnotation.user_id, and_(
+					maximum_timestamps.c.appuser_id == UserAnnotation.appuser_id,
+					maximum_timestamps.c.timestamp == UserAnnotation.timestamp
+					)
+				)	
+			).filter(UserAnnotation.reviewed == False).first()
+		
+		return uannotation
 
 
 class Label(db.Model):
@@ -312,6 +366,17 @@ class AnnotationSchema(ma.SQLAlchemyAutoSchema):
 	
 	appuser = ma.Nested(AppUserSchema(only=("username",)))
 
+class UserAnnotationSchema(ma.SQLAlchemyAutoSchema):
+	extended_labels = fields.Dict(keys=fields.String(), attribute="extended_labels")
+
+	class Meta:
+		model = UserAnnotation
+		#datetimeformat = "%d-%m-%Y %H:%M"
+		load_instance = True
+		include_fk = True
+	
+	#appuser = ma.Nested(AppUserSchema(only=("username",)))
+
 
 	
 
@@ -322,3 +387,4 @@ user_schema = UserSchema()
 label_schema = LabelSchema()
 appuser_schema = AppUserSchema(exclude=["password"])
 revokedtoken_schema = RevokedTokenSchema()
+userannotation_schema = UserAnnotationSchema()

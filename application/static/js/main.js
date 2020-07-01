@@ -421,7 +421,7 @@ function save_all(callback)
 			403: function(xhr)
 			{
 				alert("Your session has expired. Please log in again");
-				//~ window.location.replace(baseurl);
+				window.location.replace(baseurl);
 			}
 		},
 		headers: {

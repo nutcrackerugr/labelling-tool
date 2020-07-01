@@ -24,6 +24,11 @@ def tagging():
 def tagging_specific(tid):
 	return render_template("tagging.html", specific_tid=tid)
 
+@main_bp.route("/check_ua")
+@view_require_level(7)
+def review_ua():
+	return render_template("review_ua.html")
+
 @main_bp.route("/search")
 @view_require_level(1)
 def search():
