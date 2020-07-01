@@ -26,4 +26,5 @@ apir.add_resource(api.RankTweetsFirstTime,             "/rank/firsttime")
 apir.add_resource(api.CreateGraph,                     "/graph/create/<string:name>")
 apir.add_resource(api.TestCelery,                      "/testcelery")
 apir.add_resource(api.ExpandProperties,                "/properties/expand/<string:filename>")
+apir.add_resource(api.GetStats,                        "/stats")
 

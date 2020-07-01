@@ -151,13 +151,17 @@ function createUserAnnotationComponent(ua)
 
 						$.each(ua["extended_labels"], function(k, v)
 						{
-							html += '<li><strong>' + k + '</strong>: ' + v + '</li>';
+							let position = "neutral";
+							if (v < 0) position = "negative";
+							if (v > 0) position = "positive";
+
+							html += '<li><strong>' + k + ': ' + position + '</strong> (' + v + ')</li>';
 						});
 
 						html += '</ul>'
 						html += '<div class="btn-group">';
 						html += '<button type="button" class="btn btn-outline-danger"  onclick="reviewAnnotation(-1)">Definitely wrong</button>';
-						html += '<button type="button" class="btn btn-outline-primary" onclick="reviewAnnotation(0)">I cannot confirm nor deny</button>';
+						html += '<button type="button" class="btn btn-outline-primary" onclick="reviewAnnotation(0)">I cannot confirm or deny</button>';
 						html += '<button type="button" class="btn btn-outline-success" onclick="reviewAnnotation(1)">Seems right</button>';
 						html += '</div>';
 						$("#ua_list").append(html);

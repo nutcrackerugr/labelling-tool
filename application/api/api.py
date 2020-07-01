@@ -53,6 +53,45 @@ class CreateGraph(Resource):
 		return {"message": "Task scheduled successfully", "task": result.id}, 201
 
 
+class GetStats(Resource):
+	@require_level(7)
+	def get(self):
+		stats = {}
+		stats["no_tweets"] = db.session.query(Tweet.id).count()
+		stats["no_users"] = db.session.query(User.id).count()
+		stats["no_annotations"] = db.session.query(Annotation).count()
+		stats["total_user_annotations"] = db.session.query(UserAnnotation).count()
+		stats["no_user_annotations"] = db.session.query(UserAnnotation).group_by(UserAnnotation.user_id).count()
+
+		appusers = db.session.query(AppUser).all()
+		appuser_stats = []
+		for appuser in appusers:
+			maximum_timestamps = db.session.query(Annotation.tweet_id, 
+				Annotation.appuser_id, func.max(Annotation.timestamp).label("timestamp")
+				).group_by(Annotation.tweet_id).subquery()
+			annotations = db.session.query(Annotation).filter_by(appuser_id=appuser.id).join(maximum_timestamps, and_(
+				maximum_timestamps.c.tweet_id == Annotation.tweet_id, and_(
+					maximum_timestamps.c.appuser_id == Annotation.appuser_id,
+					maximum_timestamps.c.timestamp == Annotation.timestamp)
+				)).count()
+
+			maximum_timestamps = db.session.query(UserAnnotation.user_id, 
+				UserAnnotation.appuser_id, func.max(UserAnnotation.timestamp).label("timestamp")
+				).group_by(UserAnnotation.user_id).subquery()
+			uannotations = db.session.query(UserAnnotation).filter_by(reviewed_by=appuser.id).join(maximum_timestamps, and_(
+				maximum_timestamps.c.user_id == UserAnnotation.user_id, and_(
+					maximum_timestamps.c.appuser_id == UserAnnotation.appuser_id,
+					maximum_timestamps.c.timestamp == UserAnnotation.timestamp)
+				)).count()
+			
+			appuser_stats.append({"reviewed_annotations": uannotations, "annotations": annotations, "username": appuser.username})
+		
+		stats["users"] = appuser_stats
+
+		return stats, 200
+
+
+
 class SearchInText(Resource):
 	@require_level(1)
 	def get(self, q):
