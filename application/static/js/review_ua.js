@@ -188,5 +188,26 @@ $(function(){
 
 	$("#logo").addClass("fa-spin");
 	getUserAnnotation();
+
+	$(document).keydown(function(e)
+	{
+		switch (e.key)
+		{
+			case "n":
+				reviewAnnotation(-1);
+				break;
+				
+			case "y":
+				reviewAnnotation(1)
+				break;
+			
+			case "j":
+				reviewAnnotation(0);
+				break;
+				
+			case "h":
+				$("#keyboard_shortcuts").toggle();
+		}
+	});
 });
 

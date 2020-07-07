@@ -53,8 +53,10 @@ def create_graph(name = "default", path = ""):
 
 @celery.task()
 def expand_properties(properties, name = "default", path = "", steps = 1, alpha = .2):
+    # Load relations graph
     G = nx.read_gpickle("{}{}".format(path, name))
 
+    # Load last annotation for each tweet
     maximum_timestamps = db.session.query(Annotation.tweet_id, 
         Annotation.appuser_id, func.max(Annotation.timestamp).label("timestamp")
         ).group_by(Annotation.tweet_id).subquery()
@@ -69,7 +71,15 @@ def expand_properties(properties, name = "default", path = "", steps = 1, alpha 
     for annotation in annotations:
         for prop in properties:
             if prop in annotation.labels.keys():
+                # Beware: * 2 - 1 expects 2 categories
                 dir_props[annotation.tweet.user.id_str][prop] += annotation.labels[prop] * 2 - 1
+
+                # Retweets should also be counted for p_direct as they have the same properties than the original tweet
+                users_rt = db.session.query(User.id_str).join(Tweet).filter(Tweet.is_retweet == True).filter(Tweet.parent_tweet == annotation.tweet.id_str).all()
+                #users_rt = db.session.query(Tweet.user_id).filter_by(is_retweet=True).filter_by(parent_tweet=annotation.tweet.id_str).all()
+                for user in users_rt:
+                    # Beware: * 2 - 1 expects 2 categories
+                    dir_props[user[0]][prop] += annotation.labels[prop] * 2 - 1
 
     # Beware: not thread-safe
     ext_props = deepcopy(dir_props)
@@ -95,9 +105,23 @@ def expand_properties(properties, name = "default", path = "", steps = 1, alpha 
                 neighbourhood = list(zip(*edges))[1]
 
                 for prop in properties:
+                    sum_prop = 0
+                    pos_count = 0
+                    neg_count = 0
                     for neighbour in neighbourhood:
                         if prop in ext_props[neighbour].keys():
-                            ext_props_aux[user][prop] += alpha * ext_props[neighbour][prop]
+                            sum_prop += ext_props[neighbour][prop]
+                            pos_count += 1 if ext_props[neighbour][prop] > 0 else 0
+                            neg_count += 1 if ext_props[neighbour][prop] < 0 else 0
+
+                    if sum_prop > 0:
+                        factor = pos_count / len(neighbourhood)
+                    elif sum_prop < 0:
+                        factor = neg_count / len(neighbourhood)
+                    else:
+                        factor = (len(neighbourhood) - pos_count - neg_count) / len(neighbourhood)
+                    
+                    ext_props_aux[user][prop] = alpha * factor * sum_prop
         
         # Prepare for next iteration
         ext_props = ext_props_aux
@@ -106,8 +130,12 @@ def expand_properties(properties, name = "default", path = "", steps = 1, alpha 
         # Create annotations
         timestamp = datetime.utcnow()
         for uid_str in ext_props.keys():
-            uid = db.session.query(User.id).filter_by(id_str=uid_str).scalar()
-            ua = UserAnnotation(user_id=uid, appuser_id=0, timestamp=timestamp, extended_labels=dict(ext_props[uid_str]))
+            current_user = db.session.query(User).filter_by(id_str=uid_str).first()
+            
+            # If uid_str user only has retweets, automatically confirm the annotation
+            confirmed = False if db.session.query(Tweet.id).filter_by(user_id=current_user.id).filter_by(is_retweet=False).first() is not None else True
+
+            ua = UserAnnotation(user_id=current_user.id, appuser_id=0, timestamp=timestamp, extended_labels=dict(ext_props[uid_str]), reviewed=confirmed, reviewed_by=0, decision=1)
             db.session.add(ua)
 
         try:
@@ -116,5 +144,3 @@ def expand_properties(properties, name = "default", path = "", steps = 1, alpha 
         except Exception as e:
             print(e)
             return {"message": "Something went wrong in async task", "error": 500}, 500
-
-        
