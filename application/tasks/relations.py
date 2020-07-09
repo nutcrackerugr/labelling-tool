@@ -4,6 +4,7 @@ from application.models import Annotation, Tweet, User, UserAnnotation
 from sqlalchemy import and_, func
 
 import networkx as nx
+import pandas as pd
 
 import time
 from datetime import datetime
@@ -52,9 +53,23 @@ def create_graph(name = "default", path = ""):
 
 
 @celery.task()
-def expand_properties(properties, name = "default", path = "", steps = 1, alpha = .2):
+def expand_properties(properties, name = "default", path = "", steps = 1, alpha = .2, alpha_0_quantile=.1, alpha_1_quantile=.25):
     # Load relations graph
     G = nx.read_gpickle("{}{}".format(path, name))
+    
+    edges_count = pd.Series([len(G.edges(node)) for node in G.nodes()])
+    lower_neigh_count = edges_count.quantile(q=alpha_0_quantile)
+    upper_neigh_count = edges_count.quantile(q=alpha_1_quantile)
+    del edges_count
+
+    def alpha(n_neigh):
+        if n_neigh < lower_neigh_count:
+            return 0
+        elif n_neigh > upper_neigh_count:
+            return 1
+        else:
+            return (n_neigh - lower_neigh_count) / (upper_neigh_count - lower_neigh_count)
+
 
     # Load last annotation for each tweet
     maximum_timestamps = db.session.query(Annotation.tweet_id, 
@@ -69,17 +84,21 @@ def expand_properties(properties, name = "default", path = "", steps = 1, alpha 
     # Compute p_direct
     dir_props = defaultdict(lambda : defaultdict(float))
     for annotation in annotations:
+        user_id_str = annotation.tweet.user.id_str
+        user_tweet_count = len(annotation.tweet.user.tweets)
+
         for prop in properties:
             if prop in annotation.labels.keys():
                 # Beware: * 2 - 1 expects 2 categories
-                dir_props[annotation.tweet.user.id_str][prop] += annotation.labels[prop] * 2 - 1
+                dir_props[user_id_str][prop] += (annotation.labels[prop] * 2 - 1) / user_tweet_count
 
                 # Retweets should also be counted for p_direct as they have the same properties than the original tweet
                 users_rt = db.session.query(User.id_str).join(Tweet).filter(Tweet.is_retweet == True).filter(Tweet.parent_tweet == annotation.tweet.id_str).all()
                 #users_rt = db.session.query(Tweet.user_id).filter_by(is_retweet=True).filter_by(parent_tweet=annotation.tweet.id_str).all()
                 for user in users_rt:
                     # Beware: * 2 - 1 expects 2 categories
-                    dir_props[user[0]][prop] += annotation.labels[prop] * 2 - 1
+                    dir_props[user[0]][prop] += (annotation.labels[prop] * 2 - 1) / user_tweet_count
+
 
     # Beware: not thread-safe
     ext_props = deepcopy(dir_props)
@@ -103,6 +122,7 @@ def expand_properties(properties, name = "default", path = "", steps = 1, alpha 
             edges = G.edges(user)
             if edges:
                 neighbourhood = list(zip(*edges))[1]
+                n_neighbours = len(neighbourhood)
 
                 for prop in properties:
                     sum_prop = 0
@@ -115,13 +135,17 @@ def expand_properties(properties, name = "default", path = "", steps = 1, alpha 
                             neg_count += 1 if ext_props[neighbour][prop] < 0 else 0
 
                     if sum_prop > 0:
-                        factor = pos_count / len(neighbourhood)
+                        symbol_confidence = pos_count / n_neighbours
                     elif sum_prop < 0:
-                        factor = neg_count / len(neighbourhood)
+                        symbol_confidence = neg_count / n_neighbours
                     else:
-                        factor = (len(neighbourhood) - pos_count - neg_count) / len(neighbourhood)
+                        symbol_confidence = (n_neighbours - pos_count - neg_count) / n_neighbours
                     
-                    ext_props_aux[user][prop] = alpha * factor * sum_prop
+                    alpha_current = alpha(n_neighbours)
+                    if alpha_current != 0 and symbol_confidence != 0:
+                        ext_props_aux[user][prop] = alpha_current * symbol_confidence * sum_prop / n_neighbours
+                        ext_props_aux[user]["alpha"] = alpha_current
+                        ext_props_aux[user]["symbol_confidence"] = symbol_confidence
         
         # Prepare for next iteration
         ext_props = ext_props_aux

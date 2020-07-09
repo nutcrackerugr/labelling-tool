@@ -34,3 +34,5 @@ dumps/*
 graph/*
 debatea5rtve.json
 debatearv.json
+
+.vscode/*
