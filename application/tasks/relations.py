@@ -123,29 +123,31 @@ def expand_properties(properties, name = "default", path = "", steps = 1, alpha 
             if edges:
                 neighbourhood = list(zip(*edges))[1]
                 n_neighbours = len(neighbourhood)
+                alpha_current = alpha(n_neighbours)
 
-                for prop in properties:
-                    sum_prop = 0
-                    pos_count = 0
-                    neg_count = 0
-                    for neighbour in neighbourhood:
-                        if prop in ext_props[neighbour].keys():
-                            sum_prop += ext_props[neighbour][prop]
-                            pos_count += 1 if ext_props[neighbour][prop] > 0 else 0
-                            neg_count += 1 if ext_props[neighbour][prop] < 0 else 0
+                if alpha_current > 0:
+                    for prop in properties:
+                        sum_prop = 0
+                        pos_count = 0
+                        neg_count = 0
+                        for neighbour in neighbourhood:
+                            if prop in ext_props[neighbour].keys():
+                                sum_prop += ext_props[neighbour][prop]
+                                pos_count += 1 if ext_props[neighbour][prop] > 0 else 0
+                                neg_count += 1 if ext_props[neighbour][prop] < 0 else 0
 
-                    if sum_prop > 0:
-                        symbol_confidence = pos_count / n_neighbours
-                    elif sum_prop < 0:
-                        symbol_confidence = neg_count / n_neighbours
-                    else:
-                        symbol_confidence = (n_neighbours - pos_count - neg_count) / n_neighbours
-                    
-                    alpha_current = alpha(n_neighbours)
-                    if alpha_current != 0 and symbol_confidence != 0:
-                        ext_props_aux[user][prop] = alpha_current * symbol_confidence * sum_prop / n_neighbours
-                        ext_props_aux[user]["alpha"] = alpha_current
-                        ext_props_aux[user]["symbol_confidence"] = symbol_confidence
+                        if sum_prop > 0:
+                            symbol_confidence = pos_count / n_neighbours
+                        elif sum_prop < 0:
+                            symbol_confidence = neg_count / n_neighbours
+                        else:
+                            symbol_confidence = (n_neighbours - pos_count - neg_count) / n_neighbours
+                        
+                        if symbol_confidence > 0:
+                            ext_props_aux[user]["alpha"] = alpha_current
+                            ext_props_aux[user][prop] = alpha_current * symbol_confidence * sum_prop / n_neighbours
+                            ext_props_aux[user][f"symbol_confidence_{prop}"] = symbol_confidence
+                
         
         # Prepare for next iteration
         ext_props = ext_props_aux

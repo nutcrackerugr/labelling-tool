@@ -455,7 +455,7 @@ function toggleModalHelp(element)
 	let e = $(element);
 	console.log(e.attr("data-title"))
 	$("#modal_long .modal-title").html(e.attr("data-title"));
-	$("#modal_long .modal-body").html(e.attr("data-help"));
+	$("#modal_long .modal-body").html(e.attr("data-help").replace(/[\r\n]/g, "<br /><br />"));
 	$("#modal_long").modal();
 }
 
