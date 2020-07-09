@@ -450,6 +450,15 @@ function save(e)
 	save_all(success);
 }
 
+function toggleModalHelp(element)
+{
+	let e = $(element);
+	console.log(e.attr("data-title"))
+	$("#modal_long .modal-title").html(e.attr("data-title"));
+	$("#modal_long .modal-body").html(e.attr("data-help"));
+	$("#modal_long").modal();
+}
+
 function createLabelComponent(name, disclaimer, labeltag, options, bgcolorhex, help_text)
 {
 	if (!bgcolorhex)
@@ -466,7 +475,7 @@ function createLabelComponent(name, disclaimer, labeltag, options, bgcolorhex, h
 	if (disclaimer)
         html += '<div class="row"><div class="col"><div class="text-muted text-justify small-text mb-1">' + disclaimer + '</div></div></div>';
 	
-	html += '<div class="row"><div class="col-auto"><i class="fa fa-question-circle" data-toggle="tooltip" data-placement="left" title="' + help_text + '" /></div>';
+	html += '<div class="row"><div class="col-auto"><i class="fa fa-question-circle cursor-pointer" onclick="toggleModalHelp(this);" data-title="' + name + ' help" data-help="' + help_text + '" /></div>';
 	html += '<div class="col-auto"><span class="font-weight-bold">' + labeltag + '</span></div>';
 	html += '<div class="col-auto"><div class="custom-control custom-switch align-middle">';
 	html += '<input type="checkbox" class="custom-control-input" id="label-' + name.replace(/ /g, '_') + '-switch" checked>';
