@@ -1,5 +1,5 @@
 from application import celery, db
-from application.models import Annotation, Tweet, User, UserAnnotation
+from application.models import Annotation, Label, Tweet, User, UserAnnotation
 
 from sqlalchemy import and_, func
 
@@ -56,12 +56,13 @@ def create_graph(name = "default", path = ""):
 def expand_properties(properties, name = "default", path = "", steps = 1, alpha = .2, alpha_0_quantile=.1, alpha_1_quantile=.25):
     # Load relations graph
     G = nx.read_gpickle("{}{}".format(path, name))
-    
+
     edges_count = pd.Series([len(G.edges(node)) for node in G.nodes()])
     lower_neigh_count = edges_count.quantile(q=alpha_0_quantile)
     upper_neigh_count = edges_count.quantile(q=alpha_1_quantile)
     del edges_count
 
+    # Neighbourhood weight
     def alpha(n_neigh):
         if n_neigh < lower_neigh_count:
             return 0
@@ -69,6 +70,17 @@ def expand_properties(properties, name = "default", path = "", steps = 1, alpha 
             return 1
         else:
             return (n_neigh - lower_neigh_count) / (upper_neigh_count - lower_neigh_count)
+
+    # Label normalisation: dict of lambdas
+    prop_labels = db.session.query(Label).filter(Label.name.in_(properties)).all()
+    norm_label_value = {}
+
+    for label in prop_labels:
+        label_values = label.values.split(',')
+        if len(label_values) == 2:
+            norm_label_value[label.name] = lambda x: x * 2 - 1
+        elif len(label_values) == 3:
+            norm_label_value[label.name] = lambda x: x - 1
 
 
     # Load last annotation for each tweet
@@ -89,15 +101,12 @@ def expand_properties(properties, name = "default", path = "", steps = 1, alpha 
 
         for prop in properties:
             if prop in annotation.labels.keys():
-                # Beware: * 2 - 1 expects 2 categories
-                dir_props[user_id_str][prop] += (annotation.labels[prop] * 2 - 1) / user_tweet_count
+                dir_props[user_id_str][prop] += norm_label_value[prop](annotation.labels[prop]) / user_tweet_count
 
                 # Retweets should also be counted for p_direct as they have the same properties than the original tweet
                 users_rt = db.session.query(User.id_str).join(Tweet).filter(Tweet.is_retweet == True).filter(Tweet.parent_tweet == annotation.tweet.id_str).all()
-                #users_rt = db.session.query(Tweet.user_id).filter_by(is_retweet=True).filter_by(parent_tweet=annotation.tweet.id_str).all()
                 for user in users_rt:
-                    # Beware: * 2 - 1 expects 2 categories
-                    dir_props[user[0]][prop] += (annotation.labels[prop] * 2 - 1) / user_tweet_count
+                    dir_props[user[0]][prop] += norm_label_value[prop](annotation.labels[prop]) / user_tweet_count
 
 
     # Beware: not thread-safe
@@ -130,6 +139,7 @@ def expand_properties(properties, name = "default", path = "", steps = 1, alpha 
                         sum_prop = 0
                         pos_count = 0
                         neg_count = 0
+
                         for neighbour in neighbourhood:
                             if prop in ext_props[neighbour].keys():
                                 sum_prop += ext_props[neighbour][prop]
