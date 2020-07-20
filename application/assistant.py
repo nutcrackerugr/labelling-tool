@@ -82,7 +82,10 @@ class ExtendedPropertiesAssistant(Assistant):
 				label = Label.query.filter_by(name=label_name).first()
 				if label:
 					value_names = label.values.split(',')
-					response[label_name]["value_name"] = value_names[0] if value < 0 else value_names[1]
+					if len(value_names) == 2:
+						response[label_name]["value_name"] = value_names[0] if value < 0 else value_names[1]
+					elif len(value_names) == 3:
+						response[label_name]["value_name"] = value_names[0] if value < 0 else value_names[1] if value == 0 else value_names[2]
 
 			return 1, response
 		else:

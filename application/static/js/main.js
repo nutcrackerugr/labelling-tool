@@ -128,6 +128,7 @@ function getReasons(n, callback)
 					}
 					else if (data[key]["how"] == "extended_properties")
 					{
+						let ua = data[key]["why"];
 						cls = data[key]["what"] == "1" ? "positive" : "neutral";
 						css_cls = data[key]["what"] == "1" ? "list-group-item-success" : "list-group-item-info";
 						
@@ -142,10 +143,29 @@ function getReasons(n, callback)
 						}
 						
 						$("#reasons").append("<button class=\"btn btn-primary\" type=\"button\" data-toggle=\"collapse\" data-target=\"#expandedPropertiesReasons\">Show Expanded Properties</button>");
-						$("#reasons").append("<li class=\"list-group-item " + css_cls + " hanging-indent collapse\" id=\"expandedPropertiesReasons\">"
-						                     + "This user's neighbourhood suggests the following " + Object.keys(data[key]["why"]).length + " properties:<br />"
-						                     + whys + " </li>"
-						                    );
+
+						let html = "<li class=\"list-group-item " + css_cls + " hanging-indent collapse\" id=\"expandedPropertiesReasons\">";
+
+						html += 'This user\'s neighbourhood suggests the following properties:';
+						html += '<ul>';
+
+						if ($.isEmptyObject(ua))
+							html += "<li>not enough information yet</li>";
+						else
+							$.each(ua, function(k, v)
+							{
+								if (k.indexOf("symbol_") == -1)
+								{
+									if (k == "alpha")
+										html += '<li><strong>Importance (alpha): </strong> ' + v["value"] + '</li>';
+									else
+										html += '<li><strong>' + k + ': ' + ua[k]["value_name"] + '</strong> (' + v["value"] + ')&emsp;<strong>Confidence:</strong> ' + ua["symbol_confidence_" + k]["value"] + '</li>';
+								}
+							});
+
+						html += '</ul>'
+
+						$("#reasons").append(html);
 					}
 					else
 						$("#reasons").append("<li class=\"list-group-item " + css_cls + " hanging-indent\" data-toggle=\"tooltip\" data-placement=\"right\" title=\"Reasons: " + whys + "\">"
@@ -453,7 +473,6 @@ function save(e)
 function toggleModalHelp(element)
 {
 	let e = $(element);
-	console.log(e.attr("data-title"))
 	$("#modal_long .modal-title").html(e.attr("data-title"));
 	$("#modal_long .modal-body").html(e.attr("data-help").replace(/[\r\n]/g, "<br /><br />"));
 	$("#modal_long").modal();
