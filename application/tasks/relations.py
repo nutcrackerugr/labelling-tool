@@ -12,6 +12,8 @@ from collections import Counter, defaultdict
 from copy import deepcopy
 from itertools import combinations
 
+import numpy as np
+
 import json
 
 
@@ -167,11 +169,28 @@ def expand_properties(properties, name = "default", path = "", steps = 1, alpha 
         timestamp = datetime.utcnow()
         for uid_str in ext_props.keys():
             current_user = db.session.query(User).filter_by(id_str=uid_str).first()
+            current_user_annotation = UserAnnotation.get_last_annotation_for_user(current_user.id)
+            # current_user_annotation = db.session.query(UserAnnotation).filter_by(user_id=current_user.id).order_by(UserAnnotation.timestamp.desc()).first()
             
             # If uid_str user only has retweets, automatically confirm the annotation
             confirmed = False if db.session.query(Tweet.id).filter_by(user_id=current_user.id).filter_by(is_retweet=False).first() is not None else True
+            decision = 1
+            reviewer = 0
 
-            ua = UserAnnotation(user_id=current_user.id, appuser_id=0, timestamp=timestamp, extended_labels=dict(ext_props[uid_str]), reviewed=confirmed, reviewed_by=0, decision=1)
+            # If each label has the same sign than an already-confirmed annotation, reuse decision
+            if current_user_annotation and not confirmed and current_user_annotation.reviewed:
+                confirmed = True
+
+                for prop in properties:
+                    if np.sign(current_user_annotation.extended_labels[prop]) != np.sign(ext_props[uid_str][prop]):
+                        confirmed = False
+                
+                if confirmed:
+                    decision = current_user_annotation.decision
+                    reviewer = current_user_annotation.reviewed_by
+
+
+            ua = UserAnnotation(user_id=current_user.id, appuser_id=0, timestamp=timestamp, extended_labels=dict(ext_props[uid_str]), reviewed=confirmed, reviewed_by=reviewer, decision=decision)
             db.session.add(ua)
 
         try:
