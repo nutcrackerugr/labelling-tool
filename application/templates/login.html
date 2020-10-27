@@ -39,7 +39,8 @@
 								{% endif %}
 							{% endwith %}
 							<h5 class="card-title text-center">Nutcracker - Log In</h5>
-							<h6 class="card-subtitle text-center"><a href="english">English Tweets</a> / <a href="/">Spanish Tweets</a></h5>
+							<h6 class="card-subtitle text-center"><a href="english">English Tweets</a> / <a href="/">Spanish Tweets</a></h6>
+							<h6 id="web_version"></h6>
 							<form class="text-center" id="loginform">
 								<div class="form-group text-left">
 									<label for="username">Username</label>
@@ -61,5 +62,12 @@
 		<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
 		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
 		<script src="{{ url_for('static', filename='js/login.js')|autoversion }}"></script>
+		<script>
+			$(function()
+			{
+				if (window.location.href.indexOf("english") > -1)
+					$("#web_version").html("This is the English Version");
+			});
+		</script>
 	</body>
 </html>
