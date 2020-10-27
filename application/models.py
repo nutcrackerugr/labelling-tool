@@ -50,7 +50,7 @@ class Tweet(db.Model):
 	
 	@classmethod
 	def create_by_batch_json(cls, filename):
-		with open(os.path.dirname(os.path.dirname(os.path.dirname(__file__))) + "/dumps/" + filename, 'r') as jsonfile:
+		with open(os.path.dirname(os.path.dirname(__file__)) + "/dumps/" + filename, 'r') as jsonfile:
 			batch = json.load(jsonfile)
 
 			count = 0
