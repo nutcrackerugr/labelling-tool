@@ -78,7 +78,7 @@ class GetStats(Resource):
 			maximum_timestamps = db.session.query(UserAnnotation.user_id, 
 				UserAnnotation.appuser_id, func.max(UserAnnotation.timestamp).label("timestamp")
 				).group_by(UserAnnotation.user_id).subquery()
-			uannotations = db.session.query(UserAnnotation).filter_by(reviewed_by=appuser.id).join(maximum_timestamps, and_(
+			uannotations = db.session.query(UserAnnotation).filter_by(reviewed_by=appuser.id, reviewed=True).join(maximum_timestamps, and_(
 				maximum_timestamps.c.user_id == UserAnnotation.user_id, and_(
 					maximum_timestamps.c.appuser_id == UserAnnotation.appuser_id,
 					maximum_timestamps.c.timestamp == UserAnnotation.timestamp)
@@ -87,6 +87,17 @@ class GetStats(Resource):
 			appuser_stats.append({"reviewed_annotations": uannotations, "annotations": annotations, "username": appuser.username})
 		
 		stats["users"] = appuser_stats
+
+		maximum_timestamps = db.session.query(UserAnnotation.user_id, 
+			UserAnnotation.appuser_id, func.max(UserAnnotation.timestamp).label("timestamp")
+			).group_by(UserAnnotation.user_id).subquery()
+		failed_annotations = db.session.query(UserAnnotation).filter_by(reviewed=True, decision=-1).join(maximum_timestamps, and_(
+			maximum_timestamps.c.user_id == UserAnnotation.user_id, and_(
+				maximum_timestamps.c.appuser_id == UserAnnotation.appuser_id,
+				maximum_timestamps.c.timestamp == UserAnnotation.timestamp)
+			))
+
+		stats["failed_annotations"] = failed_annotations.count()
 
 		return stats, 200
 
