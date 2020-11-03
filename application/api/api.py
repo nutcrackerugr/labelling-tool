@@ -66,7 +66,23 @@ class GetStats(Resource):
 		stats["no_users"] = db.session.query(User.id).count()
 		stats["no_annotations"] = db.session.query(Annotation).count()
 		stats["total_user_annotations"] = db.session.query(UserAnnotation).count()
-		stats["no_user_annotations"] = db.session.query(UserAnnotation).group_by(UserAnnotation.user_id).count()
+
+		maximum_timestamps = db.session.query(
+			UserAnnotation.user_id, 
+			UserAnnotation.appuser_id,
+			func.max(UserAnnotation.timestamp).label("timestamp")
+			).group_by(UserAnnotation.user_id).subquery()
+		
+		uannotations = db.session.query(UserAnnotation).join(
+			maximum_timestamps, and_(
+				maximum_timestamps.c.user_id == UserAnnotation.user_id, and_(
+					maximum_timestamps.c.appuser_id == UserAnnotation.appuser_id,
+					maximum_timestamps.c.timestamp == UserAnnotation.timestamp
+					)
+				)	
+			).count()
+
+		stats["no_user_annotations"] = uannotations
 
 		appusers = db.session.query(AppUser).filter(AppUser.permission_level < level).all()
 		appuser_stats = []
