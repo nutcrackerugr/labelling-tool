@@ -73,7 +73,7 @@ class GetStats(Resource):
 				maximum_timestamps.c.tweet_id == Annotation.tweet_id, and_(
 					maximum_timestamps.c.appuser_id == Annotation.appuser_id,
 					maximum_timestamps.c.timestamp == Annotation.timestamp)
-				)).count()
+				)).all()
 
 			maximum_timestamps = db.session.query(UserAnnotation.user_id, 
 				UserAnnotation.appuser_id, func.max(UserAnnotation.timestamp).label("timestamp")
@@ -83,8 +83,10 @@ class GetStats(Resource):
 					maximum_timestamps.c.appuser_id == UserAnnotation.appuser_id,
 					maximum_timestamps.c.timestamp == UserAnnotation.timestamp)
 				)).count()
+
+			nonempty_annotations = len(list(filter(lambda a: not a.is_empty(), annotations)))
 			
-			appuser_stats.append({"reviewed_annotations": uannotations, "annotations": annotations, "username": appuser.username})
+			appuser_stats.append({"reviewed_annotations": uannotations, "annotations": len(annotations), "nonempty_annotations": nonempty_annotations, "username": appuser.username})
 		
 		stats["users"] = appuser_stats
 

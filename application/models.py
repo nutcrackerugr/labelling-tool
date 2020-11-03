@@ -128,6 +128,18 @@ class Annotation(db.Model):
 	@classmethod
 	def get_last_annotation_for_tweet(cls, tid):
 		return Annotation.query.filter_by(tweet_id=tid).order_by(Annotation.timestamp.desc()).first()
+	
+	def is_empty(self):
+		empty = not self.labels and not self.highlights and not self.comment
+		
+		if self.tags:
+			for item in self.tags:
+				if item:
+					empty = False
+					break
+		
+		return empty
+
 
 
 class User(db.Model):

@@ -59,7 +59,9 @@ def myprofile():
 			maximum_timestamps.c.timestamp == Annotation.timestamp)
 		)).order_by(Annotation.timestamp.desc()).all()
 	
-	stats = {"total": len(annotations)}
+	nonempty_annotations = list(filter(lambda a: not a.is_empty(), annotations))
+	
+	stats = {"total": len(nonempty_annotations)}
 
 
 	return render_template("myprofile.html", user=appuser.__dict__, annotations=[a.tweet_id for a in annotations[:100]], stats=stats)
