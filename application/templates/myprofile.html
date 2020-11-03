@@ -1,3 +1,4 @@
+{% set active_page = "myprofile" %}
 <!DOCTYPE html>
 <html class="h-100">
 	<head>
@@ -20,26 +21,7 @@
 							Nutcracker Tagging System
 						</a>
 						<div class="collapse navbar-collapse" id="navbarContent">
-							<ul class="navbar-nav mr-auto">
-								<li class="nav-item">
-									<a class="nav-link" href="{{ url_for('main.rank_tagging') }}">Annotate</a>
-								</li>
-								<li class="nav-item">
-									<a class="nav-link" href="{{ url_for('main.tagging') }}">Review</a>
-								</li>
-								<li class="nav-item">
-									<a class="nav-link" href="{{ url_for('main.review_ua') }}">Auto-annotations</a>
-								</li>
-								<li class="nav-item">
-									<a class="nav-link" href="{{ url_for('main.search') }}">Search</a>
-								</li>
-								<li class="nav-item">
-									<a class="nav-link" href="{{ url_for('main.batchupload') }}">Upload</a>
-								</li>
-								<li class="nav-item active">
-									<a class="nav-link" href="{{ url_for('main.myprofile') }}">My Profile</a>
-								</li>
-							</ul>
+							{% include "menu.partial.html" %}
 						</div>
 					</nav>
 				</div>

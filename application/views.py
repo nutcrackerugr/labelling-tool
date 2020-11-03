@@ -66,6 +66,11 @@ def myprofile():
 
 	return render_template("myprofile.html", user=appuser.__dict__, annotations=[a.tweet_id for a in annotations[:100]], stats=stats)
 
+@main_bp.route("/stats")
+@view_require_level(2)
+def stats():
+	return render_template("stats.html")
+
 @main_bp.route("/signup")
 def signup():
 	return render_template("signup.html")

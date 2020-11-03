@@ -1,6 +1,6 @@
 from flask import request, current_app
 from flask_restful import Resource
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt_claims
 from sqlalchemy import null, and_
 
 from application.models import *
@@ -54,8 +54,13 @@ class CreateGraph(Resource):
 
 
 class GetStats(Resource):
-	@require_level(7)
+	@require_level(2)
 	def get(self):
+		claims = get_jwt_claims()
+		level = claims["permission_level"]
+		if level == 9:
+			level += 1 # To ensure superuser sees everything
+
 		stats = {}
 		stats["no_tweets"] = db.session.query(Tweet.id).count()
 		stats["no_users"] = db.session.query(User.id).count()
@@ -63,7 +68,7 @@ class GetStats(Resource):
 		stats["total_user_annotations"] = db.session.query(UserAnnotation).count()
 		stats["no_user_annotations"] = db.session.query(UserAnnotation).group_by(UserAnnotation.user_id).count()
 
-		appusers = db.session.query(AppUser).all()
+		appusers = db.session.query(AppUser).filter(AppUser.permission_level < level).all()
 		appuser_stats = []
 		for appuser in appusers:
 			maximum_timestamps = db.session.query(Annotation.tweet_id, 
@@ -86,7 +91,7 @@ class GetStats(Resource):
 
 			nonempty_annotations = len(list(filter(lambda a: not a.is_empty(), annotations)))
 			
-			appuser_stats.append({"reviewed_annotations": uannotations, "annotations": len(annotations), "nonempty_annotations": nonempty_annotations, "username": appuser.username})
+			appuser_stats.append({"reviewed_annotations": uannotations, "annotations": len(annotations), "nonempty_annotations": nonempty_annotations, "username": appuser.username, "name": appuser.name})
 		
 		stats["users"] = appuser_stats
 
