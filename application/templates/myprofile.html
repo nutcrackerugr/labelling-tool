@@ -71,13 +71,11 @@
 									<h5 class="mt-4">Your last 100 annotations</h5>
 									<p>	
 										{% for tweet in annotations %}
-										<a href="/review/{{ tweet }}" alt="Review tweet {{ tweet }}">{{ tweet }}</a>&nbsp;
+										<a href="{{ url_for('main.review_ua') }}/{{ tweet }}" alt="Review tweet {{ tweet }}">{{ tweet }}</a>&nbsp;
 										{% endfor %}
 									</p>
-										
 								</div>
 							</div>
-							
 						</div>
 					</div>
 				</div>
