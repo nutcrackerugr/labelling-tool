@@ -219,7 +219,8 @@ function create_tweet(data)
 			{
 				$("#user_description").html(userdata["description"]);
 				$("#user_profile_pic").attr("src", userdata["profile_image_url_https"]);
-				$("#user_name").html(userdata["name"] + ' <span class="text-secondary">@' + userdata["screen_name"] + '</span>');
+				//$("#user_name").html(userdata["name"] + ' <span class="text-secondary">@' + userdata["screen_name"] + '</span>');
+				$("#user_name").html("<Hidden Name>" + ' <span class="text-secondary"><hidden username></span>');
 				last_user = userdata;
 			}
 		});
