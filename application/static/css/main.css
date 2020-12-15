@@ -122,3 +122,8 @@ html, body
 .card-columns {
 	column-count: 2;
 }
+
+#double-labels-2
+{
+	background-color: #ffe0ec;
+}

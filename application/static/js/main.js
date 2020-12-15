@@ -482,14 +482,16 @@ function toggleModalHelp(element)
 function createLabelComponent(name, disclaimer, labeltag, options, bgcolorhex, help_text)
 {
 	if (!bgcolorhex)
-		bgcolorhex = "f8f9fa";
+		bgcolorhex = "inherit";
+	else
+		bgcolorhex = "#" + bgcolorhex;
 	let html = "";
 
 	if (!help_text || help_text === null)
 		help_text = "No help available for this label";
 	
 	
-	html += '<div class="row py-2 border-top" style="background-color: #' + bgcolorhex + ';">';
+	html += '<div class="row py-2 border-top" style="background-color: ' + bgcolorhex + ';">';
 	html += '<div class="col">';
 	
 	if (disclaimer)
