@@ -123,6 +123,11 @@ html, body
 	column-count: 2;
 }
 
+#double-labels-1
+{
+	background-color: #ccfaff;
+}
+
 #double-labels-2
 {
 	background-color: #ffe0ec;
