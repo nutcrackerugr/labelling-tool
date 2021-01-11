@@ -133,4 +133,5 @@ html, body
 
 body.arabic #tweet_content, body.arabic #othertweets li {
 	direction: rtl;
+	text-align: right;
 }
