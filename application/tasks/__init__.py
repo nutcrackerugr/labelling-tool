@@ -8,7 +8,7 @@ def rqjob(func):
         from application import create_app
     
         job = get_current_job()
-        config_name = f"{job.origin[len('nutcracker_tasks'):]}config" if job.origin.startswith("nutcracker_tasks_") else "config"
+        config_name = f"{job.origin[len('nutcracker_tasks_'):]}config" if job.origin.startswith("nutcracker_tasks_") else "config"
         app = create_app(config=config_name)
 
         with app.app_context():
