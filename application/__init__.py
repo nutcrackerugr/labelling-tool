@@ -10,11 +10,8 @@ from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager, verify_jwt_in_request, get_jwt_claims
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-from flask_worker import Manager
-from flask_socketio import SocketIO
 from redis import Redis
 from rq import Queue
-import eventlet
 
 from .assistant import AssistantManager, OntologyAssistant, ExtendedPropertiesAssistant
 
