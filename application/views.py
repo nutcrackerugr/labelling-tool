@@ -78,3 +78,8 @@ def signup():
 @main_bp.route("/phpinfo")
 def teapot():
 	abort(418)
+
+@main_bp.route("/workertest")
+def workertest():
+	worker = Worker.query.filter_by(name="test").first or Worker("test", AQUITASK)
+	return worker.result if worker.job_finished else worker()

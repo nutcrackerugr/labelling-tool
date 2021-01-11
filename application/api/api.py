@@ -8,48 +8,74 @@ from application import db, ma, assistant_manager, require_level
 
 from datetime import datetime, timedelta
 
-from application.tasks.tweets import repair_retweets, rank_retweets, rank_tweets_first_time
+from application.tasks.tweets import repair_retweets, rank_retweets, rank_tweets_first_time, just_sleep
 from application.tasks.relations import test_task, create_graph, expand_properties
 
 import random
 
-class TestCelery(Resource):
+
+class TestWorker(Resource):
 	@require_level(9)
 	def get(self):
-		result = test_task.delay()
+		username = get_jwt_identity()
+		appuser = AppUser.query.filter_by(username=username).scalar()
+
+		result = appuser.launch_task("tweets.just_sleep_with_params", 3)
+
 		return {"message": "Task scheduled successfully", "task": result.id}, 201
+
 
 class ExpandProperties(Resource):
 	@require_level(9)
 	def get(self, filename):
-		result = expand_properties.delay(current_app.config["EXTENDABLE_PROPERTIES"], name=filename, path=current_app.config["GRAPH_PATH"])
+		username = get_jwt_identity()
+		appuser = AppUser.query.filter_by(username=username).scalar()
+
+		result = appuser.launch_task("relations.expand_properties", current_app.config["EXTENDABLE_PROPERTIES"], name=filename, path=current_app.config["GRAPH_PATH"])
+
 		return {"message": "Task scheduled successfully", "task": result.id}, 201
 
 class RepairRetweets(Resource):
 	@require_level(8)
 	def get(self, filename):
-		result = repair_retweets.delay("{}{}".format(current_app.config["DUMPS_PATH"], filename))
+		username = get_jwt_identity()
+		appuser = AppUser.query.filter_by(username=username).scalar()
+
+		result = appuser.launch_task("tweets.repair_retweets", "{}{}".format(current_app.config["DUMPS_PATH"], filename))
+
 		return {"message": "Task scheduled successfully", "task": result.id}, 201
 
 
 class RankRetweets(Resource):
 	@require_level(8)
 	def get(self):
-		result = rank_retweets.delay()
+		username = get_jwt_identity()
+		appuser = AppUser.query.filter_by(username=username).scalar()
+
+		result = appuser.launch_task("tweets.rank_retweets")
+
 		return {"message": "Task scheduled successfully", "task": result.id}, 201
 
 
 class RankTweetsFirstTime(Resource):
 	@require_level(8)
 	def get(self):
-		result = rank_tweets_first_time.delay()
-		return {"message": "Task scheduled successfuly", "task": result.id}, 201
+		username = get_jwt_identity()
+		appuser = AppUser.query.filter_by(username=username).scalar()
+
+		result = appuser.launch_task("tweets.rank_tweets_first_time")
+
+		return {"message": "Task scheduled successfully", "task": result.id}, 201
 
 
 class CreateGraph(Resource):
 	@require_level(8)
 	def get(self, name):
-		result = create_graph.delay(path=current_app.config["GRAPH_PATH"], name=name)
+		username = get_jwt_identity()
+		appuser = AppUser.query.filter_by(username=username).scalar()
+
+		result = appuser.launch_task("relations.create_graph", path=current_app.config["GRAPH_PATH"], name=name)
+
 		return {"message": "Task scheduled successfully", "task": result.id}, 201
 
 

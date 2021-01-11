@@ -5,6 +5,7 @@ import os
 
 from datetime import datetime, timedelta
 
+from flask import current_app
 from flask_bcrypt import Bcrypt
 from flask_marshmallow import Marshmallow
 from flask_sqlalchemy import SQLAlchemy
@@ -241,6 +242,7 @@ class AppUser(db.Model):
 	authorized = db.Column(db.Boolean, nullable=False, default=False)
 	permission_level = db.Column(db.Integer, nullable=False, default=0)
 	annotations = db.relationship("Annotation", backref="appuser", lazy=True)
+	tasks = db.relationship("Task", backref="appuser", lazy=True)
 	
 	
 	def __init__(self, username, password, email=None, authorized=False, permission_level=0):
@@ -313,6 +315,21 @@ class AppUser(db.Model):
 			return {"message": "Session expired. Please log in again", "error": 401}
 		except jwt.InvalidTokenError:
 			return {"message": "Invalid session. Please log in again", "error": 401}
+	
+	def launch_task(self, name, *args, **kwargs):
+		rq_job = current_app.task_queue.enqueue(f"application.tasks.{name}", *args, **kwargs)
+		task = Task(id=rq_job.get_id(), name=name, appuser=self)
+		
+		db.session.add(task)
+		db.session.commit()
+
+		return task
+	
+	def get_tasks_in_progress(self):
+		return Task.query.filter_by(user=self, completed=False).all()
+	
+	def get_task_in_progress(self, name):
+		return Task.query.filter_by(name=name, user=self, completed=False).first()
 
 
 class RevokedToken(db.Model):
@@ -327,6 +344,27 @@ class RevokedToken(db.Model):
 	def is_jti_blacklisted(cls, jti):
 		query = cls.query.filter_by(jti=jti).first()
 		return bool(query)
+
+
+class Task(db.Model):
+	id = db.Column(db.String(36), primary_key=True)
+	name = db.Column(db.String(128), index=True)
+	appuser_id = db.Column(db.Integer, db.ForeignKey("app_user.id"), nullable=False)
+	completed = db.Column(db.Boolean, default=False)
+	exception = db.Column(db.Boolean, default=False)
+	created_at = db.Column(db.DateTime, default=datetime.utcnow)
+	completed_at = db.Column(db.DateTime)
+
+	def get_rq_job(self):
+		try:
+			rq_job = rq.job.Job.fetch(self.id, connection=current_app.redis)
+			return rq_job
+		except (redis.exceptions.RedisError, rq.exceptions.NoSuchJobError):
+			return None
+
+	def get_progress(self):
+		job = self.get_rq_job()
+		return job.meta.get("progress", 0) if job is not None else 100
 
 
 class AppUserSchema(ma.SQLAlchemyAutoSchema):

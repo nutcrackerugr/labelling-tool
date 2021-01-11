@@ -1,11 +1,13 @@
-from application import celery, db
-from application.models import Annotation, Tweet
+from application import db
+from application.models import Annotation, Tweet, Task
 
 from collections import Counter
 
 from sqlalchemy import and_
 
-@celery.task()
+from . import rqjob
+
+@rqjob
 def repair_retweets(filepath):
     import json
 
@@ -21,7 +23,7 @@ def repair_retweets(filepath):
     db.session.commit()
 
 
-@celery.task()
+@rqjob
 def rank_retweets():
     db.session.query(Tweet).filter_by(is_retweet=True).update({Tweet.rank: -1})
     db.session.commit()
@@ -36,7 +38,7 @@ def rank_retweets():
 
 
 
-@celery.task()
+@rqjob
 def rank_tweets_first_time():
     # Set default importance
     db.session.query(Tweet).update({Tweet.rank: 1})
@@ -69,7 +71,7 @@ def rank_tweets_first_time():
         return {"message": "Something went wrong in async task", "error": 500}, 500
 
 
-@celery.task()
+@rqjob
 def rank_negative_annotated_tweets():
     # Rank negatively those tweets that are already annotated
     annotations = db.session.query(Annotation.tweet_id).all()
@@ -82,3 +84,11 @@ def rank_negative_annotated_tweets():
     except Exception as e:
         print(e)
         return {"message": "Something went wrong in async task", "error": 500}, 500
+
+
+@rqjob
+def just_sleep():
+    import time
+    time.sleep(10)
+
+    return "OK"

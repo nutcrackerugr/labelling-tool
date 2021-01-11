@@ -8,8 +8,13 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager, verify_jwt_in_request, get_jwt_claims
-from celery import Celery
 from werkzeug.middleware.proxy_fix import ProxyFix
+
+from flask_worker import Manager
+from flask_socketio import SocketIO
+from redis import Redis
+from rq import Queue
+import eventlet
 
 from .assistant import AssistantManager, OntologyAssistant, ExtendedPropertiesAssistant
 
@@ -40,9 +45,6 @@ class ReverseProxyPrefixFix(object):
 db = SQLAlchemy()
 ma = Marshmallow()
 jwt = JWTManager()
-celery = Celery()
-
-
 
 assistant_manager = AssistantManager()
 
@@ -103,33 +105,18 @@ def view_require_level(level):
 	return decorator
 
 
-def init_celery(app=None):
-	app = app or create_app()
-	celery.conf.broker_url = app.config["CELERY_BROKER_URL"]
-	#celery.conf.result_backend = app.config["CELERY_RESULT_BACKEND"]
-	celery.conf.update(app.config)
-
-	class ContextTask(celery.Task):
-		"""Make celery tasks work with Flask app context"""
-
-		def __call__(self, *args, **kwargs):
-			with app.app_context():
-				return self.run(*args, **kwargs)
-
-	celery.Task = ContextTask
-	return celery
-
-
 def create_app(config="config"):
 	app = Flask(__name__, instance_relative_config=False)
 	app.config.from_object(config)
+
+	app.redis = Redis.from_url(app.config["REDIS_URL"])
+	app.task_queue = Queue(name=app.config["REDIS_QUEUE"], connection=app.redis)
 
 	ReverseProxyPrefixFix(app)
 	
 	db.init_app(app)
 	ma.init_app(app)
 	jwt.init_app(app)
-	init_celery(app)
 	migrate = Migrate(app, db)
 	
 	# Assistants

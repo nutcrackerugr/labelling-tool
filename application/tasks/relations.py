@@ -1,4 +1,4 @@
-from application import celery, db
+from application import db
 from application.models import Annotation, Label, Tweet, User, UserAnnotation
 
 from sqlalchemy import and_, func
@@ -16,13 +16,15 @@ import numpy as np
 
 import json
 
+from . import rqjob
 
-@celery.task()
+
+@rqjob
 def test_task():
     print("It works!")
     return True
 
-@celery.task()
+@rqjob
 def create_graph(name = "default", path = ""):
     G = nx.Graph()
 
@@ -54,7 +56,7 @@ def create_graph(name = "default", path = ""):
     nx.write_gpickle(G, "{}{}_{}.gpickle".format(path, name, time.strftime("%Y%m%d-%H%M%S")))
 
 
-@celery.task()
+@rqjob
 def expand_properties(properties, name = "default", path = "", steps = 1, alpha = .2, alpha_0_quantile=.1, alpha_1_quantile=.25):
     # Load relations graph
     G = nx.read_gpickle("{}{}".format(path, name))
