@@ -20,7 +20,7 @@ class TestWorker(Resource):
 		username = get_jwt_identity()
 		appuser = AppUser.query.filter_by(username=username).scalar()
 
-		result = appuser.launch_task("tweets.just_sleep_with_params", 3)
+		result = appuser.launch_task("tweets.just_sleep")
 
 		return {"message": "Task scheduled successfully", "task": result.id}, 201
 

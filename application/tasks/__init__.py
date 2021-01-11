@@ -6,10 +6,12 @@ from datetime import datetime
 def rqjob(func):
     def rqjob_inner(*args, **kwargs):
         from application import create_app
-        
-        app = create_app()
+    
+        job = get_current_job()
+        config_name = f"{job.origin[len('nutcracker_tasks'):]}config" if job.origin.startswith("nutcracker_tasks_") else "config"
+        app = create_app(config=config_name)
+
         with app.app_context():
-            job = get_current_job()
             task = Task.query.get(job.get_id())
 
             try:
