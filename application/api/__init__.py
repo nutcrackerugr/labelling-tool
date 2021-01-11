@@ -28,4 +28,5 @@ apir.add_resource(api.CreateGraph,                     "/graph/create/<string:na
 apir.add_resource(api.TestWorker,                      "/testworker")
 apir.add_resource(api.ExpandProperties,                "/properties/expand/<string:filename>")
 apir.add_resource(api.GetStats,                        "/stats")
+apir.add_resource(api.GetCompletedTasks,               "/tasks/completed")
 

@@ -326,10 +326,13 @@ class AppUser(db.Model):
 		return task
 	
 	def get_tasks_in_progress(self):
-		return Task.query.filter_by(user=self, completed=False).all()
+		return Task.query.filter_by(appuser=self, completed=False).all()
+	
+	def get_completed_tasks(self):
+		return Task.query.filter_by(appuser=self, completed=True).all()
 	
 	def get_task_in_progress(self, name):
-		return Task.query.filter_by(name=name, user=self, completed=False).first()
+		return Task.query.filter_by(name=name, appuser=self, completed=False).first()
 
 
 class RevokedToken(db.Model):
@@ -365,7 +368,6 @@ class Task(db.Model):
 	def get_progress(self):
 		job = self.get_rq_job()
 		return job.meta.get("progress", 0) if job is not None else 100
-
 
 class AppUserSchema(ma.SQLAlchemyAutoSchema):
 	def make_appuser(self, data, **kwargs):
@@ -427,7 +429,10 @@ class UserAnnotationSchema(ma.SQLAlchemyAutoSchema):
 	
 	#appuser = ma.Nested(AppUserSchema(only=("username",)))
 
-
+class TaskSchema(ma.SQLAlchemyAutoSchema):
+	class Meta:
+		model = Task
+		load_instance = True
 	
 
 
@@ -438,3 +443,4 @@ label_schema = LabelSchema()
 appuser_schema = AppUserSchema(exclude=["password"])
 revokedtoken_schema = RevokedTokenSchema()
 userannotation_schema = UserAnnotationSchema()
+task_schema = TaskSchema()

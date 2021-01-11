@@ -78,6 +78,15 @@ class CreateGraph(Resource):
 
 		return {"message": "Task scheduled successfully", "task": result.id}, 201
 
+class GetCompletedTasks(Resource):
+	@require_level(2)
+	def get(self):
+		username = get_jwt_identity()
+		appuser = AppUser.query.filter_by(username=username).scalar()
+		tasks = appuser.get_completed_tasks()
+
+		return task_schema.dump(tasks, many=True)
+
 
 class GetStats(Resource):
 	@require_level(2)
