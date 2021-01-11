@@ -1,4 +1,4 @@
-var lastIndexBaseUrl = Math.max(window.location.pathname.indexOf("annotate"), window.location.pathname.indexOf("review"));
+var lastIndexBaseUrl = window.location.pathname.indexOf("check_ua");
 var baseurl = window.location.pathname.substring(0, lastIndexBaseUrl);
 if (!baseurl.endsWith('/'))
 	baseurl += '/';
