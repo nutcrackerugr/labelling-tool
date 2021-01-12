@@ -96,7 +96,6 @@ def promote_tracked_tweets_and_negative_users():
     list_of_files = glob.glob(f"{current_app.config['DUMPS_PATH']}/*.gpickle")
 
     if list_of_files:
-        logging.info("Loading last graph")
         latest_file = max(list_of_files, key=os.path.getctime)
         
         graph = nx.read_gpickle(latest_file)
