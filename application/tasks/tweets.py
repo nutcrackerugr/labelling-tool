@@ -103,17 +103,22 @@ def promote_tracked_tweets_and_negative_users():
 
         # Tracked users: raise one tweet per node
         # Non-positive users: raise all tweets
+        tracked = []
+        nonpositive = []
+
         for nxnode in graph:
             node = graph.nodes[nxnode]["user"]
 
             if node["tweets"]:
                 if node["source"]["kind"] == "tracked_retweets_positive":
-                        tid = random.sample(node["tweets"], 1)
-                        tweet = db.session.query(Tweet).filter(Tweet.id == tid).update({Tweet.rank: 9999 - Tweet.rank})
+                        tracked.append(random.sample(node["tweets"], 1))
                 elif len(node["positives"]) == 0:
-                    for tid in random.sample(node["tweets"], min(5, len(node["tweets"]))):
-                        tweet = db.session.query(Tweet).filter(Tweet.id == tid).update({Tweet.rank: 999 - Tweet.rank})
-    
+                    nonpositive += random.sample(node["tweets"], min(5, len(node["tweets"])))
+        
+        
+        db.session.query(Tweet).filter(Tweet.id_str.in_(tracked)).update({Tweet.rank: 9999 - Tweet.rank}, synchronize_session="fetch")
+        db.session.query(Tweet).filter(Tweet.id_str.in_(nonpositive)).update({Tweet.rank: 999 - Tweet.rank}, synchronize_session="fetch")
+
         try:
             db.session.commit()
             return {"message": "Tweets ranked successfully"}
