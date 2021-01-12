@@ -109,17 +109,10 @@ def promote_tracked_tweets_and_negative_users():
             if node["tweets"]:
                 if node["source"]["kind"] == "tracked_retweets_positive":
                         tid = random.sample(node["tweets"], 1)
-
-                        tweet = db.session.query(Tweet).filter(Tweet.id == tid).first()
-
-                        if tweet:
-                            tweet.rank = 9999 - tweet.rank
+                        tweet = db.session.query(Tweet).filter(Tweet.id == tid).update({Tweet.rank: 9999 - Tweet.rank})
                 elif len(node["positives"]) == 0:
                     for tid in random.sample(node["tweets"], min(5, len(node["tweets"]))):
-                        tweet = db.session.query(Tweet).filter(Tweet.id == tid).first()
-
-                        if tweet:
-                            tweet.rank = 999 - tweet.rank
+                        tweet = db.session.query(Tweet).filter(Tweet.id == tid).update({Tweet.rank: 999 - Tweet.rank})
     
         try:
             db.session.commit()
