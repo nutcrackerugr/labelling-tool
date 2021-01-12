@@ -24,6 +24,7 @@ apir.add_resource(api.TransformAnnotationToMultivalue, "/annotation/transformtom
 apir.add_resource(api.RepairRetweets,                  "/repair/retweets/<string:filename>")
 apir.add_resource(api.RankRetweets,                    "/rank/retweets")
 apir.add_resource(api.RankTweetsFirstTime,             "/rank/firsttime")
+apir.add_resource(api.RankTrackedAndNegativeUsers,     "/rank/tracked")
 apir.add_resource(api.CreateGraph,                     "/graph/create/<string:name>")
 apir.add_resource(api.TestWorker,                      "/testworker")
 apir.add_resource(api.ExpandProperties,                "/properties/expand/<string:filename>")
