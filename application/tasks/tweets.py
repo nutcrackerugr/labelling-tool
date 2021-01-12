@@ -95,6 +95,10 @@ def rank_negative_annotated_tweets():
 @rqjob
 def promote_tracked_tweets_and_negative_users():
     list_of_files = glob.glob(f"{current_app.config['DUMPS_PATH']}/*.gpickle")
+    
+    #Hack
+    config = {}
+    config.__MONITORIZED_USER__ = "3012875395"
 
     if list_of_files:
         latest_file = max(list_of_files, key=os.path.getctime)
