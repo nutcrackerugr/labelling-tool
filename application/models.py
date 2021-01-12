@@ -355,7 +355,7 @@ class Task(db.Model):
 	appuser_id = db.Column(db.Integer, db.ForeignKey("app_user.id"), nullable=False)
 	completed = db.Column(db.Boolean, default=False)
 	exception = db.Column(db.Boolean, default=False)
-	exceptoin_str = db.Column(db.String(256))
+	exception_str = db.Column(db.String(256))
 	created_at = db.Column(db.DateTime, default=datetime.utcnow)
 	completed_at = db.Column(db.DateTime)
 
