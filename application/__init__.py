@@ -107,7 +107,7 @@ def create_app(config="config"):
 	app.config.from_object(config)
 
 	app.redis = Redis.from_url(app.config["REDIS_URL"])
-	app.task_queue = Queue(name=app.config["REDIS_QUEUE"], connection=app.redis)
+	app.task_queue = Queue(name=app.config["REDIS_QUEUE"], connection=app.redis, default_timeout=app.config["RQ_TASK_DEFAULT_TIMEOUT"])
 
 	ReverseProxyPrefixFix(app)
 	
