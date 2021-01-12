@@ -94,33 +94,33 @@ def rank_negative_annotated_tweets():
 def promote_tracked_tweets_and_negative_users():
     list_of_files = glob.glob(f"{current_app.config['DUMPS_PATH']}/*.gpickle")
 
-        if list_of_files:
-            logging.info("Loading last graph")
-            latest_file = max(list_of_files, key=os.path.getctime)
-            
-            graph = nx.read_gpickle(latest_file)
-
-            # Tracked users: raise one tweet per node
-            # Non-positive users: raise all tweets
-            for nxnode in graph:
-                node = graph.nodes[nxnode]["user"]
-
-                if node["source"]["kind"] == "tracked_retweets_positive":
-                    tid = random.choice(node["tweets"])
-
-                    tweet = db.session.query(Tweet).filter(tid).first()
-                    tweet.rank = 9999 - tweet.rank
-                elif len(node["positives"]) == 0:
-                    for tid in random.sample(node["tweets"], min(5, len(node["tweets"]))):
-                        tweet = db.session.query(Tweet).filter(tid).first()
-                        tweet.rank = 999 - tweet.rank
+    if list_of_files:
+        logging.info("Loading last graph")
+        latest_file = max(list_of_files, key=os.path.getctime)
         
-            try:
-                db.session.commit()
-                return {"message": "Tweets ranked successfully"}
-            except Exception as e:
-                print(e)
-                return {"message": "Something went wrong in async task", "error": 500}, 500
+        graph = nx.read_gpickle(latest_file)
+
+        # Tracked users: raise one tweet per node
+        # Non-positive users: raise all tweets
+        for nxnode in graph:
+            node = graph.nodes[nxnode]["user"]
+
+            if node["source"]["kind"] == "tracked_retweets_positive":
+                tid = random.choice(node["tweets"])
+
+                tweet = db.session.query(Tweet).filter(tid).first()
+                tweet.rank = 9999 - tweet.rank
+            elif len(node["positives"]) == 0:
+                for tid in random.sample(node["tweets"], min(5, len(node["tweets"]))):
+                    tweet = db.session.query(Tweet).filter(tid).first()
+                    tweet.rank = 999 - tweet.rank
+    
+        try:
+            db.session.commit()
+            return {"message": "Tweets ranked successfully"}
+        except Exception as e:
+            print(e)
+            return {"message": "Something went wrong in async task", "error": 500}, 500
 
 
 @rqjob
