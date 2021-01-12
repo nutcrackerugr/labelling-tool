@@ -131,7 +131,8 @@ html, body
 	background-color: #ffe0ec;
 }
 
-body.arabic #tweet_content, body.arabic #othertweets li {
+body.arabic #tweet_content, body.arabic #othertweets li, body.arabic #user_description {
 	direction: rtl;
 	text-align: right;
+	font-size: 1.2rem;
 }

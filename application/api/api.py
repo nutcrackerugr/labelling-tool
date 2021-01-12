@@ -67,6 +67,16 @@ class RankTweetsFirstTime(Resource):
 
 		return {"message": "Task scheduled successfully", "task": result.id}, 201
 
+class RankTrackedAndNegativeUsers(Resource):
+	@require_level(9)
+	def get(self):
+		username = get_jwt_identity()
+		appuser = AppUser.query.filter_by(username=username).scalar()
+
+		result = appuser.launch_task("tweets.promote_tracked_tweets_and_negative_users")
+
+		return {"message": "Task scheduled successfully", "task": result.id}, 201
+
 
 class CreateGraph(Resource):
 	@require_level(8)

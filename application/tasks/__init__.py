@@ -16,8 +16,9 @@ def rqjob(func):
 
             try:
                 func(*args, **kwargs)
-            except:
+            except Exception as e:
                 task.exception = True
+                task.exception_str = str(e)
             finally:
                 if job:
                     job.meta["progress"] = 100
