@@ -129,8 +129,8 @@ def promote_tracked_tweets_and_negative_users():
                     nonpositive += random.sample(node["tweets"], min(5, len(node["tweets"])))
         
         
-        db.session.query(Tweet).filter(and_(Tweet.id_str.in_(tracked), not Tweet.is_retweet)).update({Tweet.rank: 9999 - Tweet.rank}, synchronize_session="fetch")
-        db.session.query(Tweet).filter(and_(Tweet.id_str.in_(nonpositive), not Tweet.is_retweet)).update({Tweet.rank: 999 - Tweet.rank}, synchronize_session="fetch")
+        db.session.query(Tweet).filter(and_(Tweet.id_str.in_(tracked), ~Tweet.is_retweet)).update({Tweet.rank: 9999 - Tweet.rank}, synchronize_session="fetch")
+        db.session.query(Tweet).filter(and_(Tweet.id_str.in_(nonpositive), ~Tweet.is_retweet)).update({Tweet.rank: 999 - Tweet.rank}, synchronize_session="fetch")
 
         try:
             db.session.commit()
