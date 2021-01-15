@@ -31,7 +31,7 @@ class ExpandProperties(Resource):
 		username = get_jwt_identity()
 		appuser = AppUser.query.filter_by(username=username).scalar()
 
-		result = appuser.launch_task("relations.expand_properties", current_app.config["EXTENDABLE_PROPERTIES"], filename=filename, path=current_app.config["GRAPH_PATH"])
+		result = appuser.launch_task("relations.expand_properties", properties=current_app.config["EXTENDABLE_PROPERTIES"], filename=filename, path=current_app.config["GRAPH_PATH"])
 
 		return {"message": "Task scheduled successfully", "task": result.id}, 201
 
