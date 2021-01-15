@@ -67,6 +67,18 @@ class RankTweetsFirstTime(Resource):
 
 		return {"message": "Task scheduled successfully", "task": result.id}, 201
 
+
+class ResetRank(Resource):
+	@require_level(8)
+	def get(self):
+		username = get_jwt_identity()
+		appuser = AppUser.query.filter_by(username=username).scalar()
+
+		result = appuser.launch_task("tweets.reset_rank")
+
+		return {"message": "Task scheduled successfully", "task": result.id}, 201
+
+
 class RankTrackedAndNegativeUsers(Resource):
 	@require_level(9)
 	def get(self):

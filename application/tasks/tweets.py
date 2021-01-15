@@ -77,6 +77,19 @@ def rank_tweets_first_time():
         return {"message": "Something went wrong in async task", "error": 500}, 500
 
 
+
+@rqjob
+def reset_rank():
+    db.session.query(Tweet).update({Tweet.rank: 0})
+    
+    try:
+        db.session.commit()
+        return {"message": "Tweets ranked successfully"}
+    except Exception as e:
+        print(e)
+        return {"message": "Something went wrong in async task", "error": 500}, 500
+
+
 @rqjob
 def rank_negative_annotated_tweets():
     # Rank negatively those tweets that are already annotated
@@ -116,8 +129,8 @@ def promote_tracked_tweets_and_negative_users():
                     nonpositive += random.sample(node["tweets"], min(5, len(node["tweets"])))
         
         
-        db.session.query(Tweet).filter(Tweet.id_str.in_(tracked)).update({Tweet.rank: 9999 - Tweet.rank}, synchronize_session="fetch")
-        db.session.query(Tweet).filter(Tweet.id_str.in_(nonpositive)).update({Tweet.rank: 999 - Tweet.rank}, synchronize_session="fetch")
+        db.session.query(Tweet).filter(and_(Tweet.id_str.in_(tracked), not Tweet.is_retweet)).update({Tweet.rank: 9999 - Tweet.rank}, synchronize_session="fetch")
+        db.session.query(Tweet).filter(and_(Tweet.id_str.in_(nonpositive), not Tweet.is_retweet)).update({Tweet.rank: 999 - Tweet.rank}, synchronize_session="fetch")
 
         try:
             db.session.commit()
