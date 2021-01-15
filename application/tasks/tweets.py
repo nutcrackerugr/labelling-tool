@@ -128,6 +128,7 @@ def promote_tracked_tweets_and_negative_users():
                 elif len(node["positives"]) == 0:
                     nonpositive += random.sample(node["tweets"], min(5, len(node["tweets"])))
         
+        nonpositive = random.sample(nonpositive, min(100, len(nonpositive)))
         
         db.session.query(Tweet).filter(and_(Tweet.id_str.in_(tracked), ~Tweet.is_retweet)).update({Tweet.rank: 9999 - Tweet.rank}, synchronize_session="fetch")
         db.session.query(Tweet).filter(and_(Tweet.id_str.in_(nonpositive), ~Tweet.is_retweet)).update({Tweet.rank: 999 - Tweet.rank}, synchronize_session="fetch")
