@@ -25,7 +25,7 @@ def test_task():
     return True
 
 @rqjob
-def create_graph(name = "default", path = ""):
+def create_graph(filename = "default", path = ""):
     G = nx.Graph()
 
     parents = db.session.query(Tweet.parent_tweet).filter_by(is_retweet=True).all()
@@ -53,13 +53,13 @@ def create_graph(name = "default", path = ""):
     edge_counts = Counter(edge for edge in edges)
     G.add_weighted_edges_from((edge[0][0], edge[0][1], edge[1]) for edge in edge_counts.most_common())
 
-    nx.write_gpickle(G, "{}{}_{}.gpickle".format(path, name, time.strftime("%Y%m%d-%H%M%S")))
+    nx.write_gpickle(G, "{}{}_{}.gpickle".format(path, filename, time.strftime("%Y%m%d-%H%M%S")))
 
 
 @rqjob
-def expand_properties(properties, name = "default", path = "", steps = 1, alpha = .2, alpha_0_quantile=.1, alpha_1_quantile=.25):
+def expand_properties(properties, filename = "default", path = "", steps = 1, alpha = .2, alpha_0_quantile=.1, alpha_1_quantile=.25):
     # Load relations graph
-    G = nx.read_gpickle("{}{}".format(path, name))
+    G = nx.read_gpickle("{}{}".format(path, filename))
 
     edges_count = pd.Series([len(G.edges(node)) for node in G.nodes()])
     lower_neigh_count = edges_count.quantile(q=alpha_0_quantile)
