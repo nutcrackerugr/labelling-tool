@@ -111,7 +111,7 @@ class GetCompletedTasks(Resource):
 
 
 class GetStats(Resource):
-	@require_level(2)
+	@require_level(3)
 	def get(self):
 		claims = get_jwt_claims()
 		level = claims["permission_level"]
