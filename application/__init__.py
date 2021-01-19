@@ -49,6 +49,7 @@ assistant_manager = AssistantManager()
 @jwt.user_claims_loader
 def add_claims_to_access_token(user):
 	return {
+		"user_id": user.id,
 		"username": user.username,
 		"permission_level": user.permission_level,
 		"clearance": user.clearance,

@@ -494,7 +494,8 @@ class GetAssistantsSuggestions(Resource):
 class GetUnreviewedUserAnnotation(Resource):
 	@require_level(1)
 	def get(self):
-		ua = UserAnnotation.get_last_unreviewed_annotation()
+		claims = get_jwt_claims()
+		ua = UserAnnotation.get_last_unreviewed_annotation(appuser_id=claims["user_id"])
 		return userannotation_schema.dump(ua)
 
 class ReviewUserAnnotation(Resource):

@@ -166,6 +166,8 @@ class UserAnnotation(db.Model):
 	decision = db.Column(db.Integer, default=0)
 	user = db.relationship("User", back_populates="user_annotations", lazy=True)
 
+	in_use_instances_ = []
+
 	@classmethod
 	def get_last_annotation_for_user(cls, uid):
 		return UserAnnotation.query.filter_by(user_id=uid).order_by(UserAnnotation.timestamp.desc()).first()
@@ -203,21 +205,44 @@ class UserAnnotation(db.Model):
 		return uannotations
 	
 	@classmethod
-	def get_last_unreviewed_annotation(cls):
+	def get_last_unreviewed_annotation(cls, appuser_id=0):
 		maximum_timestamps = db.session.query(
-			UserAnnotation.user_id, 
-			UserAnnotation.appuser_id,
-			func.max(UserAnnotation.timestamp).label("timestamp")
+				UserAnnotation.user_id, 
+				UserAnnotation.appuser_id,
+				func.max(UserAnnotation.timestamp).label("timestamp")
 			).group_by(UserAnnotation.user_id).subquery()
 		
+		# Try to obtain an unfinished annotation
 		uannotation = db.session.query(UserAnnotation).join(
 			maximum_timestamps, and_(
 				maximum_timestamps.c.user_id == UserAnnotation.user_id, and_(
 					maximum_timestamps.c.appuser_id == UserAnnotation.appuser_id,
 					maximum_timestamps.c.timestamp == UserAnnotation.timestamp
-					)
-				)	
-			).filter(UserAnnotation.reviewed == False).first()
+				)
+			)
+		).filter(UserAnnotation.reviewed == False, UserAnnotation.reviewed_by == appuser_id).first()
+
+		# If there isn't any unfinished annotation, get a new one
+		if not uannotation:
+			print("nothing! getting a new one")
+			uannotation = db.session.query(UserAnnotation).join(
+				maximum_timestamps, and_(
+					maximum_timestamps.c.user_id == UserAnnotation.user_id, and_(
+						maximum_timestamps.c.appuser_id == UserAnnotation.appuser_id,
+						maximum_timestamps.c.timestamp == UserAnnotation.timestamp
+						)
+					)	
+				).filter(
+					UserAnnotation.reviewed == False,
+					UserAnnotation.reviewed_by == 0
+				).with_for_update(of=UserAnnotation).first()
+			
+			uannotation.reviewed_by = appuser_id
+
+			try:
+				db.session.commit()
+			except:
+				return {"message": "Something went wrong", "error": 500}
 		
 		return uannotation
 
