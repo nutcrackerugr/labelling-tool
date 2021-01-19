@@ -492,14 +492,14 @@ class GetAssistantsSuggestions(Resource):
 		return response, 200
 
 class GetUnreviewedUserAnnotation(Resource):
-	@require_level(1)
+	@require_level(2)
 	def get(self):
 		claims = get_jwt_claims()
 		ua = UserAnnotation.get_last_unreviewed_annotation(appuser_id=claims["user_id"])
 		return userannotation_schema.dump(ua)
 
 class ReviewUserAnnotation(Resource):
-	@require_level(1)
+	@require_level(2)
 	def post(self):
 		try:
 			data = request.get_json()
