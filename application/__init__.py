@@ -9,6 +9,7 @@ from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager, verify_jwt_in_request, get_jwt_claims
 from werkzeug.middleware.proxy_fix import ProxyFix
+from flaskext.autoversion import Autoversion
 
 from redis import Redis
 from rq import Queue
@@ -114,6 +115,9 @@ def create_app(config="config"):
 	app.redis = Redis.from_url(app.config["REDIS_URL"])
 	app.task_queue = Queue(name=app.config["REDIS_QUEUE"], connection=app.redis, default_timeout=app.config["RQ_TASK_DEFAULT_TIMEOUT"])
 
+	app.autoversion = True
+	Autoversion(app)
+
 	ReverseProxyPrefixFix(app)
 	
 	db.init_app(app)
@@ -142,17 +146,6 @@ def create_app(config="config"):
 		
 		from application.api import api_bp
 		app.register_blueprint(api_bp, url_prefix="/api")
-
-		@app.template_filter('autoversion')
-		def autoversion_filter(filename):
-			# determining fullpath might be project specific
-			fullpath = os.path.join(os.path.dirname(__file__) + "/", filename[1:])
-			try:
-				timestamp = str(os.path.getmtime(fullpath))
-			except OSError:
-				return filename
-			newfilename = "{0}?v={1}".format(filename, timestamp)
-			return newfilename
 	
 	return app
 
