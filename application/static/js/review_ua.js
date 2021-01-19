@@ -139,14 +139,23 @@ function createUserAnnotationComponent(ua)
 				{
 					if (k.indexOf("symbol_") == -1)
 					{
-						if (k == "alpha")
-							html += '<li><strong>Importance (alpha): </strong> ' + v + '</li>';
-						else
+						// if (k == "alpha")
+						// 	html += '<li><strong>Importance (alpha): </strong> ' + v + '</li>';
+						// else
+						// {
+						// 	let position = "neutral";
+						// 	if (v < 0) position = "negative";
+						// 	if (v > 0) position = "positive";
+						// 	html += '<li><strong>' + k + ': ' + position + '</strong> (' + v + ')&emsp;<strong>Confidence:</strong> ' + ua["extended_labels"]["symbol_confidence_" + k] + '</li>';
+						// }
+
+						if (k != "alpha")
 						{
 							let position = "neutral";
 							if (v < 0) position = "negative";
 							if (v > 0) position = "positive";
-							html += '<li><strong>' + k + ': ' + position + '</strong> (' + v + ')&emsp;<strong>Confidence:</strong> ' + ua["extended_labels"]["symbol_confidence_" + k] + '</li>';
+
+							html += '<li><strong>' + k + ': ' + position + '</strong></li>';
 						}
 					}
 				});
