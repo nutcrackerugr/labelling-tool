@@ -128,11 +128,19 @@ html, body
 }
 
 #double-labels-1 {
-	background-color: #ccfaff;
+	background-color: #dfecde;
 }
 
 #double-labels-2 {
-	background-color: #ffe0ec;
+	background-color: #b3c3bc;
+}
+
+#double-labels-1 > .with-disclaimer {
+	background-color: #b2ebad;
+}
+
+#double-labels-2 > .with-disclaimer {
+	background-color: #cce8df;
 }
 
 body.arabic #tweet_content, body.arabic #othertweets li, body.arabic #user_description {
