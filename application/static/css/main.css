@@ -15,7 +15,7 @@ html, body
 
 #maintweet {
 	background-color: #bee5eb;
-	border: 1px solid rgba(0,0,0,.125);
+	border: 3px solid rgba(0,123,255,.25);
 }
 
 .media.tweetcard, .tweetcard {
@@ -31,6 +31,10 @@ html, body
 .mainrow {
 	overflow: auto;
 	padding-bottom: 500px;
+}
+
+#reasons ul {
+	list-style-type: none;
 }
 
 .footer {

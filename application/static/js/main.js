@@ -209,19 +209,20 @@ function create_tweet(data)
 			type: "GET",
 			url: api + "user/" + data["user"],
 			statusCode: {
-				403: function(xhr)
-				{
-					alert("Your session has expired. Please log in again");
-					window.location.replace(baseurl);
-				}
+				// 403: function(xhr)
+				// {
+				// 	alert("Your session has expired. Please log in again");
+				// 	window.location.replace(baseurl);
+				// }
 			},
 			success: function(userdata)
 			{
 				$("#user_description").html(userdata["description"]);
 				$("#user_profile_pic").attr("src", userdata["profile_image_url_https"]);
-				//$("#user_name").html(userdata["name"] + ' <span class="text-secondary">@' + userdata["screen_name"] + '</span>');
-				$("#user_name").html("<Hidden Name>" + ' <span class="text-secondary"><hidden username></span>');
+				$("#user_name").html(userdata["name"] + ' <span class="text-secondary">@' + userdata["screen_name"] + '</span>');
 				last_user = userdata;
+
+				$("#maintweet_more_info, #user_profile_pic").removeClass("d-none");
 			}
 		});
 

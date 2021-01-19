@@ -241,6 +241,7 @@ class AppUser(db.Model):
 	email = db.Column(db.String(256))
 	authorized = db.Column(db.Boolean, nullable=False, default=False)
 	permission_level = db.Column(db.Integer, nullable=False, default=0)
+	clearance = db.Column(db.Boolean, nullable=False, default=False)
 	annotations = db.relationship("Annotation", backref="appuser", lazy=True)
 	tasks = db.relationship("Task", backref="appuser", lazy=True)
 	
@@ -286,6 +287,9 @@ class AppUser(db.Model):
 	
 	def get_permission_level(self):
 		return self.permission_level
+	
+	def check_clearance(self):
+		return self.clearance
 	
 	def save(self):
 		db.session.add(self)

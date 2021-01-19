@@ -71,11 +71,13 @@
 								<!-- Here goes AI reasons -->
 							</ul>
 							<div class="media p-3 rounded sticky-top" id="maintweet">
-								<img class="mr-3 profile-pic" alt="User Image" id="user_profile_pic" src="" />
+								<img class="d-none mr-3 profile-pic" alt="User Image" id="user_profile_pic" src="" />
 								<div class="media-body">
-									<h5 class="mt-0" id="user_name">Name <span class="text-secondary" id="user_screen_name">@screen_name</span></h5>
-									<h6 class="mt-0 text-secondary">User Description:</h6>
-									<p id="user_description">User description</p>
+									<div class="d-none" id="maintweet_more_info">
+										<h5 class="mt-0" id="user_name">Name <span class="text-secondary" id="user_screen_name">@screen_name</span></h5>
+										<h6 class="mt-0 text-secondary">User Description:</h6>
+										<p id="user_description">User description</p>
+									</div>
 									<h6 class="mt-0 text-secondary">Tweet:</h6>
 									<p id="tweet_content">Tweet content</p>
 								</div>

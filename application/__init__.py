@@ -48,7 +48,11 @@ assistant_manager = AssistantManager()
 
 @jwt.user_claims_loader
 def add_claims_to_access_token(user):
-	return {"username": user.username, "permission_level": user.permission_level}
+	return {
+		"username": user.username,
+		"permission_level": user.permission_level,
+		"clearance": user.clearance,
+	}
 
 @jwt.user_identity_loader
 def user_identity_lookup(user):
@@ -60,15 +64,15 @@ def check_if_token_in_blacklist(decrypted_token):
 	return models.RevokedToken.is_jti_blacklisted(jti)
 	
 
-def require_level(level):
+def require_level(level, clearance=False):
 	def decorator(function):
 		@wraps(function)
 		def wrapper(*args, **kwargs):
 			try:
 				verify_jwt_in_request()
 				claims = get_jwt_claims()
-				
-				if claims["permission_level"] < level:
+
+				if claims["permission_level"] < level or (clearance and not claims["clearance"]):
 					return {"message": "You do not have enough privileges to access this resource."}, 403
 				else:
 					return function(*args, **kwargs)

@@ -108,73 +108,71 @@ function createUserAnnotationComponent(ua)
 		$("#ua_list").empty();
 		let html = "";
 
+		html += '<div class="card p-3 rounded tweetcard">';
+		html += '<div class="card-body">';
+		html += '<div class="d-flex flex-row">';
+		html += '<div id="user_image"></div>';
+		html += '<div id="user_info"></div>';
+		html += '</div>';
+		html += '<h6 class="mt-0 text-secondary">Tweets:</h6>';
+		
 		$.ajax({
 			beforeSend: setAuth,
 			type: "GET",
-			url: api + "user/" + ua["user_id"],
-			success: function(user)
+			url: api + "user/" + ua["user_id"] + "/tweets/10",
+			success: function(tweets)
 			{
-				html += '<div class="card p-3 rounded tweetcard">';
-				html += '<div class="card-body">';
-				html += '<div class="d-flex flex-row">'
-				html += '<img class="mr-3 profile-pic float-left" alt="User Image" src="' + user["profile_image_url_https"] + '" />';
-				html += '<div>';
-				html += '<h5 class="mt-0">' + user["name"] + ' <span class="text-secondary">@' + user["screen_name"] + '</span></h5>';
-				html += '<h6 class="mt-0 text-secondary">User Description:</h6>';
-
-				if (user["description"] === null)
-					user["description"] = "Not available";
-
-				html += '<p>' + user["description"] + '</p>';
+				$.each(tweets, function(k, v)
+				{
+					html += '<p class="p-2 rounded border border-dark">' + v["full_text"] + '</p>';
+				});
+			},
+			complete: function()
+			{
 				html += '</div>';
 				html += '</div>';
-				html += '<h6 class="mt-0 text-secondary">Tweets:</h6>';
-				
+				html += '<div class="card mt-4 p-3 rounded list-group-item-success">'
+				html += 'This user\'s neighbourhood suggests the following properties:';
+				html += '<ul>';
+
+				$.each(ua["extended_labels"], function(k, v)
+				{
+					if (k.indexOf("symbol_") == -1)
+					{
+						if (k == "alpha")
+							html += '<li><strong>Importance (alpha): </strong> ' + v + '</li>';
+						else
+						{
+							let position = "neutral";
+							if (v < 0) position = "negative";
+							if (v > 0) position = "positive";
+							html += '<li><strong>' + k + ': ' + position + '</strong> (' + v + ')&emsp;<strong>Confidence:</strong> ' + ua["extended_labels"]["symbol_confidence_" + k] + '</li>';
+						}
+					}
+				});
+
+				html += '</ul>'
+				html += '<div class="btn-group">';
+				html += '<button type="button" class="btn btn-outline-danger"  onclick="reviewAnnotation(-1)">Definitely wrong</button>';
+				html += '<button type="button" class="btn btn-outline-primary" onclick="reviewAnnotation(0)">I cannot confirm or deny</button>';
+				html += '<button type="button" class="btn btn-outline-success" onclick="reviewAnnotation(1)">Looks right</button>';
+				html += '</div>';
+				$("#ua_list").append(html);
+
 				$.ajax({
 					beforeSend: setAuth,
 					type: "GET",
-					url: api + "user/" + ua["user_id"] + "/tweets/10",
-					success: function(tweets)
+					url: api + "user/" + ua["user_id"],
+					success: function(user)
 					{
-						$.each(tweets, function(k, v)
-						{
-							html += '<p class="p-2 rounded border border-dark">' + v["full_text"] + '</p>';
-						});
-					},
-					complete: function()
-					{
-						html += '</div>';
-						html += '</div>';
-						html += '<div class="card mt-4 p-3 rounded list-group-item-success">'
-						html += 'This user\'s neighbourhood suggests the following properties:';
-						html += '<ul>';
-
-						$.each(ua["extended_labels"], function(k, v)
-						{
-							if (k.indexOf("symbol_") == -1)
-							{
-								if (k == "alpha")
-									html += '<li><strong>Importance (alpha): </strong> ' + v + '</li>';
-								else
-								{
-									let position = "neutral";
-									if (v < 0) position = "negative";
-									if (v > 0) position = "positive";
-									html += '<li><strong>' + k + ': ' + position + '</strong> (' + v + ')&emsp;<strong>Confidence:</strong> ' + ua["extended_labels"]["symbol_confidence_" + k] + '</li>';
-								}
-							}
-						});
-
-						html += '</ul>'
-						html += '<div class="btn-group">';
-						html += '<button type="button" class="btn btn-outline-danger"  onclick="reviewAnnotation(-1)">Definitely wrong</button>';
-						html += '<button type="button" class="btn btn-outline-primary" onclick="reviewAnnotation(0)">I cannot confirm or deny</button>';
-						html += '<button type="button" class="btn btn-outline-success" onclick="reviewAnnotation(1)">Seems right</button>';
-						html += '</div>';
-						$("#ua_list").append(html);
-						$("#logo").removeClass("fa-spin");
+						$("#user_image").append('<img class="mr-3 profile-pic float-left" alt="User Image" src="' + user["profile_image_url_https"] + '" />')
+						$("#user_info").append('<h5 class="mt-0">' + user["name"] + ' <span class="text-secondary">@' + user["screen_name"] + '</span></h5>');
+						$("#user_info").append('<h6 class="mt-0 text-secondary">User Description:</h6>');
+						$("#user_info").append('<p>' + user["description"] === null ? "Not available" : user["description"] + '</p>');
 					}
 				});
+
+				$("#logo").removeClass("fa-spin");
 			}
 		});
 	}

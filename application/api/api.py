@@ -240,7 +240,7 @@ class GetAnnotation(Resource):
 		if annotation:
 			return annotation_schema.dump(annotation)
 		else:
-			return {"error":404, "message":"Not Found"}, 404
+			return {"error": 404, "message":"Not Found"}, 404
 
 class TransformAnnotationToMultivalue(Resource):
 	@require_level(8)
@@ -472,7 +472,7 @@ class CreateAnnotation(Resource):
 
 
 class GetUser(Resource):
-	@require_level(1)
+	@require_level(1, clearance=True)
 	def get(self, uid):
 		user = User.query.get(uid)
 		return user_schema.dump(user)
