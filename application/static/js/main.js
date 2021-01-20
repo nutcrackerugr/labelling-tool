@@ -220,9 +220,10 @@ function create_tweet(data)
 				$("#user_description").html(userdata["description"]);
 				$("#user_profile_pic").attr("src", userdata["profile_image_url_https"]);
 				$("#user_name").html(userdata["name"] + ' <span class="text-secondary">@' + userdata["screen_name"] + '</span>');
+				$("#link_to_original").attr("href", "https://twitter.com/" + userdata["screen_name"] + "/status/" + data["id_str"]);
 				last_user = userdata;
-
-				$("#maintweet_more_info, #user_profile_pic").removeClass("d-none");
+				
+				$("#maintweet_more_info, #user_profile_pic, #link_to_original").removeClass("d-none");
 			}
 		});
 
