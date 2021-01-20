@@ -237,12 +237,13 @@ class UserAnnotation(db.Model):
 					UserAnnotation.reviewed_by == 0
 				).with_for_update(of=UserAnnotation).first()
 			
-			uannotation.reviewed_by = appuser_id
+			if uannotation:
+				uannotation.reviewed_by = appuser_id
 
 			try:
 				db.session.commit()
 			except:
-				return {"message": "Something went wrong", "error": 500}
+				return None
 		
 		return uannotation
 
