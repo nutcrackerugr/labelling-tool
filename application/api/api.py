@@ -221,13 +221,12 @@ class GetNextTweetByRanking(Resource):
 	@require_level(1)
 	def get(self):
 		# Select 5 of the best ranked and select one randomly
-		tweets = db.session.query(Tweet).order_by(Tweet.rank.desc()).limit(5).all()
+		tweets = db.session.query(Tweet).filter(Tweet.rank >= 0).order_by(Tweet.rank.desc()).limit(5).all()
 
 		if tweets:
 			tweet = random.choice(tweets)
 
-			if tweet.rank >= 0:
-				return tweet_schema.dump(tweet)
+			return tweet_schema.dump(tweet)
 		else:
 			return {"error": 404, "message": "No more tweets"}
 

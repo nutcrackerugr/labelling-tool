@@ -199,7 +199,7 @@ function getOtherTweets(uid, callback)
 function create_tweet(data)
 {
 	if ($.isEmptyObject(data))
-		alert("There was a problem loading the tweet " + n);
+		alert("There was a problem loading the tweet");
 	else
 	{
 		url = api + "tweet/" + data["id"];
@@ -363,6 +363,10 @@ function getRankedTweet(callback)
 				{
 					alert("Your session has expired. Please log in again");
 					window.location.replace(baseurl);
+				},
+				404: function(xhr)
+				{
+					alert("Congratulations! There are no more tweets to annotate. Conctact support if you think this is an error :)")
 				}
 			},
 			success: create_tweet,
