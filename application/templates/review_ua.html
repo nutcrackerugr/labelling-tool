@@ -49,6 +49,12 @@
 									<span class="keyboard-key">y</span> Seems right<br />
 									<span class="keyboard-key">j</span> Neutral (cannot confirm or deny)<br />
 									<span class="keyboard-key">h</span> toggle this dialog<br />
+									<div class="mt-4 d-none" id="spanishDiagram">
+										<img src="{{ url_for('static', filename='images/diagrama.png') }}" class="diagram" alt="">
+									</div>
+									<div class="mt-4 d-none" id="englishDiagram">
+										<img src="{{ url_for('static', filename='images/diagram.png') }}" class="diagram" alt="">
+									</div>
 								</div>
 							</div>
 						</div>
@@ -77,5 +83,14 @@
 		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
 		<script src="{{ url_for('static', filename='js/jquery.hotkeys.js') }}"></script>
 		<script src="{{ static_autoversion('js/review_ua.js') }}"></script>
+		<script>
+			$(function()
+			{
+				if (window.location.href.indexOf("english") == -1 && window.location.href.indexOf("arabic") == -1)
+					$("#spanishDiagram").removeClass("d-none");
+				else
+					$("#englishDiagram").removeClass("d-none");
+			});
+		</script>
 	</body>
 </html>
