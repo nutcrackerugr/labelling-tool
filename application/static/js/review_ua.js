@@ -54,50 +54,62 @@ function setAuth(xhr)
 	return true;
 }
 
-function getUserAnnotation()
+function getUserAnnotation(uid)
 {
-	$.ajax({
-		beforeSend: setAuth,
-		type: "GET",
-		url: api + "user/annotation/unreviewed",
-		success: createUserAnnotationComponent
-	});
+	if (uid)
+		$.ajax({
+			beforeSend: setAuth,
+			type: "GET",
+			url: api + "user/" + uid + "/annotation",
+			success: createRevisitUserAnnotationComponent
+		});
+	else
+		$.ajax({
+			beforeSend: setAuth,
+			type: "GET",
+			url: api + "user/annotation/unreviewed",
+			success: createUserAnnotationComponent
+		});
 }
 
 function reviewAnnotation(decision)
 {
-	$(".btn").prop("disabled", true);
-	$("#logo").addClass("fa-spin");
-	let payload = {
-		"user_id": last_ua["user_id"],
-		"appuser_id" : last_ua["appuser_id"],
-		"timestamp": last_ua["timestamp"],
-		"decision": decision
-	};
-
-	$.ajax({
-		beforeSend: setAuth,
-		type: "POST",
-		url: api + "user/annotation/review",
-		statusCode: {
-			403: function(xhr)
-			{
-				alert("Your session has expired. Please log in again");
-				window.location.replace(baseurl);
+	console.log("review!")
+	if (last_ua)
+	{
+		$(".btn").prop("disabled", true);
+		$("#logo").addClass("fa-spin");
+		let payload = {
+			"user_id": last_ua["user_id"],
+			"appuser_id" : last_ua["appuser_id"],
+			"timestamp": last_ua["timestamp"],
+			"decision": decision
+		};
+	
+		$.ajax({
+			beforeSend: setAuth,
+			type: "POST",
+			url: api + "user/annotation/review",
+			statusCode: {
+				403: function(xhr)
+				{
+					alert("Your session has expired. Please log in again");
+					window.location.replace(baseurl);
+				},
+				500: function(xhr)
+				{
+					alert(xhr.responseJSON["message"]);
+				},
 			},
-			500: function(xhr)
-			{
-				alert(xhr.responseJSON["message"]);
+			headers: {
+				"X-CSRF-TOKEN": Cookies.get("csrf_access_token")
 			},
-		},
-		headers: {
-			"X-CSRF-TOKEN": Cookies.get("csrf_access_token")
-		},
-		data: JSON.stringify(payload),
-		contentType: "application/json",
-		dataType: "json",
-		success: getUserAnnotation
-	});
+			data: JSON.stringify(payload),
+			contentType: "application/json",
+			dataType: "json",
+			success: getUserAnnotation
+		});
+	}
 }
 
 function createUserAnnotationComponent(ua)
@@ -105,6 +117,7 @@ function createUserAnnotationComponent(ua)
 	if (!$.isEmptyObject(ua))
 	{
 		last_ua = ua;
+		$("#page").val(ua["user_id"]);
 		$("#ua_list").empty();
 		let html = "";
 
@@ -196,12 +209,135 @@ function createUserAnnotationComponent(ua)
 	}
 }
 
+function createRevisitUserAnnotationComponent(ua)
+{
+	if (!$.isEmptyObject(ua))
+	{
+		$("#ua_list").empty();
+		$("#page").val(ua["user_id"]);
+		last_ua = undefined;
+		let html = "";
+
+		html += '<div class="card p-3 rounded tweetcard">';
+		html += '<div class="card-body">';
+		html += '<div class="d-flex flex-row">';
+		html += '<div id="user_image"></div>';
+		html += '<div id="user_info"></div>';
+		html += '</div>';
+		html += '<h6 class="mt-0 text-secondary">Tweets:</h6>';
+		
+		$.ajax({
+			beforeSend: setAuth,
+			type: "GET",
+			url: api + "user/" + ua["user_id"] + "/tweets/10",
+			success: function(tweets)
+			{
+				$.each(tweets, function(k, v)
+				{
+					html += '<p class="p-2 rounded border border-dark">' + v["full_text"] + '</p>';
+				});
+			},
+			complete: function()
+			{
+				html += '</div>';
+				html += '</div>';
+				html += '<div class="card mt-4 p-3 rounded list-group-item-success">'
+				html += 'This user\'s neighbourhood suggests the following properties:';
+				html += '<ul>';
+
+				$.each(ua["extended_labels"], function(k, v)
+				{
+					if (k.indexOf("symbol_") == -1)
+					{
+						// if (k == "alpha")
+						// 	html += '<li><strong>Importance (alpha): </strong> ' + v + '</li>';
+						// else
+						// {
+						// 	let position = "neutral";
+						// 	if (v < 0) position = "negative";
+						// 	if (v > 0) position = "positive";
+						// 	html += '<li><strong>' + k + ': ' + position + '</strong> (' + v + ')&emsp;<strong>Confidence:</strong> ' + ua["extended_labels"]["symbol_confidence_" + k] + '</li>';
+						// }
+
+						if (k != "alpha")
+						{
+							let position = "neutral";
+							if (v < 0) position = "negative";
+							if (v > 0) position = "positive";
+
+							html += '<li><strong>' + k + ': ' + position + '</strong></li>';
+						}
+					}
+				});
+
+				html += '</ul>'
+				html += '<div class="btn-group">';
+
+				if (ua["reviewed"])
+					switch (ua["decision"])
+					{
+						case -1:
+							html += '<button type="button" class="btn btn-danger">Decision was Definitely wrong</button>';
+							break;
+						
+						case 0:
+							html += '<button type="button" class="btn btn-primary">Decision was I cannot confirm or deny</button>';
+							break;
+						
+						case 1:
+							html += '<button type="button" class="btn btn-success">Decision was Looks Right</button>';
+							break;
+					}
+				else
+					html += '<button type="button" class="btn btn-secondary">Not reviewed yet</button>';
+
+				html += '</div>';
+				html += '<span class="text-secondary">Press Resume Work to continue with annotations</span>';
+				$("#ua_list").append(html);
+
+				$.ajax({
+					beforeSend: setAuth,
+					type: "GET",
+					url: api + "user/" + ua["user_id"],
+					success: function(user)
+					{
+						$("#user_image").append('<img class="mr-3 profile-pic float-left" alt="User Image" src="' + user["profile_image_url_https"] + '" />')
+						$("#user_info").append('<h5 class="mt-0">' + user["name"] + ' <span class="text-secondary">@' + user["screen_name"] + '</span></h5>');
+						$("#user_info").append('<h6 class="mt-0 text-secondary">User Description:</h6>');
+						$("#user_info").append('<p>' + user["description"] === null ? "Not available" : user["description"] + '</p>');
+					}
+				});
+
+				$("#logo").removeClass("fa-spin");
+			}
+		});
+	}
+	else
+	{
+		let html = "";
+		html += '<div class="card mt-4 p-3 rounded list-group-item-success">'
+		html += 'There are no more automatic annotations to check! Please come back tomorrow :)';
+		html += '</div>';
+		$("#ua_list").empty().append(html);
+		$("#logo").removeClass("fa-spin");
+	}
+}
+
 $(function(){
 	//Renew tokens if necessary
 	setAuth();
 
 	$("#logo").addClass("fa-spin");
 	getUserAnnotation();
+
+	$("#firstunlabelled").click(function()
+	{
+		getUserAnnotation();
+	});
+
+	$("#revisit").click(function() {
+		getUserAnnotation($("#page").val());
+	});
 
 	$(document).keydown(function(e)
 	{

@@ -497,6 +497,12 @@ class GetUnreviewedUserAnnotation(Resource):
 		ua = UserAnnotation.get_last_unreviewed_annotation(appuser_id=claims["user_id"])
 		return userannotation_schema.dump(ua)
 
+class GetUserAnnotation(Resource):
+	@require_level(2)
+	def get(self, uid):
+		ua = UserAnnotation.get_last_annotation_for_user(uid)
+		return userannotation_schema.dump(ua)
+
 class ReviewUserAnnotation(Resource):
 	@require_level(2)
 	def post(self):

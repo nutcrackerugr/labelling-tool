@@ -23,6 +23,20 @@
 						<div class="collapse navbar-collapse" id="navbarContent">
 							{% include "menu.partial.html" %}
 						</div>
+						<div class="form-inline">
+							<div class="btn-group mr-auto">
+								<button type="button" class="btn btn-secondary btn-sm" id="firstunlabelled">Resume Work</button>
+								<button type="button" class="btn btn-primary btn-sm" id="revisit">Revisit UID</button>
+							</div>
+							
+							<div class="input-group input-group-sm">
+								<label for="page" class="sr-only">UID: </label>
+								<div class="input-group-prepend">
+									<div class="input-group-text">UID</div>
+								</div>
+								<input type="number" class="form-control form-control-sm" style="width:100px" id="page" name="page" min="1">
+							</div>
+						</div>
 					</nav>
 				</div>
 				<div class="col-xl-10 offset-xl-1 mt-4">
