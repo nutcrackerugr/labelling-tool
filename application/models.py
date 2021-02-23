@@ -224,7 +224,6 @@ class UserAnnotation(db.Model):
 
 		# If there isn't any unfinished annotation, get a new one
 		if not uannotation:
-			print("nothing! getting a new one")
 			uannotation = db.session.query(UserAnnotation).join(
 				maximum_timestamps, and_(
 					maximum_timestamps.c.user_id == UserAnnotation.user_id, and_(
