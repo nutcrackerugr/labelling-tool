@@ -72,6 +72,11 @@ function getUserAnnotation(uid)
 		});
 }
 
+function getUnreviewedUserAnnotation()
+{
+	return getUserAnnotation();
+}
+
 function reviewAnnotation(decision)
 {
 	console.log("review!")
@@ -107,7 +112,7 @@ function reviewAnnotation(decision)
 			data: JSON.stringify(payload),
 			contentType: "application/json",
 			dataType: "json",
-			success: getUserAnnotation
+			success: getUnreviewedUserAnnotation
 		});
 	}
 }
@@ -328,12 +333,9 @@ $(function(){
 	setAuth();
 
 	$("#logo").addClass("fa-spin");
-	getUserAnnotation();
+	getUnreviewedUserAnnotation();
 
-	$("#firstunlabelled").click(function()
-	{
-		getUserAnnotation();
-	});
+	$("#firstunlabelled").click(getUnreviewedUserAnnotation);
 
 	$("#revisit").click(function() {
 		getUserAnnotation($("#page").val());
