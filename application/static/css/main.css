@@ -148,3 +148,8 @@ body.arabic #tweet_content, body.arabic #othertweets li, body.arabic #user_descr
 	text-align: right;
 	font-size: 1.2rem;
 }
+
+#question {
+	font-size: largest;
+	padding: 10px;
+}

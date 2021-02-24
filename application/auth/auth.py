@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from flask import request, jsonify
 from flask_restful import Resource
-from flask_jwt_extended import create_access_token, create_refresh_token, jwt_refresh_token_required, get_jwt_identity, get_raw_jwt, jwt_required, set_access_cookies, set_refresh_cookies, unset_jwt_cookies
+from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity, get_jwt, jwt_required, set_access_cookies, set_refresh_cookies, unset_jwt_cookies
 
 from application import jwt, require_level
 from application.models import AppUser, AppUserSchema, appuser_schema
@@ -73,7 +73,7 @@ class UserLogin(Resource):
 
 
 class UserLogoutAccess(Resource):
-	@jwt_required
+	@jwt_required()
 	def post(self):
 		jti = get_raw_jwt()["jti"]
 		
@@ -88,7 +88,7 @@ class UserLogoutAccess(Resource):
 
 
 class UserLogoutRefresh(Resource):
-	@jwt_refresh_token_required
+	@jwt_required(refresh=True)
 	def post(self):
 		jti = get_raw_jwt()["jti"]
 		
@@ -111,7 +111,7 @@ class TokenValid(Resource):
 
 
 class TokenRefresh(Resource):
-	@jwt_refresh_token_required
+	@jwt_required(refresh=True)
 	def post(self):
 		identity = get_jwt_identity()
 		current_user = AppUser.find_by_username(identity)

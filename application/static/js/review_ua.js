@@ -5,7 +5,7 @@ if (!baseurl.endsWith('/'))
 	
 var api = baseurl + "api/";
 
-var last_time = 0, last_ua;
+var last_time = 0, last_ua, step = 0;
 
 function stopPropagation(e)
 {
@@ -117,6 +117,91 @@ function reviewAnnotation(decision)
 	}
 }
 
+function questionComponent(step, decision)
+{
+	switch (step)
+	{
+		case 0:
+			""
+	}
+}
+
+function nextQuestionStep(step, decision)
+{
+	switch (step)
+	{
+		case 0:
+			if (decision === 1)
+			{
+				reviewAnnotation(-1); //Definitely wrong
+				return 0; //Restart
+			}
+			else
+				return 1; //Go to step 1
+
+			break;
+		
+		case 1:
+			if (decision === 1)
+				return 2; //Go to step 2
+			else
+			{
+				reviewAnnotation(0); //I cannot confirm or deny
+				return 0; //Restart
+			}
+				
+			break;
+		
+		case 2:
+			if (decision === 1)
+				reviewAnnotation(-1); //Definitely wrong
+			else
+				reviewAnnotation(1); //Looks right
+
+			return 0; //Restart in both scenarios
+			
+			break;
+	}
+}
+
+function answerForCurrentStep(decision)
+{
+	let q = $("#question").fadeOut("fast");
+	step = nextQuestionStep(step, decision);
+
+	if (step != 0)
+	{
+		q.html(questionForStep(step));
+		q.fadeIn("fast");
+	}
+	else
+	{
+		$("#decisionCard").hide();
+	}
+}
+
+function questionForStep(step)
+{
+	let question;
+
+	switch (step)
+	{
+		case 0:
+			question = "Is there any evidence that at least one property is <strong>incorrect</strong>?";
+			break;
+		case 1:
+			question = "Is there any evidence that at least one property is <strong>correct</strong>?";
+			break;
+		case 2:
+			question = "Is there any <strong>contradiction</strong>? Remember to check the guidelines if you are not sure";
+			break;
+		default:
+			question = "Oh no... this is an unexpected error. Please contact support. Thank you."
+	}
+
+	return question;
+}
+
 function createUserAnnotationComponent(ua)
 {
 	if (!$.isEmptyObject(ua))
@@ -149,7 +234,7 @@ function createUserAnnotationComponent(ua)
 			{
 				html += '</div>';
 				html += '</div>';
-				html += '<div class="card mt-4 p-3 rounded list-group-item-success">'
+				html += '<div class="card mt-4 p-3 rounded list-group-item-success" id="decisionCard">'
 				html += 'This user\'s neighbourhood suggests the following properties:';
 				html += '<ul>';
 
@@ -169,7 +254,7 @@ function createUserAnnotationComponent(ua)
 
 						if (k != "alpha")
 						{
-							let position = "neutral";
+							let position = "neutral or without information";
 							if (v < 0) position = "negative";
 							if (v > 0) position = "positive";
 
@@ -179,10 +264,12 @@ function createUserAnnotationComponent(ua)
 				});
 
 				html += '</ul>'
-				html += '<div class="btn-group">';
-				html += '<button type="button" class="btn btn-outline-danger"  onclick="reviewAnnotation(-1)">Definitely wrong</button>';
-				html += '<button type="button" class="btn btn-outline-primary" onclick="reviewAnnotation(0)">I cannot confirm or deny</button>';
-				html += '<button type="button" class="btn btn-outline-success" onclick="reviewAnnotation(1)">Looks right</button>';
+
+				step = 0;
+				html += '<span class="question" id="question">' + questionForStep(step) +'</span>';
+				html += '<div class="btn-group" id="answers">';
+				html += '<button type="button" class="btn btn-outline-danger"  onclick="answerForCurrentStep(0)">No</button>';
+				html += '<button type="button" class="btn btn-outline-success" onclick="answerForCurrentStep(1)">Yes</button>';
 				html += '</div>';
 				$("#ua_list").append(html);
 
@@ -266,7 +353,7 @@ function createRevisitUserAnnotationComponent(ua)
 
 						if (k != "alpha")
 						{
-							let position = "neutral";
+							let position = "neutral or without information";
 							if (v < 0) position = "negative";
 							if (v > 0) position = "positive";
 
@@ -341,25 +428,25 @@ $(function(){
 		getUserAnnotation($("#page").val());
 	});
 
-	$(document).keydown(function(e)
-	{
-		switch (e.key)
-		{
-			case "n":
-				reviewAnnotation(-1);
-				break;
+	// $(document).keydown(function(e)
+	// {
+	// 	switch (e.key)
+	// 	{
+	// 		case "n":
+	// 			reviewAnnotation(-1);
+	// 			break;
 				
-			case "y":
-				reviewAnnotation(1)
-				break;
+	// 		case "y":
+	// 			reviewAnnotation(1)
+	// 			break;
 			
-			case "j":
-				reviewAnnotation(0);
-				break;
+	// 		case "j":
+	// 			reviewAnnotation(0);
+	// 			break;
 				
-			case "h":
-				$("#keyboard_shortcuts").toggle();
-		}
-	});
+	// 		case "h":
+	// 			$("#keyboard_shortcuts").toggle();
+	// 	}
+	// });
 });
 

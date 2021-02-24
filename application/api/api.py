@@ -1,6 +1,6 @@
 from flask import request, current_app
 from flask_restful import Resource
-from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt_claims
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from sqlalchemy import null, and_
 
 from application.models import *
@@ -113,7 +113,7 @@ class GetCompletedTasks(Resource):
 class GetStats(Resource):
 	@require_level(3)
 	def get(self):
-		claims = get_jwt_claims()
+		claims = get_jwt()
 		level = claims["permission_level"]
 		if level == 9:
 			level += 1 # To ensure superuser sees everything
@@ -493,7 +493,7 @@ class GetAssistantsSuggestions(Resource):
 class GetUnreviewedUserAnnotation(Resource):
 	@require_level(2)
 	def get(self):
-		claims = get_jwt_claims()
+		claims = get_jwt()
 		ua = UserAnnotation.get_last_unreviewed_annotation(appuser_id=claims["user_id"])
 		return userannotation_schema.dump(ua)
 

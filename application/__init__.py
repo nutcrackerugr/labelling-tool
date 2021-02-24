@@ -7,7 +7,7 @@ from flask import Flask, jsonify, abort, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
-from flask_jwt_extended import JWTManager, verify_jwt_in_request, get_jwt_claims
+from flask_jwt_extended import JWTManager, verify_jwt_in_request, get_jwt
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flaskext.autoversion import Autoversion
 
@@ -47,7 +47,7 @@ jwt = JWTManager()
 assistant_manager = AssistantManager()
 
 
-@jwt.user_claims_loader
+@jwt.additional_claims_loader
 def add_claims_to_access_token(user):
 	return {
 		"user_id": user.id,
@@ -60,10 +60,10 @@ def add_claims_to_access_token(user):
 def user_identity_lookup(user):
 	return user.username
 
-@jwt.token_in_blacklist_loader
-def check_if_token_in_blacklist(decrypted_token):
-	jti = decrypted_token["jti"]
-	return models.RevokedToken.is_jti_blacklisted(jti)
+@jwt.token_in_blocklist_loader
+def check_if_token_in_blocklist(jwt_header, jwt_payload):
+	jti = jwt_payload["jti"]
+	return models.RevokedToken.is_jti_blocklisted(jti)
 	
 
 def require_level(level, clearance=False):
@@ -72,7 +72,7 @@ def require_level(level, clearance=False):
 		def wrapper(*args, **kwargs):
 			try:
 				verify_jwt_in_request()
-				claims = get_jwt_claims()
+				claims = get_jwt()
 
 				if claims["permission_level"] < level or (clearance and not claims["clearance"]):
 					return {"message": "You do not have enough privileges to access this resource."}, 403
@@ -92,7 +92,7 @@ def view_require_level(level):
 		def wrapper(*args, **kwargs):
 			try:
 				verify_jwt_in_request()
-				claims = get_jwt_claims()
+				claims = get_jwt()
 				
 				if claims["permission_level"] < level:
 					flash("You do not have enough privileges to access the requested resource.")
