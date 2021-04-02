@@ -164,6 +164,7 @@ class UserAnnotation(db.Model):
 	reviewed = db.Column(db.Boolean, nullable=False, default=False)
 	reviewed_by = db.Column(db.Integer, db.ForeignKey("app_user.id"), nullable=True)
 	decision = db.Column(db.Integer, default=0)
+	validated = db.Column(db.Boolean, nullable=False, default=False)
 	user = db.relationship("User", back_populates="user_annotations", lazy=True)
 
 	in_use_instances_ = []
@@ -245,6 +246,25 @@ class UserAnnotation(db.Model):
 				return None
 		
 		return uannotation
+	
+	@classmethod
+	def get_last_unvalidated_rejected_annotation(cls):
+		maximum_timestamps = db.session.query(
+				UserAnnotation.user_id, 
+				UserAnnotation.appuser_id,
+				func.max(UserAnnotation.timestamp).label("timestamp")
+			).group_by(UserAnnotation.user_id).subquery()
+		
+		uannotations = db.session.query(UserAnnotation).join(
+			maximum_timestamps, and_(
+				maximum_timestamps.c.user_id == UserAnnotation.user_id, and_(
+					maximum_timestamps.c.appuser_id == UserAnnotation.appuser_id,
+					maximum_timestamps.c.timestamp == UserAnnotation.timestamp
+					)
+				)	
+			).filter(UserAnnotation.decision == -1).filter(UserAnnotation.validated == False).first()
+		
+		return uannotations
 
 
 class Label(db.Model):

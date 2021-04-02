@@ -18,7 +18,7 @@
 						</button>
 						<a class="navbar-brand">
 							<img src="{{ url_for('static', filename='images/logo.png') }}" width="30" height="30" id="logo" class="d-inline-block align-top" alt="">
-							Nutcracker Tagging System
+							Nutcracker Tagging
 						</a>
 						<div class="collapse navbar-collapse" id="navbarContent">
 							{% include "menu.partial.html" %}
@@ -96,15 +96,9 @@
 		<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
 		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
 		<script src="{{ url_for('static', filename='js/jquery.hotkeys.js') }}"></script>
-		<script src="{{ static_autoversion('js/review_ua.js') }}"></script>
 		<script>
-			$(function()
-			{
-				if (window.location.href.indexOf("english") == -1 && window.location.href.indexOf("arabic") == -1)
-					$("#spanishDiagram").removeClass("d-none");
-				else
-					$("#englishDiagram").removeClass("d-none");
-			});
+			var validate = {{ validate if validate else 0 }};
 		</script>
+		<script src="{{ static_autoversion('js/review_ua.js') }}"></script>
 	</body>
 </html>
