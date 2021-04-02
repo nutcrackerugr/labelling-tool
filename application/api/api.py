@@ -511,7 +511,7 @@ class GetUserAnnotation(Resource):
 		return userannotation_schema.dump(ua)
 
 class ReviewUserAnnotation(Resource):
-	@require_level(4)
+	@require_level(2)
 	def post(self):
 		try:
 			data = request.get_json()
