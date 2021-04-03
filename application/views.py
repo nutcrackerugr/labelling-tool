@@ -30,7 +30,7 @@ def review_ua():
 	return render_template("review_ua.html")
 
 @main_bp.route("/validate_ua")
-@view_require_level(4)
+@view_require_level(5)
 def validate_ua():
 	return render_template("review_ua.html", validate=1)
 

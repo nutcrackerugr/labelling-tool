@@ -369,15 +369,15 @@ function createRevisitUserAnnotationComponent(ua)
 					switch (ua["decision"])
 					{
 						case -1:
-							html += '<button type="button" class="btn btn-danger">Decision was Definitely wrong</button>';
+							html += '<button type="button" class="btn btn-danger">Decision was Definitely wrong by ' + ua["reviewed_by"] +  '</button>';
 							break;
 						
 						case 0:
-							html += '<button type="button" class="btn btn-primary">Decision was I cannot confirm or deny</button>';
+							html += '<button type="button" class="btn btn-primary">Decision was I cannot confirm or deny by ' + ua["reviewed_by"] +  '</button>';
 							break;
 						
 						case 1:
-							html += '<button type="button" class="btn btn-success">Decision was Looks Right</button>';
+							html += '<button type="button" class="btn btn-success">Decision was Looks Right by ' + ua["reviewed_by"] +  '</button>';
 							break;
 					}
 				else
