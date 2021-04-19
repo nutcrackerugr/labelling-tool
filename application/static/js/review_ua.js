@@ -64,12 +64,20 @@ function getUserAnnotation(uid)
 			success: createRevisitUserAnnotationComponent
 		});
 	else
-		$.ajax({
-			beforeSend: setAuth,
-			type: "GET",
-			url: api + "user/annotation/unreviewed",
-			success: createUserAnnotationComponent
-		});
+		if (validate === 1) //html previous script global
+			$.ajax({
+				beforeSend: setAuth,
+				type: "GET",
+				url: api + "user/annotation/unvalidated/rejected",
+				success: createRevisitUserAnnotationComponent
+			});
+		else
+			$.ajax({
+				beforeSend: setAuth,
+				type: "GET",
+				url: api + "user/annotation/unreviewed",
+				success: createUserAnnotationComponent
+			});
 }
 
 function getUnreviewedUserAnnotation()
@@ -117,14 +125,6 @@ function reviewAnnotation(decision)
 	}
 }
 
-function questionComponent(step, decision)
-{
-	switch (step)
-	{
-		case 0:
-			""
-	}
-}
 
 function nextQuestionStep(step, decision)
 {
@@ -307,7 +307,7 @@ function createRevisitUserAnnotationComponent(ua)
 	{
 		$("#ua_list").empty();
 		$("#page").val(ua["user_id"]);
-		last_ua = undefined;
+		last_ua = ua;
 		let html = "";
 
 		html += '<div class="card p-3 rounded tweetcard">';
@@ -369,21 +369,31 @@ function createRevisitUserAnnotationComponent(ua)
 					switch (ua["decision"])
 					{
 						case -1:
-							html += '<button type="button" class="btn btn-danger">Decision was Definitely wrong</button>';
+							html += '<button type="button" class="btn btn-danger">Decision was Definitely wrong by ' + ua["reviewed_by"] +  '</button>';
 							break;
 						
 						case 0:
-							html += '<button type="button" class="btn btn-primary">Decision was I cannot confirm or deny</button>';
+							html += '<button type="button" class="btn btn-primary">Decision was I cannot confirm or deny by ' + ua["reviewed_by"] +  '</button>';
 							break;
 						
 						case 1:
-							html += '<button type="button" class="btn btn-success">Decision was Looks Right</button>';
+							html += '<button type="button" class="btn btn-success">Decision was Looks Right by ' + ua["reviewed_by"] +  '</button>';
 							break;
 					}
 				else
 					html += '<button type="button" class="btn btn-secondary">Not reviewed yet</button>';
-
+				
 				html += '</div>';
+				
+				if (validate === 1)
+				{
+					html += '<div class="btn-group">';
+					html += '<button type="button" class="btn btn-outline-danger"  onclick="reviewAnnotation(-1)">Definitely wrong</button>';
+					html += '<button type="button" class="btn btn-outline-primary" onclick="reviewAnnotation(0)">I cannot confirm or deny</button>';
+					html += '<button type="button" class="btn btn-outline-success" onclick="reviewAnnotation(1)">Looks right</button>';
+					html += '</div>';
+				}
+
 				html += '<span class="text-secondary">Press Resume Work to continue with annotations</span>';
 				$("#ua_list").append(html);
 
@@ -428,25 +438,25 @@ $(function(){
 		getUserAnnotation($("#page").val());
 	});
 
-	// $(document).keydown(function(e)
-	// {
-	// 	switch (e.key)
-	// 	{
-	// 		case "n":
-	// 			reviewAnnotation(-1);
-	// 			break;
-				
-	// 		case "y":
-	// 			reviewAnnotation(1)
-	// 			break;
-			
-	// 		case "j":
-	// 			reviewAnnotation(0);
-	// 			break;
-				
-	// 		case "h":
-	// 			$("#keyboard_shortcuts").toggle();
-	// 	}
-	// });
+	if (validate === 1)
+	{
+		$(document).keydown(function(e)
+		{
+			switch (e.key)
+			{
+				case "n":
+					reviewAnnotation(-1);
+					break;			
+				case "y":
+					reviewAnnotation(1)
+					break;		
+				case "j":
+					reviewAnnotation(0);
+					break;			
+				case "h":
+					$("#keyboard_shortcuts").toggle();
+			}
+		});
+	}
 });
 

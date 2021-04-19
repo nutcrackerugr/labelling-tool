@@ -497,6 +497,13 @@ class GetUnreviewedUserAnnotation(Resource):
 		ua = UserAnnotation.get_last_unreviewed_annotation(appuser_id=claims["user_id"])
 		return userannotation_schema.dump(ua)
 
+class GetUnvalidatedRejectedUserAnnotation(Resource):
+	@require_level(4)
+	def get(self):
+		claims = get_jwt()
+		ua = UserAnnotation.get_last_unvalidated_rejected_annotation()
+		return userannotation_schema.dump(ua)
+
 class GetUserAnnotation(Resource):
 	@require_level(2)
 	def get(self, uid):
@@ -530,7 +537,17 @@ class ReviewUserAnnotation(Resource):
 					return {"message": "Something went wrong", "error": 500}, 500
 				
 			else:
-				if ua.decision != data["decision"]:
+				claims = get_jwt()
+				if claims["permission_level"] >= 4:
+					ua.decision = data["decision"]
+					ua.validated = True
+
+					try:
+						db.session.commit()
+					except:
+						return {"message": "Something went wrong", "error": 500}, 500
+				
+				elif ua.decision != data["decision"]:
 					uaid = f"{ua.user_id},{ua.appuser_id},{ua.timestamp}"
 					return {"message": "This annotation was already reviewed and it had a different decision. Contact support and provide the following reference: <UserAnnotation:{}>".format(uaid), "error": 500}, 500
 
