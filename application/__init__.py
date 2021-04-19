@@ -146,6 +146,10 @@ def create_app(config="config"):
 		
 		from application.api import api_bp
 		app.register_blueprint(api_bp, url_prefix="/api")
+
+		# Import Dash application
+		from application.dash.dashboard import create_dashboard
+		app = create_dashboard(app, prefix=config)
 	
 	return app
 

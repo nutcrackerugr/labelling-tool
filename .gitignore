@@ -32,6 +32,7 @@ config.py
 *config.py
 dumps/*
 graph/*
+dashboard-data/*
 debatea5rtve.json
 debatearv.json
 
