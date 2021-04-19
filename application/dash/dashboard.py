@@ -245,16 +245,16 @@ def create_dashboard(server, prefix=None):
         )
 
     try:
-        a = pd.read_csv("dashboard-data/a.csv", index_col=0)
-        resampled = pd.read_csv("dashboard-data/resampled.csv", index_col=0)
-        todos_partido = pd.read_csv("dashboard-data/todos_partido.csv", index_col=0)
+        a = pd.read_csv(server.config["DASHBOARD_PATH"] + "a.csv", index_col=0)
+        resampled = pd.read_csv(server.config["DASHBOARD_PATH"] + "resampled.csv", index_col=0)
+        todos_partido = pd.read_csv(server.config["DASHBOARD_PATH"] + "todos_partido.csv", index_col=0)
 
-        resampled2 = joblib.load("dashboard-data/resampled.joblib.pkl")
-        resampled2_neg = joblib.load("dashboard-data/resampled_neg.joblib.pkl")
-        resampled2_neu = joblib.load("dashboard-data/resampled_neu.joblib.pkl")
+        resampled2 = joblib.load(server.config["DASHBOARD_PATH"] + "resampled.joblib.pkl")
+        resampled2_neg = joblib.load(server.config["DASHBOARD_PATH"] + "resampled_neg.joblib.pkl")
+        resampled2_neu = joblib.load(server.config["DASHBOARD_PATH"] + "resampled_neu.joblib.pkl")
 
     except:
-        todos = pd.read_csv("dashboard-data/todos_sentiment_polar.csv", index_col=0)
+        todos = pd.read_csv(server.config["DASHBOARD_PATH"] + "todos_sentiment_polar.csv", index_col=0)
         todos.created_at = pd.to_datetime(todos.created_at)
         todos = todos.sort_values(by="created_at")
 
@@ -262,14 +262,14 @@ def create_dashboard(server, prefix=None):
         resampled = todos.copy()
         resampled.index = resampled.created_at + timedelta(hours=1)
         resampled = resampled.resample("30S").mean()
-        resampled.to_csv("dashboard-data/resampled.csv")
+        resampled.to_csv(server.config["DASHBOARD_PATH"] + "resampled.csv")
 
         a = todos.copy()
         a.index = a.created_at + timedelta(hours=1)
         a = a.resample("30S").count()
         a.to_csv("a.csv")
 
-        etiquetado = pd.read_csv("dashboard-data/etiquetado.csv", dtype=dict(document_sentiment="str", PP="str", Cs="str", PSOE="str", UP="str", VOX="str",
+        etiquetado = pd.read_csv(server.config["DASHBOARD_PATH"] + "etiquetado.csv", dtype=dict(document_sentiment="str", PP="str", Cs="str", PSOE="str", UP="str", VOX="str",
             auto_PP="str", auto_Cs="str", auto_VOX="str", auto_PSOE="str", auto_UP="str",
         ))
 
@@ -287,16 +287,16 @@ def create_dashboard(server, prefix=None):
         todos_partido["partido"] = todos_partido.apply(lambda row: [partido for partido in ["PP", "Cs", "VOX", "PSOE", "UP"] if row[partido] == "positive"], axis="columns")
         todos_partido["partido_negativo"] = todos_partido.apply(lambda row: [partido for partido in ["PP", "Cs", "VOX", "PSOE", "UP"] if row[partido] == "negative"], axis="columns")
         todos_partido["partido_neutral"] = todos_partido.apply(lambda row: [partido for partido in ["PP", "Cs", "VOX", "PSOE", "UP"] if row[partido] == "neutral"], axis="columns")
-        todos_partido.to_csv("dashboard-data/todos_partido.csv")
+        todos_partido.to_csv(server.config["DASHBOARD_PATH"] + "todos_partido.csv")
 
         aux_df = todos_partido.copy()
         aux_df.index = aux_df.created_at + timedelta(hours=1)
         resampled2 = {partido: aux_df.copy().loc[aux_df.partido.map(lambda x: partido in x), :].resample("30S").mean() for partido in ["PP", "Cs", "VOX", "PSOE", "UP"]}
         resampled2_neg = {partido: aux_df.copy().loc[aux_df.partido_negativo.map(lambda x: partido in x), :].resample("30S").mean() for partido in ["PP", "Cs", "VOX", "PSOE", "UP"]}
         resampled2_neu = {partido: aux_df.copy().loc[aux_df.partido_neutral.map(lambda x: partido in x), :].resample("30S").mean() for partido in ["PP", "Cs", "VOX", "PSOE", "UP"]}
-        joblib.dump(resampled2, "dashboard-data/resampled.joblib.pkl")
-        joblib.dump(resampled2_neg, "dashboard-data/resampled_neg.joblib.pkl")
-        joblib.dump(resampled2_neu, "dashboard-data/resampled_neu.joblib.pkl")
+        joblib.dump(resampled2, server.config["DASHBOARD_PATH"] + "resampled.joblib.pkl")
+        joblib.dump(resampled2_neg, server.config["DASHBOARD_PATH"] + "resampled_neg.joblib.pkl")
+        joblib.dump(resampled2_neu, server.config["DASHBOARD_PATH"] + "resampled_neu.joblib.pkl")
 
     finally:
         fig = go.Figure()
