@@ -93,7 +93,7 @@ class Tweet(db.Model):
 						created_at=data["created_at"],
 						in_reply_to_status_id=data["in_reply_to_status_id_str"],
 						in_reply_to_user_id=data["in_reply_to_user_id_str"],
-						geo=data["geo"],
+						geo=str(data["geo"]),
 						coordinates=str(data["coordinates"]),
 						retweet_count=data["retweet_count"],
 						favorite_count=data["favorite_count"],
