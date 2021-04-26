@@ -54,64 +54,67 @@ class Tweet(db.Model):
 		with open(os.path.dirname(os.path.dirname(__file__)) + "/dumps/" + filename, 'r') as jsonfile:
 			batch = json.load(jsonfile)
 
+			tids = db.session.query(Tweet.id_str).all()
+
 			count = 0
 			for data in batch:
-				u = db.session.query(User).filter_by(id_str=data["user"]["id_str"]).scalar()
-				if not u:
-					u = User(
-						id_str=data["user"]["id_str"],
-						name=data["user"]["name"],
-						screen_name=data["user"]["screen_name"],
-						location=data["user"]["location"],
-						description=data["user"]["description"],
-						protected=data["user"]["protected"],
-						profile_image_url_https=data["user"]["profile_image_url_https"]
-					)
-					db.session.add(u)
+				if data["id_str"] not in tids:
+					u = db.session.query(User).filter_by(id_str=data["user"]["id_str"]).scalar()
+					if not u:
+						u = User(
+							id_str=data["user"]["id_str"],
+							name=data["user"]["name"],
+							screen_name=data["user"]["screen_name"],
+							location=data["user"]["location"],
+							description=data["user"]["description"],
+							protected=data["user"]["protected"],
+							profile_image_url_https=data["user"]["profile_image_url_https"]
+						)
+						db.session.add(u)
+						
+					t = db.session.query(Tweet).filter_by(id_str=data["id_str"]).scalar()
 					
-				t = db.session.query(Tweet).filter_by(id_str=data["id_str"]).scalar()
+					if not t:
+						if "full_text" in data.keys():
+							text = data["full_text"]
+						elif "extended_tweet" in data.keys():
+							text = data["extended_tweet"]["full_text"]
+						else:
+							text = data["text"]
 				
-				if not t:
-					if "full_text" in data.keys():
-						text = data["full_text"]
-					elif "extended_tweet" in data.keys():
-						text = data["extended_tweet"]["full_text"]
-					else:
-						text = data["text"]
-			
-					if "retweeted_status" in data.keys():
-						is_retweet = True
-						parent_tweet = data["retweeted_status"]["id_str"]
-					else:
-						is_retweet = False
-						parent_tweet = None
-					
-					tweet = Tweet(
-						id_str=data["id_str"],
-						full_text=text,
-						truncated=data["truncated"],
-						created_at=data["created_at"],
-						in_reply_to_status_id=data["in_reply_to_status_id_str"],
-						in_reply_to_user_id=data["in_reply_to_user_id_str"],
-						geo=str(data["geo"]),
-						coordinates=str(data["coordinates"]),
-						retweet_count=data["retweet_count"],
-						favorite_count=data["favorite_count"],
-						lang=data["lang"],
-						is_retweet=is_retweet,
-						parent_tweet=parent_tweet,
-						retweeted=data["retweeted"],
-						favorited=data["favorited"]
-					)
-					
-					u.tweets.append(tweet)
-					count += 1
-					db.session.add(tweet)
-					print("Added tweet {}".format(tweet.id_str))
+						if "retweeted_status" in data.keys():
+							is_retweet = True
+							parent_tweet = data["retweeted_status"]["id_str"]
+						else:
+							is_retweet = False
+							parent_tweet = None
+						
+						tweet = Tweet(
+							id_str=data["id_str"],
+							full_text=text,
+							truncated=data["truncated"],
+							created_at=data["created_at"],
+							in_reply_to_status_id=data["in_reply_to_status_id_str"],
+							in_reply_to_user_id=data["in_reply_to_user_id_str"],
+							geo=str(data["geo"]),
+							coordinates=str(data["coordinates"]),
+							retweet_count=data["retweet_count"],
+							favorite_count=data["favorite_count"],
+							lang=data["lang"],
+							is_retweet=is_retweet,
+							parent_tweet=parent_tweet,
+							retweeted=data["retweeted"],
+							favorited=data["favorited"]
+						)
+						
+						u.tweets.append(tweet)
+						count += 1
+						db.session.add(tweet)
+						print("Added tweet {}".format(tweet.id_str))
 
-					if count % 100 == 0:
-						db.session.commit()
-						print("Commiting changes...")
+						if count % 100 == 0:
+							db.session.commit()
+							print("Commiting changes...")
 
 			db.session.commit()
 
