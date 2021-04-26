@@ -270,7 +270,7 @@ def create_dashboard(server, prefix=None):
         a = todos.copy()
         a.index = a.created_at + timedelta(hours=1)
         a = a.resample("30S").count()
-        a.to_csv("a.csv")
+        a.to_csv(server.config["DASHBOARD_PATH"] + "a.csv")
 
         etiquetado = pd.read_csv(server.config["DASHBOARD_PATH"] + "etiquetado.csv", dtype=dict(document_sentiment="str", PP="str", Cs="str", PSOE="str", UP="str", VOX="str",
             auto_PP="str", auto_Cs="str", auto_VOX="str", auto_PSOE="str", auto_UP="str",
