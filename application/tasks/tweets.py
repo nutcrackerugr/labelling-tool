@@ -14,6 +14,16 @@ import networkx as nx
 from . import rqjob
 
 @rqjob
+def upload_tweets_from_file(filename):
+    try:
+        Tweet.create_by_batch_json(filename)
+        return {"message": "Tweets created succesfully"}
+        
+    except:
+        print(e)
+        return {"message": "Something went wrong", "error": 500}, 500
+
+@rqjob
 def repair_retweets(filepath):
     import json
 

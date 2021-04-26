@@ -361,12 +361,12 @@ class CreateTweet(Resource):
 class CreateTweetsFromFile(Resource):
 	@require_level(7)
 	def get(self, filename):
-		try:
-			Tweet.create_by_batch_json(filename)
-			return {"message": "Tweets created succesfully"}
-			
-		except:
-			return {"message": "Something went wrong", "error": 500}, 500
+		username = get_jwt_identity()
+		appuser = AppUser.query.filter_by(username=username).scalar()
+
+		result = appuser.launch_task("tweets.upload_tweets_from_file", filename=filename)
+
+		return {"message": "Task scheduled successfully", "task": result.id}, 201
 
 
 class CreateTweetsBatch(Resource):
