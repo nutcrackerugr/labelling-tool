@@ -66,11 +66,11 @@
 		<script>
 			$(function()
 			{
-				if (window.location.href.indexOf("english") > -1)
+				if (window.location.href.indexOf("/english") > -1)
 					$("#web_version").html("Current version: English tweets").css({"text-align": "center", "margin-top": "15px", "font-weight": "bold"});
-				else if (window.location.href.indexOf("arabic") > -1)
+				else if (window.location.href.indexOf("/arabic") > -1)
 					$("#web_version").html("Current version: Arabic tweets").css({"text-align": "center", "margin-top": "15px", "font-weight": "bold"});
-				else if (window.location.href.indexOf("madrid") > -1)
+				else if (window.location.href.indexOf("/madrid") > -1)
 					$("#web_version").html("Current version: Debate Telemadrid 2021").css({"text-align": "center", "margin-top": "15px", "font-weight": "bold"});
 				else
 					$("#web_version").html("Current version: Debate a 5 RTVE 2019").css({"text-align": "center", "margin-top": "15px", "font-weight": "bold"});
