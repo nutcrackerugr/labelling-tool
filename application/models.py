@@ -79,9 +79,9 @@ class Tweet(db.Model):
 					else:
 						text = data["text"]
 			
-					if "retweet_status" in data.keys():
+					if "retweeted_status" in data.keys():
 						is_retweet = True
-						parent_tweet = data["retweet_status"]["id_str"]
+						parent_tweet = data["retweeted_status"]["id_str"]
 					else:
 						is_retweet = False
 						parent_tweet = None
@@ -94,7 +94,7 @@ class Tweet(db.Model):
 						in_reply_to_status_id=data["in_reply_to_status_id_str"],
 						in_reply_to_user_id=data["in_reply_to_user_id_str"],
 						geo=data["geo"],
-						coordinates=data["coordinates"],
+						coordinates=str(data["coordinates"]),
 						retweet_count=data["retweet_count"],
 						favorite_count=data["favorite_count"],
 						lang=data["lang"],
