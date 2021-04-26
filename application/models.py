@@ -278,6 +278,27 @@ class Label(db.Model):
 	help_text = db.Column(db.Text, nullable=True)
 
 
+class VideoLabel(db.Model):
+	id = db.Column(db.Integer, primary_key=True)
+	order = db.Column(db.Float, index=True, nullable=False)
+	name = db.Column(db.String(32), unique=True, nullable=False)
+	values = db.Column(db.Text, nullable=False)
+
+
+class VideoAnnotation(db.Model):
+	id = db.Column(db.Integer, primary_key=True)
+	video = db.Column(db.String(34), nullable=False)
+	start_time = db.Column(db.Float, nullable=False)
+	end_time = db.Column(db.Float, nullable=False)
+	labels = db.Column(db.PickleType, nullable=True)
+	appuser_id = db.Column(db.Integer, db.ForeignKey("app_user.id"), nullable=False)
+	created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+	@classmethod
+	def get_annotations_for_video(cls, video):
+		return VideoAnnotation.query.filter_by(video=video).order_by(VideoAnnotation.start_time).all()
+
+
 class AppUser(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	username = db.Column(db.String(256), nullable=False, unique=True)
@@ -438,6 +459,11 @@ class LabelSchema(ma.SQLAlchemyAutoSchema):
 		model = Label
 		load_instance = True
 
+class VideoLabelSchema(ma.SQLAlchemyAutoSchema):
+	class Meta:
+		model = VideoLabel
+		load_instance = True
+
 class UserSchema(ma.SQLAlchemyAutoSchema):
 	class Meta:
 		model = User
@@ -468,6 +494,16 @@ class AnnotationSchema(ma.SQLAlchemyAutoSchema):
 	
 	appuser = ma.Nested(AppUserSchema(only=("username",)))
 
+class VideoAnnotationSchema(ma.SQLAlchemyAutoSchema):
+	labels = fields.Dict(keys=fields.String(), values=fields.List(fields.String()), attribute="labels")
+
+	class Meta:
+		model = VideoAnnotation
+		datetimeformat = "%d-%m-%Y %H:%M"
+		load_instance = True
+	
+	appuser = ma.Nested(AppUserSchema(only=("username",)))
+
 class UserAnnotationSchema(ma.SQLAlchemyAutoSchema):
 	extended_labels = fields.Dict(keys=fields.String(), attribute="extended_labels")
 
@@ -488,8 +524,10 @@ class TaskSchema(ma.SQLAlchemyAutoSchema):
 
 tweet_schema = TweetSchema()
 annotation_schema = AnnotationSchema()
+videoannotation_schema = VideoAnnotationSchema()
 user_schema = UserSchema()
 label_schema = LabelSchema()
+videolabel_schema = VideoLabelSchema()
 appuser_schema = AppUserSchema(exclude=["password"])
 revokedtoken_schema = RevokedTokenSchema()
 userannotation_schema = UserAnnotationSchema()

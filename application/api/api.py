@@ -214,7 +214,7 @@ class GetTweet(Resource):
 		if tweet:
 			return tweet_schema.dump(tweet)
 		else:
-			return {"error":404, "message":"Not Found"}, 404
+			return {"error": 404, "message":"Not Found"}, 404
 
 
 class GetNextTweetByRanking(Resource):
@@ -240,6 +240,18 @@ class GetAnnotation(Resource):
 			return annotation_schema.dump(annotation)
 		else:
 			return {"error": 404, "message":"Not Found"}, 404
+
+
+class GetVideoAnnotation(Resource):
+	@require_level(1)
+	def get(self, name):
+		vannotations = VideoAnnotation.get_annotations_for_video(name)
+
+		if vannotations:
+			return videoannotation_schema.dump(vannotations, many=True)
+		else:
+			return {"error": 404, "message": "Not Found"}, 404
+
 
 class TransformAnnotationToMultivalue(Resource):
 	@require_level(8)
@@ -275,7 +287,7 @@ class GetAuthorTweets(Resource):
 		if tweets:
 			return tweet_schema.dump(tweets, many=True)
 		else:
-			return {"error":404, "message":"Not Found"}, 404
+			return {"error": 404, "message":"Not Found"}, 404
 
 
 class CreateTweet(Resource):
@@ -469,6 +481,47 @@ class CreateAnnotation(Resource):
 			print(e)
 			return {"message": "Something went wrong. Check your JSON and try again.", "error": 500}, 500
 
+class RemoveVideoAnnotation(Resource):
+	@require_level(3)
+	def post(self, name, vaid):
+		try:
+			VideoAnnotation.query.filter(VideoAnnotation.video == name).filter(VideoAnnotation.id == vaid).delete()
+			
+			db.session.commit()
+		
+		except Exception as e:
+			print(e)
+			return {"message": "Something went wrong. Check your JSON and try again.", "error": 500}, 500
+
+class CreateVideoAnnotation(Resource):
+	@require_level(3)
+	def post(self, name):
+		try:
+			data = request.get_json()
+			username = get_jwt_identity()
+
+			appuser = AppUser.query.filter_by(username=username).scalar()
+
+			va = VideoAnnotation(
+				video=name,
+				start_time=data["start_time"],
+				end_time=data["end_time"],
+				labels=data["labels"],
+				appuser_id=appuser.id,
+			)
+			db.session.add(va)
+
+			try:
+				db.session.commit()
+				return {"message": "Video annotation created succesfully", "id": va.id}
+
+			except:
+				return {"message": "Something went wrong", "error": 500}, 500
+
+		except Exception as e:
+			print(e)
+			return {"message": "Something went wrong. Check your JSON and try again.", "error": 500}, 500
+
 
 class GetUser(Resource):
 	@require_level(1, clearance=True)
@@ -481,6 +534,12 @@ class GetLabels(Resource):
 	def get(self):
 		labels = Label.query.order_by(Label.order).all()
 		return label_schema.dump(labels, many=True)
+
+class GetVideoLabels(Resource):
+	@require_level(1)
+	def get(self):
+		labels = VideoLabel.query.order_by(VideoLabel.order).all()
+		return videolabel_schema.dump(labels, many=True)
 
 class GetAssistantsSuggestions(Resource):
 	@require_level(1)

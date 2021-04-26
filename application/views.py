@@ -80,6 +80,12 @@ def stats():
 def signup():
 	return render_template("signup.html")
 
+@main_bp.route("/video-tagging")
+@view_require_level(3)
+def videotagging():
+	video = "debatea5noviembre"
+	return render_template("video-tagging.html", video=video)
+
 @main_bp.route("/phpinfo")
 def teapot():
 	abort(418)
