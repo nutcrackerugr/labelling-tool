@@ -253,6 +253,9 @@ def create_dashboard(server, prefix=None):
         resampled2_neg = joblib.load(server.config["DASHBOARD_PATH"] + "resampled_neg.joblib.pkl")
         resampled2_neu = joblib.load(server.config["DASHBOARD_PATH"] + "resampled_neu.joblib.pkl")
 
+        derechas = joblib.load(server.config["DASHBOARD_PATH"] + "derechas.joblib.pkl")
+        izquierdas = joblib.load(server.config["DASHBOARD_PATH"] + "izquierdas.joblib.pkl")
+
     except:
         todos = pd.read_csv(server.config["DASHBOARD_PATH"] + "todos_sentiment_polar.csv", index_col=0)
         todos.created_at = pd.to_datetime(todos.created_at)
@@ -297,6 +300,21 @@ def create_dashboard(server, prefix=None):
         joblib.dump(resampled2, server.config["DASHBOARD_PATH"] + "resampled.joblib.pkl")
         joblib.dump(resampled2_neg, server.config["DASHBOARD_PATH"] + "resampled_neg.joblib.pkl")
         joblib.dump(resampled2_neu, server.config["DASHBOARD_PATH"] + "resampled_neu.joblib.pkl")
+
+
+
+        derechas_pos = aux_df.copy().loc[aux_df.partido.map(lambda x: "PP" in x or "Cs" in x or "VOX" in x), :]
+        izquierdas_pos = aux_df.copy().loc[aux_df.partido.map(lambda x: "PSOE" in x or "UP" in x), :]
+        #derechas_neu = aux_df.copy().loc[aux_df.partido_neutral.map(lambda x: "PP" in x or "Cs" in x or "VOX" in x), :]
+        #izquierdas_neu = aux_df.copy().loc[aux_df.partido_neutral.map(lambda x: "PSOE" in x or "UP" in x), :]
+        derechas_neg = aux_df.copy().loc[aux_df.partido_negativo.map(lambda x: "PP" in x and "Cs" in x and "VOX" in x), :]
+        izquierdas_neg = aux_df.copy().loc[aux_df.partido_negativo.map(lambda x: "PSOE" in x and "UP" in x), :]
+
+        izquierdas = pd.concat([derechas_neg, izquierdas_pos]).resample("30S").mean()
+        derechas = pd.concat([derechas_pos, izquierdas_neg]).resample("30S").mean()
+
+        joblib.dump(derechas, server.config["DASHBOARD_PATH"] + "derechas.joblib.pkl")
+        joblib.dump(izquierdas, server.config["DASHBOARD_PATH"] + "izquierdas.joblib.pkl")
 
     finally:
         fig = go.Figure()
@@ -414,6 +432,43 @@ def create_dashboard(server, prefix=None):
             legend=dict(traceorder="reversed"),
         )
 
+        fig3 = go.Figure()
+        add_common_annotations(fig3, yref_stripes="y1", yref_annotations="y2")
+        
+        fig3.add_trace(go.Scatter(x=derechas.index, y=derechas.Polar_BERT, name="Right-wing parties", yaxis="y1"))
+        fig3.add_trace(go.Scatter(x=izquierdas.index, y=izquierdas.Polar_BERT, name="Left-wing parties", yaxis="y1"))
+        fig3.add_trace(go.Scatter(x=a.index, y=a.id, name="Tweet Count", yaxis="y2", line={"color": "#FF6692"}))
+
+        fig3.update_layout(
+            height=700,
+            xaxis=dict({
+                "autorange": True,
+                "rangeslider": {
+                    "autorange": True,
+                },
+                "type": "date",
+            }),
+            yaxis1={
+                "anchor": "x",
+                "autorange": True,
+                "domain": (0, .7),
+                "title": "wings polar.",
+                "linecolor": "#607d8b",
+                "side": "left",
+                "range": (-2, 4),
+            },
+            yaxis2={
+                "anchor": "x",
+                "autorange": True,
+                "domain": (.7, 1),
+                "title": "no. tweets",
+                "linecolor": "#607d8b",
+                "side": "left",
+                "range": (0, 700),
+            },
+            legend=dict(traceorder="reversed"),
+        )
+
 
         pie = make_subplots(
             cols=5, specs=[[{"type": "pie"} for _ in range(5)]],
@@ -422,6 +477,7 @@ def create_dashboard(server, prefix=None):
 
         for i, etiqueta in enumerate(["PP", "Cs", "VOX", "PSOE", "UP"]):
             e = todos_partido[etiqueta].value_counts()
+            e = e.sort_index()
             pie.add_trace(
                 go.Pie(labels=e.index, values=e.values, name=etiqueta, marker={
                     "colors": [
@@ -489,6 +545,29 @@ def create_dashboard(server, prefix=None):
                 id="party_comparison",
                 figure=fig2
             ),
+            
+            html.H1(children="Left-wing parties vs Right-wing parties Comparison"),
+            html.Blockquote(children=
+                """
+                Evolution of left-wing parties versus right-wing parties polarization
+                through time using BERT DNN. A positive value stands for documents
+                with positive polarization meanwhile negative values represent
+                documents with negative polarization. Distributions are computed
+                using the same algorithm, hence it is possible to compare values
+                between labels. For each wing, we compute the polarization of those tweets whose
+                authors have been categorised for, against and neutral (or w/o info)
+                towards the parties in that wing (posLabel, neuLabel and negLabel respectively).
+                Keep in mind that Left-wing is calculated as those tweets that are
+                positive towards any left-wing party and negative toward all right-wing
+                parties, and viceversa. Results are sampled using 30-second windows and aggregated using the
+                arithmetic mean. Notice that the sentiment variability is higher for
+                those labels in which we have a lower number of tweets.
+                """
+            ),
+            dcc.Graph(
+                id="izqdcha_comparison",
+                figure=fig3
+            )
         ])
 
     return dash_app.server

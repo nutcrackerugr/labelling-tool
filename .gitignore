@@ -36,5 +36,6 @@ dashboard-data/*
 debatea5rtve.json
 debatearv.json
 application/static/videos/*.mp4
+dashboard-data/*
 
 .vscode/*
