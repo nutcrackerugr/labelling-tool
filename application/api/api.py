@@ -1,5 +1,4 @@
-from flask import request, current_app
-from flask_restful import Resource
+from flask import request, current_app, abort, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from sqlalchemy import null, and_
 
@@ -13,607 +12,477 @@ from application.tasks.relations import test_task, create_graph, expand_properti
 
 import random
 
+from . import api_bp
 
-class TestWorker(Resource):
-	@require_level(9)
-	def get(self):
-		username = get_jwt_identity()
-		appuser = AppUser.query.filter_by(username=username).scalar()
+@api_bp.route("/tweet", methods=["GET"])
+@require_level(1)
+def get_tweet_by_rank():
+	"""Get a tweet with high importance
 
-		result = appuser.launch_task("tweets.just_sleep")
+	Returns:
+		Tweet: Tweet with a high current importance
+	"""
+	tweets = db.session.query(Tweet).filter(Tweet.rank >= 0).order_by(
+		Tweet.rank.desc()).limit(5).all()
 
-		return {"message": "Task scheduled successfully", "task": result.id}, 201
+	if tweets:
+		tweet = random.choice(tweets)
 
-
-class ExpandProperties(Resource):
-	@require_level(9)
-	def get(self, filename):
-		username = get_jwt_identity()
-		appuser = AppUser.query.filter_by(username=username).scalar()
-
-		result = appuser.launch_task("relations.expand_properties", properties=current_app.config["EXTENDABLE_PROPERTIES"], filename=filename, path=current_app.config["GRAPH_PATH"])
-
-		return {"message": "Task scheduled successfully", "task": result.id}, 201
-
-class RepairRetweets(Resource):
-	@require_level(8)
-	def get(self, filename):
-		username = get_jwt_identity()
-		appuser = AppUser.query.filter_by(username=username).scalar()
-
-		result = appuser.launch_task("tweets.repair_retweets", "{}{}".format(current_app.config["DUMPS_PATH"], filename))
-
-		return {"message": "Task scheduled successfully", "task": result.id}, 201
+		return tweet_schema.dump(tweet)
+	else:
+		abort(jsonify(message="No more tweets"), 404)
 
 
-class RankRetweets(Resource):
-	@require_level(8)
-	def get(self):
-		username = get_jwt_identity()
-		appuser = AppUser.query.filter_by(username=username).scalar()
+@api_bp.route("/tweet", methods=["POST"])
+@require_level(7)
+def create_tweet():
+	"""Creates a new tweet
 
-		result = appuser.launch_task("tweets.rank_retweets")
-
-		return {"message": "Task scheduled successfully", "task": result.id}, 201
-
-
-class RankTweetsFirstTime(Resource):
-	@require_level(8)
-	def get(self):
-		username = get_jwt_identity()
-		appuser = AppUser.query.filter_by(username=username).scalar()
-
-		result = appuser.launch_task("tweets.rank_tweets_first_time")
-
-		return {"message": "Task scheduled successfully", "task": result.id}, 201
-
-
-class ResetRank(Resource):
-	@require_level(8)
-	def get(self):
-		username = get_jwt_identity()
-		appuser = AppUser.query.filter_by(username=username).scalar()
-
-		result = appuser.launch_task("tweets.reset_rank")
-
-		return {"message": "Task scheduled successfully", "task": result.id}, 201
-
-
-class RankTrackedAndNegativeUsers(Resource):
-	@require_level(9)
-	def get(self):
-		username = get_jwt_identity()
-		appuser = AppUser.query.filter_by(username=username).scalar()
-
-		result = appuser.launch_task("tweets.promote_tracked_tweets_and_negative_users")
-
-		return {"message": "Task scheduled successfully", "task": result.id}, 201
-
-
-class CreateGraph(Resource):
-	@require_level(8)
-	def get(self, name):
-		username = get_jwt_identity()
-		appuser = AppUser.query.filter_by(username=username).scalar()
-
-		result = appuser.launch_task("relations.create_graph", path=current_app.config["GRAPH_PATH"], filename=name)
-
-		return {"message": "Task scheduled successfully", "task": result.id}, 201
-
-class GetCompletedTasks(Resource):
-	@require_level(2)
-	def get(self):
-		username = get_jwt_identity()
-		appuser = AppUser.query.filter_by(username=username).scalar()
-		tasks = appuser.get_completed_tasks()
-
-		return task_schema.dump(tasks, many=True)
-
-
-class GetStats(Resource):
-	@require_level(3)
-	def get(self):
-		claims = get_jwt()
-		level = claims["permission_level"]
-		if level == 9:
-			level += 1 # To ensure superuser sees everything
-
-		stats = {}
-		stats["no_tweets"] = db.session.query(Tweet.id).count()
-		stats["no_users"] = db.session.query(User.id).count()
-		stats["no_annotations"] = db.session.query(Annotation).count()
-		stats["total_user_annotations"] = db.session.query(UserAnnotation).count()
-
-		maximum_timestamps = db.session.query(
-			UserAnnotation.user_id, 
-			UserAnnotation.appuser_id,
-			func.max(UserAnnotation.timestamp).label("timestamp")
-			).group_by(UserAnnotation.user_id).subquery()
-		
-		uannotations = db.session.query(UserAnnotation).join(
-			maximum_timestamps, and_(
-				maximum_timestamps.c.user_id == UserAnnotation.user_id, and_(
-					maximum_timestamps.c.appuser_id == UserAnnotation.appuser_id,
-					maximum_timestamps.c.timestamp == UserAnnotation.timestamp
-					)
-				)	
-			).count()
-
-		stats["no_user_annotations"] = uannotations
-
-		appusers = db.session.query(AppUser).filter(AppUser.permission_level < level).all()
-		appuser_stats = []
-		for appuser in appusers:
-			maximum_timestamps = db.session.query(Annotation.tweet_id, 
-				Annotation.appuser_id, func.max(Annotation.timestamp).label("timestamp")
-				).group_by(Annotation.tweet_id).subquery()
-			annotations = db.session.query(Annotation).filter_by(appuser_id=appuser.id).join(maximum_timestamps, and_(
-				maximum_timestamps.c.tweet_id == Annotation.tweet_id, and_(
-					maximum_timestamps.c.appuser_id == Annotation.appuser_id,
-					maximum_timestamps.c.timestamp == Annotation.timestamp)
-				)).all()
-
-			maximum_timestamps = db.session.query(UserAnnotation.user_id, 
-				UserAnnotation.appuser_id, func.max(UserAnnotation.timestamp).label("timestamp")
-				).group_by(UserAnnotation.user_id).subquery()
-			uannotations = db.session.query(UserAnnotation).filter_by(reviewed_by=appuser.id, reviewed=True).join(maximum_timestamps, and_(
-				maximum_timestamps.c.user_id == UserAnnotation.user_id, and_(
-					maximum_timestamps.c.appuser_id == UserAnnotation.appuser_id,
-					maximum_timestamps.c.timestamp == UserAnnotation.timestamp)
-				)).count()
-
-			nonempty_annotations = len(list(filter(lambda a: not a.is_empty(), annotations)))
+	Returns:
+		Tweet: Created tweet
+	"""
+	try:
+		data = request.get_json()
+		if data:
+			u = db.session.query(User).filter_by(id_str=data["user"]["id_str"]).scalar()
 			
-			appuser_stats.append({"reviewed_annotations": uannotations, "annotations": len(annotations), "nonempty_annotations": nonempty_annotations, "username": appuser.username, "name": appuser.name})
+			if not u and "user" in data.keys():
+				u = user_schema.load(data["user"])
+				db.session.add(u)
+			else:
+				abort(jsonify(message="User does not exists and your request does not contain required information"), 400)
+			
+			tweet = db.session.query(Tweet).filter_by(id_str=data["id_str"]).scalar()
+			
+			if not tweet:
+				if "full_text" in data.keys():
+					text = data["full_text"]
+				elif "extended_tweet" in data.keys():
+					text = data["extended_tweet"]["full_text"]
+				else:
+					text = data["text"]
 		
-		stats["users"] = appuser_stats
+				if "retweeted_status" in data.keys():
+					is_retweet = True
+					parent_tweet = data["retweeted_status"]["id_str"]
+				else:
+					is_retweet = False
+					parent_tweet = None
+				
+				tweet = Tweet(
+					id_str=data["id_str"],
+					full_text=text,
+					truncated=data["truncated"],
+					created_at=data["created_at"],
+					in_reply_to_status_id=data["in_reply_to_status_id_str"],
+					in_reply_to_user_id=data["in_reply_to_user_id_str"],
+					geo=str(data["geo"]),
+					coordinates=str(data["coordinates"]),
+					retweet_count=data["retweet_count"],
+					favorite_count=data["favorite_count"],
+					lang=data["lang"],
+					is_retweet=is_retweet,
+					parent_tweet=parent_tweet,
+					retweeted=data["retweeted"],
+					favorited=data["favorited"]
+				)
+		
+				u.tweets.append(tweet)
+				db.session.add(tweet)
+			
+				try:
+					db.session.commit()
+				except:
+					abort(jsonify(message="Something went wrong"), 500)
+				
+			return tweet_schema.dump(tweet)
+		
+	except:
+		abort(jsonify(message="Something went wrong, please check your request"), 400)
+
+@api_bp.route("/tweet/<int:tid>", methods=["GET"])
+@require_level(1)
+def get_specific_tweet(tid: int):
+	tweet = Tweet.query.get(tid)
+
+	if tweet:
+		return tweet_schema.dump(tweet)
+	else:
+		abort(jsonify(message="Not found"), 404)
+
+@api_bp.route("/tweet/<int:tid>/annotation", methods=["GET"])
+@require_level(1)
+def get_specific_tweet_annotation(tid: int):
+	annotation = Annotation.get_last_annotation_for_tweet(tid)
+
+	if annotation:
+		return annotation_schema.dump(annotation)
+	else:
+		abort(jsonify(message="Not found"), 404)
+
+@api_bp.route("/tweet/<int:tid>/annotation", methods=["POST"])
+@require_level(1)
+def create_specific_tweet_annotation(tid: int):
+	try:
+		data = request.get_json()
+		username = get_jwt_identity()
+
+		tweet = Tweet.query.get(tid)
+		if tweet.rank > 0:
+			tweet.rank *= -1
+
+		appuser = AppUser.query.filter_by(username=username).scalar()
+
+		annotation = Annotation.query.filter_by(tweet_id=tid).order_by(
+			Annotation.timestamp.desc()).first()
+
+		if annotation and annotation.appuser_id == appuser.id and annotation.timestamp + current_app.config["TIMEDELTA_TO_NEW_ANNOTATION"] > datetime.utcnow():
+			annotation.timestamp = datetime.utcnow()
+			annotation.labels = data["labels"]
+			annotation.highlights = data["highlights"]
+			annotation.tags = data["tags"]
+			annotation.comment = data["comment"]
+		else:
+			data["tweet_id"] = tweet.id
+			data["appuser_id"] = appuser.id
+			annotation = annotation_schema.load(data)
+
+			appuser.annotations.append(annotation)
+			db.session.add(annotation)
+
+		try:
+			db.session.commit()
+			return annotation_schema.dump(annotation)
+			
+		except:
+			abort(jsonify(message="Something went wrong"), 500)
+
+	except:
+		abort(jsonify(message="Something went wrong, please check your request"), 400)
+
+@api_bp.route("/tweet/<int:tid>/suggestions", methods=["GET"])
+@require_level(1)
+def get_specific_tweet_suggestions(tid: int):
+	details = db.session.query(Tweet.user_id, Tweet.full_text).filter_by(id=tid).first()
+	response = assistant_manager.run(*details)
+	
+	return response, 200
+
+@api_bp.route("/tweet/findByKeywords", methods=["GET"])
+@require_level(1)
+def get_tweet_by_keywords():
+	try:
+		q = request.args["q"]
+		page = request.args["page"] if "page" in request.args.keys() else 1
+		limit = request.args["limit"] if "limit" in request.args.keys() else current_app.config["DEFAULT_PAGE_LENGTH"]
+
+		words = q.split(" ")
+		conditions = [Tweet.full_text.ilike(f"%{word}%") for word in words]
+		results = db.session.query(Tweet).filter(and_(*conditions)).order_by(Tweet.id).paginate(page, per_page=limit)
+
+		return tweet_schema.dump(results, many=True)
+	except KeyError:
+		abort(jsonify(message="Something went wrong, please check your request"), 400)
+
+@api_bp.route("/user", methods=["POST"])
+@require_level(7)
+def create_user():
+	data = request.get_json()
+
+	u = db.session.query(User).filter_by(id_str=data["user"]["id_str"]).scalar()
+			
+	if not u and "user" in data.keys():
+		u = user_schema.load(data["user"])
+		db.session.add(u)
+	
+		try:
+			db.session.commit(u)
+		except:
+			abort(jsonify(message="Something went wrong"), 500)
+		
+	return user_schema.dump(u)
+
+@api_bp.route("/user/<int:uid>", methods=["GET"])
+@require_level(1, clearance=True)
+def get_specific_user(uid: int):
+	user = User.query.get(uid)
+
+	if user:
+		return user
+	else:
+		abort(jsonify(message="User not found"), 404)
+
+@api_bp.route("/user/<int:uid>/tweets", methods=["GET"])
+@require_level(1)
+def get_tweets_of_specific_user(tid: int):
+	page = request.args["page"] if "page" in request.args.keys() else 1
+	limit = request.args["limit"] if "limit" in request.args.keys() else current_app.config["DEFAULT_PAGE_LENGTH"]
+
+	tweets = Tweet.get_by_user(uid, limit=limit, page=page)
+
+	if tweets:
+		return tweet_schema.dump(tweets, many=True)
+	else:
+		abort(jsonify(message="User has no tweets"), 404)
+
+@api_bp.route("/user/<int:uid>/annotation", methods=["GET"])
+@require_level(1)
+def get_specific_user_annotation(uid: int):
+	ua = UserAnnotation.get_last_annotation_for_user(uid)
+
+	if ua:
+		return userannotation_schema.dump(ua)
+	else:
+		abort(jsonify(message="User has no annotations"), 404)
+
+@api_bp.route("/userAnnotation", methods=["POST"])
+@api_bp.route("/user/<int:uid>/annotation", methods=["POST"])
+@require_level(7)
+def create_specific_user_annotation(uid: int=None):
+	try:
+		data = request.get_json()
+		username = get_jwt_identity()
+
+		user = User.query.get(uid if uid else data["user_id"])
+		appuser = AppUser.query.filter_by(username=username).scalar()
+
+		uannotation = userannotation_schema.load(data)
+		
+		appuser.user_annotations.append(uannotation)
+		user.annotations.append(uannotation)
+		db.session.add(uannotation)
+
+		try:
+			db.session.commit()
+			return userannotation_schema.dump(uannotation)
+			
+		except:
+			abort(jsonify(message="Something went wrong"), 500)
+
+	except:
+		abort(jsonify(message="Something went wrong, please check your request"), 400)
+
+@api_bp.route("/userAnnotation", methods=["GET"])
+@require_level(1)
+def get_unreviewed_user_annotation():
+	claims = get_jwt()
+	ua = UserAnnotation.get_last_unreviewed_annotation(appuser_id=claims["user_id"])
+
+	if ua:
+		return userannotation_schema.dump(ua)
+	else:
+		abort(jsonify(message="There is not any unreviewed User Annotation"), 404)
+
+@api_bp.route("/userAnnotation/<int:uaid>", methods=["PUT"])
+@api_bp.route("/userAnnotation", methods=["PUT"])
+@require_level(2)
+def update_user_annotation(uaid: int=None):
+	#TODO: change UserAnnotation primary_key to uaid
+	try:
+		data = request.get_json()
+		username = get_jwt_identity()
+
+		ua = UserAnnotation.query.get((data["user_id"], data["appuser_id"], data["timestamp"]))
+
+		if not ua.reviewed:
+			appuser = AppUser.query.filter_by(username=username).scalar()
+			
+			ua.reviewed = True
+			ua.decision = int(data["decision"])
+			ua.reviewed_by = appuser.id
+
+			if ua.decision == -1:
+				for tweet in ua.user.tweets:
+					if not tweet.is_retweet:
+						tweet.rank = 99999 - abs(tweet.rank) # just to put them over the top without losing the real score
+			
+			try:
+				db.session.commit()
+			except:
+				abort(jsonify(message="Something went wrong"), 500)
+			
+		else:
+			claims = get_jwt()
+			if claims["permission_level"] >= 4:
+				ua.decision = data["decision"]
+				ua.validated = True
+
+				try:
+					db.session.commit()
+				except:
+					abort(jsonify(message="Something went wrong"), 500)
+			
+			elif ua.decision != data["decision"]:
+				uaid = f"{ua.user_id},{ua.appuser_id},{ua.timestamp}"
+				abort(jsonify(message=f"This annotation was already reviewed and it had a different decision. Contact support and provide the following reference: <UserAnnotation:{uaid}>"), 500)
+
+		return userannotation_schema.dump(ua)
+
+	except:
+		abort(jsonify(message="Something went wrong, please check your request"), 400)
+
+@api_bp.route("/userAnnotation/findByStatusAndDecision", methods=["GET"])
+@require_level(1)
+def get_user_annotation_by_status():
+	try:
+		# status: reviewed, unreviewed, validated, unvalidated
+		# decision: -1, 0, 1
+
+		statuses = request.args.getlist("status")
+		decision = request.args.get("decision", None)
+
+		if "unreviewed" in statuses:
+			ua = UserAnnotation.get_last_annotation_by_status(reviewed=False)
+		elif "reviewed" in statuses:
+			ua = UserAnnotation.get_last_annotation_by_status(reviewed=True)
+		elif "unvalidated" in statuses:
+			ua = UserAnnotation.get_last_annotation_by_status(validated=False, decision=decision)
+		elif "validated" in statuses:
+			ua = UserAnnotation.get_last_annotation_by_status(validated=True, decision=decision)
+		else:
+			abort(jsonify(message="Something went wrong, please check your request"), 400)
+		
+		return userannotation_schema.dump(ua)
+
+	except KeyError:
+		abort(jsonify(message="Something went wrong, please check your request"), 400)
+
+@api_bp.route("/labels", methods=["GET"])
+@require_level(1)
+def get_labels():
+	labels = Label.query.order_by(Label.order).all()
+	
+	if labels:
+		return label_schema.dump(labels, many=True)
+	else:
+		abort(jsonify(message="There are no labels"), 404)
+
+@api_bp.route("/video/labels", methods=["GET"])
+@require_level(1)
+def get_video_labels():
+	labels = VideoLabel.query.order_by(VideoLabel.order).all()
+
+	if labels:
+		return videolabel_schema.dump(labels, many=True)
+	else:
+		abort(jsonify(message="There are no video labels"), 404)
+
+@api_bp.route("/video/<string:name>/annotation", methods=["POST"])
+@require_level(1)
+def create_video_annotation(name: str):
+	try:
+		data = request.get_json()
+		username = get_jwt_identity()
+
+		appuser = AppUser.query.filter_by(username=username).scalar()
+
+		data["video"] = name
+		data["appuser_id"] = appuser.id
+		va = videoannotation_schema.load(data)
+		
+		db.session.add(va)
+		appuser.video_annotations.append(va)
+
+		try:
+			db.session.commit()
+			return videoannotation_schema.dump(va)
+
+		except:
+			abort(jsonify(message="Something went wrong"), 500)
+
+	except:
+		abort(jsonify(message="Something went wrong, please check your request"), 400)
+
+@api_bp.route("/video/<string:name>/annotation/<int:vaid>", methods=["DELETE"])
+@require_level(3)
+def delete_video_annotation(name: str, vaid: int):
+	try:
+		VideoAnnotation.query.filter(VideoAnnotation.video == name).filter(VideoAnnotation.id == vaid).delete()
+		db.session.commit()
+	
+	except:
+		abort(jsonify(message="Something went wrong, please check your request"), 400)
+
+@api_bp.route("/video/<string:name>/annotations", methods=["GET"])
+@require_level(1)
+def get_video_annotations():
+	page = request.args["page"] if "page" in request.args.keys() else 1
+	limit = request.args["limit"] if "limit" in request.args.keys() else current_app.config["DEFAULT_PAGE_LENGTH"]
+
+	vannotations = VideoAnnotation.get_annotations_for_video(name, page=page, limit=limit)
+
+	if vannotations:
+		return videoannotation_schema.dump(vannotations, many=True)
+	else:
+		abort(jsonify(message="There are no annotations for this video"), 404)
+
+@api_bp.route("/stats", methods=["GET"])
+@require_level(3)
+def get_stats():
+	claims = get_jwt()
+	level = claims["permission_level"]
+	if level == 9:
+		level += 1 # To ensure superuser sees everything
+
+	stats = {}
+	stats["no_tweets"] = db.session.query(Tweet.id).count()
+	stats["no_users"] = db.session.query(User.id).count()
+	stats["no_annotations"] = db.session.query(Annotation).count()
+	stats["total_user_annotations"] = db.session.query(UserAnnotation).count()
+
+	maximum_timestamps = db.session.query(
+		UserAnnotation.user_id, 
+		UserAnnotation.appuser_id,
+		func.max(UserAnnotation.timestamp).label("timestamp")
+		).group_by(UserAnnotation.user_id).subquery()
+	
+	uannotations = db.session.query(UserAnnotation).join(
+		maximum_timestamps, and_(
+			maximum_timestamps.c.user_id == UserAnnotation.user_id, and_(
+				maximum_timestamps.c.appuser_id == UserAnnotation.appuser_id,
+				maximum_timestamps.c.timestamp == UserAnnotation.timestamp
+				)
+			)	
+		).count()
+
+	stats["no_user_annotations"] = uannotations
+
+	appusers = db.session.query(AppUser).filter(AppUser.permission_level < level).all()
+	appuser_stats = []
+	for appuser in appusers:
+		maximum_timestamps = db.session.query(Annotation.tweet_id, 
+			Annotation.appuser_id, func.max(Annotation.timestamp).label("timestamp")
+			).group_by(Annotation.tweet_id).subquery()
+		annotations = db.session.query(Annotation).filter_by(appuser_id=appuser.id).join(maximum_timestamps, and_(
+			maximum_timestamps.c.tweet_id == Annotation.tweet_id, and_(
+				maximum_timestamps.c.appuser_id == Annotation.appuser_id,
+				maximum_timestamps.c.timestamp == Annotation.timestamp)
+			)).all()
 
 		maximum_timestamps = db.session.query(UserAnnotation.user_id, 
 			UserAnnotation.appuser_id, func.max(UserAnnotation.timestamp).label("timestamp")
 			).group_by(UserAnnotation.user_id).subquery()
-		failed_annotations = db.session.query(UserAnnotation).filter_by(reviewed=True, decision=-1).join(maximum_timestamps, and_(
+		uannotations = db.session.query(UserAnnotation).filter_by(reviewed_by=appuser.id, reviewed=True).join(maximum_timestamps, and_(
 			maximum_timestamps.c.user_id == UserAnnotation.user_id, and_(
 				maximum_timestamps.c.appuser_id == UserAnnotation.appuser_id,
 				maximum_timestamps.c.timestamp == UserAnnotation.timestamp)
-			))
+			)).count()
 
-		stats["failed_annotations"] = failed_annotations.count()
-
-		return stats, 200
-
-
-
-class SearchInText(Resource):
-	@require_level(1)
-	def get(self, q):
-		words = q.split(" ")
-		conditions = [Tweet.full_text.ilike(f"%{word}%") for word in words]
-		results = db.session.query(Tweet).filter(and_(*conditions)).limit(30).all()
-
-		return tweet_schema.dump(results, many=True)
-
+		nonempty_annotations = len(list(filter(lambda a: not a.is_empty(), annotations)))
+		
+		appuser_stats.append({"reviewed_annotations": uannotations, "annotations": len(annotations), "nonempty_annotations": nonempty_annotations, "username": appuser.username, "name": appuser.name})
 	
-class GetTweet(Resource):
-	@require_level(1)
-	def get(self, tid):
-		tweet = None
-		
-		if tid != 0:
-			tweet = Tweet.query.get(tid)
-		else:
-			username = get_jwt_identity()
-			appuser = AppUser.query.filter_by(username=username).scalar()
-			annotation = Annotation.query.filter_by(appuser_id=appuser.id).order_by(Annotation.timestamp.desc()).first()
+	stats["users"] = appuser_stats
 
-			if annotation:
-				tweet = Tweet.query.filter_by(id=annotation.tweet_id).first()
-			else:
-				tweet = Tweet.query.first()
+	maximum_timestamps = db.session.query(UserAnnotation.user_id, 
+		UserAnnotation.appuser_id, func.max(UserAnnotation.timestamp).label("timestamp")
+		).group_by(UserAnnotation.user_id).subquery()
+	failed_annotations = db.session.query(UserAnnotation).filter_by(reviewed=True, decision=-1).join(maximum_timestamps, and_(
+		maximum_timestamps.c.user_id == UserAnnotation.user_id, and_(
+			maximum_timestamps.c.appuser_id == UserAnnotation.appuser_id,
+			maximum_timestamps.c.timestamp == UserAnnotation.timestamp)
+		))
 
-		
-		if tweet:
-			return tweet_schema.dump(tweet)
-		else:
-			return {"error": 404, "message":"Not Found"}, 404
+	stats["failed_annotations"] = failed_annotations.count()
 
-
-class GetNextTweetByRanking(Resource):
-	@require_level(1)
-	def get(self):
-		# Select 5 of the best ranked and select one randomly
-		tweets = db.session.query(Tweet).filter(Tweet.rank >= 0).order_by(Tweet.rank.desc()).limit(5).all()
-
-		if tweets:
-			tweet = random.choice(tweets)
-
-			return tweet_schema.dump(tweet)
-		else:
-			return {"error": 404, "message": "No more tweets"}
-
-
-class GetAnnotation(Resource):
-	@require_level(1)
-	def get(self, tid):
-		annotation = Annotation.get_last_annotation_for_tweet(tid)
-
-		if annotation:
-			return annotation_schema.dump(annotation)
-		else:
-			return {"error": 404, "message":"Not Found"}, 404
-
-
-class GetVideoAnnotation(Resource):
-	@require_level(1)
-	def get(self, name):
-		vannotations = VideoAnnotation.get_annotations_for_video(name)
-
-		if vannotations:
-			return videoannotation_schema.dump(vannotations, many=True)
-		else:
-			return {"error": 404, "message": "Not Found"}, 404
-
-
-class TransformAnnotationToMultivalue(Resource):
-	@require_level(8)
-	def get(self, label):
-		try:
-			label_instance = db.session.query(Label).filter_by(name=label).scalar()
-
-			if not label_instance.multiple:
-				for annotation in Annotation.query.all():
-					if label in annotation.labels.keys():
-						# Pickled attributes need to be replaced in order to trigger updates
-						labels_copy = dict(annotation.labels)
-						labels_copy[label] = [labels_copy[label]]
-						annotation.labels = labels_copy
-
-				label_instance.multiple = True
-
-				db.session.commit()
-			else:
-				return {"message": "The label is already multiple", "error": 500}, 500
-
-			return {"message": "Annotations transformed to multiple for label {}".format(label)}
-		except:
-			return {"message": "Something went wrong", "error": 500}, 500
-		
-
-class GetAuthorTweets(Resource):
-	@require_level(1)
-	def get(self, uid, limit=5):
-		if uid != 0:
-			tweets = Tweet.get_by_user(uid, limit=limit)
-		
-		if tweets:
-			return tweet_schema.dump(tweets, many=True)
-		else:
-			return {"error": 404, "message":"Not Found"}, 404
-
-
-class CreateTweet(Resource):
-	@require_level(7)
-	def post(self):
-		try:
-			data = request.get_json()
-			if data:
-				u = db.session.query(User).filter_by(id_str=data["user"]["id_str"]).scalar()
-				if not u:
-					u = User(
-						id_str=data["user"]["id_str"],
-						name=data["user"]["name"],
-						screen_name=data["user"]["screen_name"],
-						location=data["user"]["location"],
-						description=data["user"]["description"],
-						protected=data["user"]["protected"],
-						profile_image_url_https=data["user"]["profile_image_url_https"]
-					)
-					db.session.add(u)
-				
-					t = db.session.query(Tweet).filter_by(id_str=data["id_str"]).scalar()
-					
-					if not t:
-						if "full_text" in data.keys():
-							text = data["full_text"]
-						elif "extended_tweet" in data.keys():
-							text = data["extended_tweet"]["full_text"]
-						else:
-							text = data["text"]
-				
-						if "retweeted_status" in data.keys():
-							is_retweet = True
-							parent_tweet = data["retweeted_status"]["id_str"]
-						else:
-							is_retweet = False
-							parent_tweet = None
-						
-						tweet = Tweet(
-							id_str=data["id_str"],
-							full_text=text,
-							truncated=data["truncated"],
-							created_at=data["created_at"],
-							in_reply_to_status_id=data["in_reply_to_status_id_str"],
-							in_reply_to_user_id=data["in_reply_to_user_id_str"],
-							geo=data["geo"],
-							coordinates=data["coordinates"],
-							retweet_count=data["retweet_count"],
-							favorite_count=data["favorite_count"],
-							lang=data["lang"],
-							is_retweet=is_retweet,
-							parent_tweet=parent_tweet,
-							retweeted=data["retweeted"],
-							favorited=data["favorited"]
-						)
-				
-						u.tweets.append(tweet)
-						db.session.add(tweet)
-				
-				try:
-					db.session.commit()
-					return {"message": "Tweet created succesfully"}
-					
-				except:
-					return {"message": "Something went wrong", "error": 500}, 500
-			
-		except:
-			return {"message": "Something went wrong. Check your JSON and try again.", "error": 500}, 500
-
-
-class CreateTweetsFromFile(Resource):
-	@require_level(7)
-	def get(self, filename):
-		username = get_jwt_identity()
-		appuser = AppUser.query.filter_by(username=username).scalar()
-
-		result = appuser.launch_task("tweets.upload_tweets_from_file", filename=filename)
-
-		return {"message": "Task scheduled successfully", "task": result.id}, 201
-
-
-class CreateTweetsBatch(Resource):
-	@require_level(7)
-	def post(self):
-		try:
-			batch = request.get_json()
-			if batch:
-				for data in batch:
-					u = db.session.query(User).filter_by(id_str=data["user"]["id_str"]).scalar()
-					if not u:
-						u = User(
-							id_str=data["user"]["id_str"],
-							name=data["user"]["name"],
-							screen_name=data["user"]["screen_name"],
-							location=data["user"]["location"],
-							description=data["user"]["description"],
-							protected=data["user"]["protected"],
-							profile_image_url_https=data["user"]["profile_image_url_https"]
-						)
-						db.session.add(u)
-						
-					t = db.session.query(Tweet).filter_by(id_str=data["id_str"]).scalar()
-					
-					if not t:
-						if "full_text" in data.keys():
-							text = data["full_text"]
-						elif "extended_tweet" in data.keys():
-							text = data["extended_tweet"]["full_text"]
-						else:
-							text = data["text"]
-				
-						if "retweeted_status" in data.keys():
-							is_retweet = True
-							parent_tweet = data["retweeted_status"]["id_str"]
-						else:
-							is_retweet = False
-							parent_tweet = None
-						
-						tweet = Tweet(
-							id_str=data["id_str"],
-							full_text=text,
-							truncated=data["truncated"],
-							created_at=data["created_at"],
-							in_reply_to_status_id=data["in_reply_to_status_id_str"],
-							in_reply_to_user_id=data["in_reply_to_user_id_str"],
-							geo=data["geo"],
-							coordinates=data["coordinates"],
-							retweet_count=data["retweet_count"],
-							favorite_count=data["favorite_count"],
-							lang=data["lang"],
-							is_retweet=is_retweet,
-							parent_tweet=parent_tweet,
-							retweeted=data["retweeted"],
-							favorited=data["favorited"]
-						)
-						
-						u.tweets.append(tweet)
-						db.session.add(tweet)
-				
-				try:
-					db.session.commit()
-					return {"message": "Tweets created succesfully"}
-					
-				except:
-					return {"message": "Something went wrong", "error": 500}, 500
-					
-		except Exception as e:
-			return {"message": "Something went wrong. Check your JSON and try again.", "error": 500}, 500
-
-class CreateAnnotation(Resource):
-	@require_level(1)
-	def post(self, tid):
-		try:
-			data = request.get_json()
-			username = get_jwt_identity()
-
-			tweet = Tweet.query.filter_by(id=tid).scalar()
-			if tweet.rank > 0:
-				tweet.rank *= -1
-
-			user = AppUser.query.filter_by(username=username).scalar()
-
-			last_annotation = Annotation.query.filter_by(tweet_id=tid).order_by(Annotation.timestamp.desc()).first()
-
-			if last_annotation and last_annotation.appuser_id == user.id and last_annotation.timestamp + timedelta(minutes=5) > datetime.utcnow():
-				last_annotation.timestamp = datetime.utcnow()
-				last_annotation.labels = data["labels"]
-				last_annotation.highlights = data["highlights"]
-				last_annotation.tags = data["tags"]
-				last_annotation.comment = data["comment"]
-			else:
-				a = Annotation(
-					tweet_id=tid,
-					appuser_id=user.id,
-					labels=data["labels"],
-					highlights=data["highlights"],
-					tags=data["tags"],
-					comment=data["comment"]
-				)
-				user.annotations.append(a)
-				db.session.add(a)
-
-			try:
-				db.session.commit()
-				return {"message": "Annotation created succesfully"}
-				
-			except:
-				return {"message": "Something went wrong", "error": 500}, 500
-
-		except Exception as e:
-			print(e)
-			return {"message": "Something went wrong. Check your JSON and try again.", "error": 500}, 500
-
-class RemoveVideoAnnotation(Resource):
-	@require_level(3)
-	def post(self, name, vaid):
-		try:
-			VideoAnnotation.query.filter(VideoAnnotation.video == name).filter(VideoAnnotation.id == vaid).delete()
-			
-			db.session.commit()
-		
-		except Exception as e:
-			print(e)
-			return {"message": "Something went wrong. Check your JSON and try again.", "error": 500}, 500
-
-class CreateVideoAnnotation(Resource):
-	@require_level(3)
-	def post(self, name):
-		try:
-			data = request.get_json()
-			username = get_jwt_identity()
-
-			appuser = AppUser.query.filter_by(username=username).scalar()
-
-			va = VideoAnnotation(
-				video=name,
-				start_time=data["start_time"],
-				end_time=data["end_time"],
-				labels=data["labels"],
-				appuser_id=appuser.id,
-			)
-			db.session.add(va)
-
-			try:
-				db.session.commit()
-				return {"message": "Video annotation created succesfully", "id": va.id}
-
-			except:
-				return {"message": "Something went wrong", "error": 500}, 500
-
-		except Exception as e:
-			print(e)
-			return {"message": "Something went wrong. Check your JSON and try again.", "error": 500}, 500
-
-
-class GetUser(Resource):
-	@require_level(1, clearance=True)
-	def get(self, uid):
-		user = User.query.get(uid)
-		return user_schema.dump(user)
-
-class GetLabels(Resource):
-	@require_level(1)
-	def get(self):
-		labels = Label.query.order_by(Label.order).all()
-		return label_schema.dump(labels, many=True)
-
-class GetVideoLabels(Resource):
-	@require_level(1)
-	def get(self):
-		labels = VideoLabel.query.order_by(VideoLabel.order).all()
-		return videolabel_schema.dump(labels, many=True)
-
-class GetAssistantsSuggestions(Resource):
-	@require_level(1)
-	def get(self, tid):
-		details = db.session.query(Tweet.user_id, Tweet.full_text).filter_by(id=tid).first()
-		response = assistant_manager.run(*details)
-		
-		return response, 200
-
-class GetUnreviewedUserAnnotation(Resource):
-	@require_level(2)
-	def get(self):
-		claims = get_jwt()
-		ua = UserAnnotation.get_last_unreviewed_annotation(appuser_id=claims["user_id"])
-		return userannotation_schema.dump(ua)
-
-class GetUnvalidatedRejectedUserAnnotation(Resource):
-	@require_level(4)
-	def get(self):
-		claims = get_jwt()
-		ua = UserAnnotation.get_last_unvalidated_rejected_annotation()
-		return userannotation_schema.dump(ua)
-
-class GetUserAnnotation(Resource):
-	@require_level(2)
-	def get(self, uid):
-		ua = UserAnnotation.get_last_annotation_for_user(uid)
-		return userannotation_schema.dump(ua)
-
-class ReviewUserAnnotation(Resource):
-	@require_level(2)
-	def post(self):
-		try:
-			data = request.get_json()
-			username = get_jwt_identity()
-
-			ua = UserAnnotation.query.get((data["user_id"], data["appuser_id"], data["timestamp"]))
-
-			if not ua.reviewed:
-				appuser = AppUser.query.filter_by(username=username).scalar()
-				
-				ua.reviewed = True
-				ua.decision = int(data["decision"])
-				ua.reviewed_by = appuser.id
-
-				if ua.decision == -1:
-					for tweet in ua.user.tweets:
-						if not tweet.is_retweet:
-							tweet.rank = 99999 - abs(tweet.rank) # just to put them over the top without losing the real score
-				
-				try:
-					db.session.commit()
-				except:
-					return {"message": "Something went wrong", "error": 500}, 500
-				
-			else:
-				claims = get_jwt()
-				if claims["permission_level"] >= 4:
-					ua.decision = data["decision"]
-					ua.validated = True
-
-					try:
-						db.session.commit()
-					except:
-						return {"message": "Something went wrong", "error": 500}, 500
-				
-				elif ua.decision != data["decision"]:
-					uaid = f"{ua.user_id},{ua.appuser_id},{ua.timestamp}"
-					return {"message": "This annotation was already reviewed and it had a different decision. Contact support and provide the following reference: <UserAnnotation:{}>".format(uaid), "error": 500}, 500
-
-			return {"message": "Annotation reviewed successfully"}, 200
-
-
-
-		except Exception as e:
-			print(e)
-			return {"message": "Something went wrong. Check your JSON and try again.", "error": 500}, 500
+	return jsonify(stats)
