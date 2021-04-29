@@ -79,7 +79,7 @@ function search(q, callback)
 	$.ajax({
 		beforeSend: setAuth,
 		type: "GET",
-		url: api + "tweet/search/" + encodeURIComponent(q),
+		url: api + "tweet/findByKeywords/?q=" + encodeURIComponent(q),
 		statusCode: {
 			403: function(xhr)
 			{

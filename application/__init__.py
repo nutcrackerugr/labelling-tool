@@ -3,11 +3,13 @@ import sys
 
 from functools import wraps
 
-from flask import Flask, jsonify, abort, redirect, url_for, flash
+from flask import Flask, jsonify, abort, redirect, url_for, flash, make_response
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
+from jwt import ExpiredSignatureError
 from flask_jwt_extended import JWTManager, verify_jwt_in_request, get_jwt
+from flask_jwt_extended.exceptions import NoAuthorizationError, InvalidHeaderError
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flaskext.autoversion import Autoversion
 
@@ -40,7 +42,7 @@ class ReverseProxyPrefixFix(object):
 
 
 
-db = SQLAlchemy()
+db = SQLAlchemy(session_options={"expire_on_commit": False})
 ma = Marshmallow()
 jwt = JWTManager()
 
@@ -78,7 +80,8 @@ def require_level(level, clearance=False):
 					return {"message": "You do not have enough privileges to access this resource."}, 403
 				else:
 					return function(*args, **kwargs)
-			except Exception as e:
+				
+			except (NoAuthorizationError, InvalidHeaderError, ExpiredSignatureError) as e:
 				sys.stderr.write("require_level Exception: {}\n".format(e))
 				return {"message": "Unauthorised or expired session. Log in again."}, 403
 		
@@ -99,13 +102,14 @@ def view_require_level(level):
 					return redirect(url_for("main.rank_tagging"))
 				else:
 					return function(*args, **kwargs)
-			except Exception as e:
+			except (NoAuthorizationError, InvalidHeaderError, ExpiredSignatureError) as e:
 				sys.stderr.write("view_require_level Exception: {}\n".format(e))
 				flash("Your session has expired. Please, log in again.")
 				return redirect(url_for("main.login"))
 		
 		return wrapper
 	return decorator
+	
 
 
 def create_app(config="config"):
@@ -132,6 +136,10 @@ def create_app(config="config"):
 	assistant_manager.add_assistant(ARMAS_ontology)
 	assistant_manager.add_assistant(PARTIDOS_ontology)
 	assistant_manager.add_assistant(EXTENDED_PROPERTIES_assistant)
+
+	# @app.errorhandler(404)
+	# def not_found(error):
+	# 	return make_response(jsonify(message="Not Found", code=404), 404)
 	
 	with app.app_context():
 		# Include routes

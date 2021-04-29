@@ -1,4 +1,4 @@
-from flask import request, current_app, abort, jsonify
+from flask import request, current_app, make_response, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from sqlalchemy import null, and_
 
@@ -14,7 +14,7 @@ import random
 
 from . import api_bp
 
-@api_bp.route("/tweet", methods=["GET"])
+@api_bp.route("/tweet/", methods=["GET"])
 @require_level(1)
 def get_tweet_by_rank():
 	"""Get a tweet with high importance
@@ -28,12 +28,12 @@ def get_tweet_by_rank():
 	if tweets:
 		tweet = random.choice(tweets)
 
-		return tweet_schema.dump(tweet)
+		return jsonify(tweet_schema.dump(tweet))
 	else:
-		abort(jsonify(message="No more tweets"), 404)
+		return make_response(jsonify(message="No more tweets"), 404)
 
 
-@api_bp.route("/tweet", methods=["POST"])
+@api_bp.route("/tweet/", methods=["POST"])
 @require_level(7)
 def create_tweet():
 	"""Creates a new tweet
@@ -50,7 +50,7 @@ def create_tweet():
 				u = user_schema.load(data["user"])
 				db.session.add(u)
 			else:
-				abort(jsonify(message="User does not exists and your request does not contain required information"), 400)
+				return make_response(jsonify(message="User does not exists and your request does not contain required information"), 400)
 			
 			tweet = db.session.query(Tweet).filter_by(id_str=data["id_str"]).scalar()
 			
@@ -93,34 +93,34 @@ def create_tweet():
 				try:
 					db.session.commit()
 				except:
-					abort(jsonify(message="Something went wrong"), 500)
+					return make_response(jsonify(message="Something went wrong"), 500)
 				
-			return tweet_schema.dump(tweet)
+			return jsonify(tweet_schema.dump(tweet))
 		
 	except:
-		abort(jsonify(message="Something went wrong, please check your request"), 400)
+		return make_response(jsonify(message="Something went wrong, please check your request"), 400)
 
-@api_bp.route("/tweet/<int:tid>", methods=["GET"])
+@api_bp.route("/tweet/<int:tid>/", methods=["GET"])
 @require_level(1)
 def get_specific_tweet(tid: int):
 	tweet = Tweet.query.get(tid)
 
 	if tweet:
-		return tweet_schema.dump(tweet)
+		return jsonify(tweet_schema.dump(tweet))
 	else:
-		abort(jsonify(message="Not found"), 404)
+		return make_response(jsonify(message="Not found"), 404)
 
-@api_bp.route("/tweet/<int:tid>/annotation", methods=["GET"])
+@api_bp.route("/tweet/<int:tid>/annotation/", methods=["GET"])
 @require_level(1)
 def get_specific_tweet_annotation(tid: int):
 	annotation = Annotation.get_last_annotation_for_tweet(tid)
 
 	if annotation:
-		return annotation_schema.dump(annotation)
+		return jsonify(annotation_schema.dump(annotation))
 	else:
-		abort(jsonify(message="Not found"), 404)
+		return make_response(jsonify(message="Not found"), 404)
 
-@api_bp.route("/tweet/<int:tid>/annotation", methods=["POST"])
+@api_bp.route("/tweet/<int:tid>/annotation/", methods=["POST"])
 @require_level(1)
 def create_specific_tweet_annotation(tid: int):
 	try:
@@ -143,24 +143,25 @@ def create_specific_tweet_annotation(tid: int):
 			annotation.tags = data["tags"]
 			annotation.comment = data["comment"]
 		else:
-			data["tweet_id"] = tweet.id
-			data["appuser_id"] = appuser.id
 			annotation = annotation_schema.load(data)
-
+			annotation.tweet_id = tweet.id
+			annotation.appuser = appuser
 			appuser.annotations.append(annotation)
+			tweet.annotations.append(annotation)
+
 			db.session.add(annotation)
 
 		try:
 			db.session.commit()
-			return annotation_schema.dump(annotation)
+			return jsonify(annotation_schema.dump(annotation))
 			
 		except:
-			abort(jsonify(message="Something went wrong"), 500)
+			return make_response(jsonify(message="Something went wrong"), 500)
 
 	except:
-		abort(jsonify(message="Something went wrong, please check your request"), 400)
+		return make_response(jsonify(message="Something went wrong, please check your request"), 400)
 
-@api_bp.route("/tweet/<int:tid>/suggestions", methods=["GET"])
+@api_bp.route("/tweet/<int:tid>/suggestions/", methods=["GET"])
 @require_level(1)
 def get_specific_tweet_suggestions(tid: int):
 	details = db.session.query(Tweet.user_id, Tweet.full_text).filter_by(id=tid).first()
@@ -168,23 +169,23 @@ def get_specific_tweet_suggestions(tid: int):
 	
 	return response, 200
 
-@api_bp.route("/tweet/findByKeywords", methods=["GET"])
+@api_bp.route("/tweet/findByKeywords/", methods=["GET"])
 @require_level(1)
 def get_tweet_by_keywords():
 	try:
 		q = request.args["q"]
-		page = request.args["page"] if "page" in request.args.keys() else 1
-		limit = request.args["limit"] if "limit" in request.args.keys() else current_app.config["DEFAULT_PAGE_LENGTH"]
+		page = int(request.args["page"]) if "page" in request.args.keys() else 1
+		limit = int(request.args["limit"]) if "limit" in request.args.keys() else current_app.config["DEFAULT_PAGE_LENGTH"]
 
 		words = q.split(" ")
 		conditions = [Tweet.full_text.ilike(f"%{word}%") for word in words]
-		results = db.session.query(Tweet).filter(and_(*conditions)).order_by(Tweet.id).paginate(page, per_page=limit)
+		results = db.session.query(Tweet).filter(and_(*conditions)).order_by(Tweet.id).paginate(page, per_page=limit).items
 
-		return tweet_schema.dump(results, many=True)
+		return jsonify(tweet_schema.dump(results, many=True))
 	except KeyError:
-		abort(jsonify(message="Something went wrong, please check your request"), 400)
+		return make_response(jsonify(message="Something went wrong, please check your request"), 400)
 
-@api_bp.route("/user", methods=["POST"])
+@api_bp.route("/user/", methods=["POST"])
 @require_level(7)
 def create_user():
 	data = request.get_json()
@@ -198,45 +199,45 @@ def create_user():
 		try:
 			db.session.commit(u)
 		except:
-			abort(jsonify(message="Something went wrong"), 500)
+			return make_response(jsonify(message="Something went wrong"), 500)
 		
-	return user_schema.dump(u)
+	return jsonify(user_schema.dump(u))
 
-@api_bp.route("/user/<int:uid>", methods=["GET"])
+@api_bp.route("/user/<int:uid>/", methods=["GET"])
 @require_level(1, clearance=True)
 def get_specific_user(uid: int):
 	user = User.query.get(uid)
 
 	if user:
-		return user
+		return jsonify(user_schema.dump(user))
 	else:
-		abort(jsonify(message="User not found"), 404)
+		return make_response(jsonify(message="User not found"), 404)
 
-@api_bp.route("/user/<int:uid>/tweets", methods=["GET"])
+@api_bp.route("/user/<int:uid>/tweets/", methods=["GET"])
 @require_level(1)
-def get_tweets_of_specific_user(tid: int):
-	page = request.args["page"] if "page" in request.args.keys() else 1
-	limit = request.args["limit"] if "limit" in request.args.keys() else current_app.config["DEFAULT_PAGE_LENGTH"]
+def get_tweets_of_specific_user(uid: int):
+	page = int(request.args["page"]) if "page" in request.args.keys() else 1
+	limit = int(request.args["limit"]) if "limit" in request.args.keys() else current_app.config["DEFAULT_PAGE_LENGTH"]
 
 	tweets = Tweet.get_by_user(uid, limit=limit, page=page)
 
 	if tweets:
-		return tweet_schema.dump(tweets, many=True)
+		return jsonify(tweet_schema.dump(tweets, many=True))
 	else:
-		abort(jsonify(message="User has no tweets"), 404)
+		return make_response(jsonify(message="User has no tweets"), 404)
 
-@api_bp.route("/user/<int:uid>/annotation", methods=["GET"])
+@api_bp.route("/user/<int:uid>/annotation/", methods=["GET"])
 @require_level(1)
 def get_specific_user_annotation(uid: int):
 	ua = UserAnnotation.get_last_annotation_for_user(uid)
 
 	if ua:
-		return userannotation_schema.dump(ua)
+		return jsonify(userannotation_schema.dump(ua))
 	else:
-		abort(jsonify(message="User has no annotations"), 404)
+		return make_response(jsonify(message="User has no annotations"), 404)
 
-@api_bp.route("/userAnnotation", methods=["POST"])
-@api_bp.route("/user/<int:uid>/annotation", methods=["POST"])
+@api_bp.route("/userAnnotation/", methods=["POST"])
+@api_bp.route("/user/<int:uid>/annotation/", methods=["POST"])
 @require_level(7)
 def create_specific_user_annotation(uid: int=None):
 	try:
@@ -254,27 +255,27 @@ def create_specific_user_annotation(uid: int=None):
 
 		try:
 			db.session.commit()
-			return userannotation_schema.dump(uannotation)
+			return jsonify(userannotation_schema.dump(uannotation))
 			
 		except:
-			abort(jsonify(message="Something went wrong"), 500)
+			return make_response(jsonify(message="Something went wrong"), 500)
 
 	except:
-		abort(jsonify(message="Something went wrong, please check your request"), 400)
+		return make_response(jsonify(message="Something went wrong, please check your request"), 400)
 
-@api_bp.route("/userAnnotation", methods=["GET"])
+@api_bp.route("/userAnnotation/", methods=["GET"])
 @require_level(1)
 def get_unreviewed_user_annotation():
 	claims = get_jwt()
 	ua = UserAnnotation.get_last_unreviewed_annotation(appuser_id=claims["user_id"])
 
 	if ua:
-		return userannotation_schema.dump(ua)
+		return jsonify(userannotation_schema.dump(ua))
 	else:
-		abort(jsonify(message="There is not any unreviewed User Annotation"), 404)
+		return make_response(jsonify(message="There is not any unreviewed User Annotation"), 404)
 
-@api_bp.route("/userAnnotation/<int:uaid>", methods=["PUT"])
-@api_bp.route("/userAnnotation", methods=["PUT"])
+@api_bp.route("/userAnnotation/<int:uaid>/", methods=["PUT"])
+@api_bp.route("/userAnnotation/", methods=["PUT"])
 @require_level(2)
 def update_user_annotation(uaid: int=None):
 	#TODO: change UserAnnotation primary_key to uaid
@@ -299,7 +300,7 @@ def update_user_annotation(uaid: int=None):
 			try:
 				db.session.commit()
 			except:
-				abort(jsonify(message="Something went wrong"), 500)
+				return make_response(jsonify(message="Something went wrong"), 500)
 			
 		else:
 			claims = get_jwt()
@@ -310,18 +311,18 @@ def update_user_annotation(uaid: int=None):
 				try:
 					db.session.commit()
 				except:
-					abort(jsonify(message="Something went wrong"), 500)
+					return make_response(jsonify(message="Something went wrong"), 500)
 			
 			elif ua.decision != data["decision"]:
 				uaid = f"{ua.user_id},{ua.appuser_id},{ua.timestamp}"
-				abort(jsonify(message=f"This annotation was already reviewed and it had a different decision. Contact support and provide the following reference: <UserAnnotation:{uaid}>"), 500)
+				return make_response(jsonify(message=f"This annotation was already reviewed and it had a different decision. Contact support and provide the following reference: <UserAnnotation:{uaid}>"), 500)
 
-		return userannotation_schema.dump(ua)
+		return jsonify(userannotation_schema.dump(ua))
 
 	except:
-		abort(jsonify(message="Something went wrong, please check your request"), 400)
+		return make_response(jsonify(message="Something went wrong, please check your request"), 400)
 
-@api_bp.route("/userAnnotation/findByStatusAndDecision", methods=["GET"])
+@api_bp.route("/userAnnotation/findByStatusAndDecision/", methods=["GET"])
 @require_level(1)
 def get_user_annotation_by_status():
 	try:
@@ -340,34 +341,34 @@ def get_user_annotation_by_status():
 		elif "validated" in statuses:
 			ua = UserAnnotation.get_last_annotation_by_status(validated=True, decision=decision)
 		else:
-			abort(jsonify(message="Something went wrong, please check your request"), 400)
+			return make_response(jsonify(message="Something went wrong, please check your request"), 400)
 		
-		return userannotation_schema.dump(ua)
+		return jsonify(userannotation_schema.dump(ua))
 
 	except KeyError:
-		abort(jsonify(message="Something went wrong, please check your request"), 400)
+		return make_response(jsonify(message="Something went wrong, please check your request"), 400)
 
-@api_bp.route("/labels", methods=["GET"])
+@api_bp.route("/labels/", methods=["GET"])
 @require_level(1)
 def get_labels():
 	labels = Label.query.order_by(Label.order).all()
 	
 	if labels:
-		return label_schema.dump(labels, many=True)
+		return jsonify(label_schema.dump(labels, many=True))
 	else:
-		abort(jsonify(message="There are no labels"), 404)
+		return make_response(jsonify(message="There are no labels"), 404)
 
-@api_bp.route("/video/labels", methods=["GET"])
+@api_bp.route("/video/labels/", methods=["GET"])
 @require_level(1)
 def get_video_labels():
 	labels = VideoLabel.query.order_by(VideoLabel.order).all()
 
 	if labels:
-		return videolabel_schema.dump(labels, many=True)
+		return jsonify(videolabel_schema.dump(labels, many=True))
 	else:
-		abort(jsonify(message="There are no video labels"), 404)
+		return make_response(jsonify(message="There are no video labels"), 404)
 
-@api_bp.route("/video/<string:name>/annotation", methods=["POST"])
+@api_bp.route("/video/<string:name>/annotation/", methods=["POST"])
 @require_level(1)
 def create_video_annotation(name: str):
 	try:
@@ -376,47 +377,50 @@ def create_video_annotation(name: str):
 
 		appuser = AppUser.query.filter_by(username=username).scalar()
 
-		data["video"] = name
-		data["appuser_id"] = appuser.id
 		va = videoannotation_schema.load(data)
+		va.video = name
+		va.appuser = appuser
 		
 		db.session.add(va)
 		appuser.video_annotations.append(va)
 
 		try:
 			db.session.commit()
-			return videoannotation_schema.dump(va)
+			return jsonify(videoannotation_schema.dump(va))
 
 		except:
-			abort(jsonify(message="Something went wrong"), 500)
+			return make_response(jsonify(message="Something went wrong"), 500)
 
-	except:
-		abort(jsonify(message="Something went wrong, please check your request"), 400)
+	except Exception as e:
+		print(e)
+		return make_response(jsonify(message="Something went wrong, please check your request"), 400)
 
-@api_bp.route("/video/<string:name>/annotation/<int:vaid>", methods=["DELETE"])
+@api_bp.route("/video/<string:name>/annotation/<int:vaid>/", methods=["DELETE"])
 @require_level(3)
 def delete_video_annotation(name: str, vaid: int):
 	try:
-		VideoAnnotation.query.filter(VideoAnnotation.video == name).filter(VideoAnnotation.id == vaid).delete()
+		VideoAnnotation.query.filter(VideoAnnotation.video == name).filter(VideoAnnotation.id == vaid).delete(synchronize_session='fetch')
 		db.session.commit()
+
+		return jsonify(messge="Segment was deleted"), 200
 	
 	except:
-		abort(jsonify(message="Something went wrong, please check your request"), 400)
+		return make_response(jsonify(message="Something went wrong, please check your request"), 400)
 
-@api_bp.route("/video/<string:name>/annotations", methods=["GET"])
+@api_bp.route("/video/<string:name>/annotations/", methods=["GET"])
 @require_level(1)
-def get_video_annotations():
-	page = request.args["page"] if "page" in request.args.keys() else 1
-	limit = request.args["limit"] if "limit" in request.args.keys() else current_app.config["DEFAULT_PAGE_LENGTH"]
+def get_video_annotations(name: str):
+	page = int(request.args["page"]) if "page" in request.args.keys() else 1
+	limit = int(request.args["limit"]) if "limit" in request.args.keys() else current_app.config["DEFAULT_PAGE_LENGTH"]
 
 	vannotations = VideoAnnotation.get_annotations_for_video(name, page=page, limit=limit)
 
 	if vannotations:
-		return videoannotation_schema.dump(vannotations, many=True)
+		return jsonify(videoannotation_schema.dump(vannotations, many=True))
 	else:
-		abort(jsonify(message="There are no annotations for this video"), 404)
+		return make_response(jsonify(message="There are no annotations for this video"), 404)
 
-@api_bp.route("/stats", methods=["GET"])
+@api_bp.route("/stats/", methods=["GET"])
 @require_level(3)
 def get_stats():
 	claims = get_jwt()

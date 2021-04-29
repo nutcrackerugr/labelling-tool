@@ -44,7 +44,7 @@ class Tweet(db.Model):
 
 	@classmethod
 	def get_by_user(cls, uid, limit=current_app.config["DEFAULT_PAGE_LENGTH"], page=1):
-		return Tweet.query.filter_by(user_id=uid).order_by(Tweet.id.desc()).paginate(page, per_page=limit)
+		return Tweet.query.filter_by(user_id=uid).order_by(Tweet.id.desc()).paginate(page, per_page=limit).items
 	
 	@classmethod
 	def create_by_batch_json(cls, filename):
@@ -305,7 +305,7 @@ class VideoAnnotation(db.Model):
 
 	@classmethod
 	def get_annotations_for_video(cls, video, page=1, limit=current_app.config["DEFAULT_PAGE_LENGTH"]):
-		return VideoAnnotation.query.filter_by(video=video).order_by(VideoAnnotation.start_time).paginate(page, per_page=limit)
+		return VideoAnnotation.query.filter_by(video=video).order_by(VideoAnnotation.start_time).paginate(page, per_page=limit).items
 
 
 class AppUser(db.Model):
