@@ -1,6 +1,7 @@
 from flask import request, current_app, make_response, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from sqlalchemy import null, and_
+from marshmallow import EXCLUDE
 
 from application.models import *
 from application import db, ma, assistant_manager, require_level
@@ -47,7 +48,8 @@ def create_tweet():
 			u = db.session.query(User).filter_by(id_str=data["user"]["id_str"]).scalar()
 			
 			if not u and "user" in data.keys():
-				u = user_schema.load(data["user"])
+				del data["user"]["id"]
+				u = user_schema.load(data["user"], unknown=EXCLUDE)
 				db.session.add(u)
 			else:
 				return make_response(jsonify(message="User does not exists and your request does not contain required information"), 400)
@@ -97,7 +99,8 @@ def create_tweet():
 				
 			return jsonify(tweet_schema.dump(tweet))
 		
-	except:
+	except Exception as e:
+		print(e)
 		return make_response(jsonify(message="Something went wrong, please check your request"), 400)
 
 @api_bp.route("/tweet/<int:tid>/", methods=["GET"])
@@ -143,7 +146,7 @@ def create_specific_tweet_annotation(tid: int):
 			annotation.tags = data["tags"]
 			annotation.comment = data["comment"]
 		else:
-			annotation = annotation_schema.load(data)
+			annotation = annotation_schema.load(data, unknown=EXCLUDE)
 			annotation.tweet_id = tweet.id
 			annotation.appuser = appuser
 			appuser.annotations.append(annotation)
@@ -190,10 +193,11 @@ def get_tweet_by_keywords():
 def create_user():
 	data = request.get_json()
 
-	u = db.session.query(User).filter_by(id_str=data["user"]["id_str"]).scalar()
+	u = db.session.query(User).filter_by(id_str=data["id_str"]).scalar()
 			
-	if not u and "user" in data.keys():
-		u = user_schema.load(data["user"])
+	if not u:
+		del data["id"]
+		u = user_schema.load(data, unknown=EXCLUDE)
 		db.session.add(u)
 	
 		try:
@@ -247,10 +251,13 @@ def create_specific_user_annotation(uid: int=None):
 		user = User.query.get(uid if uid else data["user_id"])
 		appuser = AppUser.query.filter_by(username=username).scalar()
 
-		uannotation = userannotation_schema.load(data)
+		uannotation = userannotation_schema.load(data, partial=True)
+		uannotation.appuser = appuser
+		uannotation.appuser_id = appuser.id
+		uannotation.timestamp = datetime.utcnow()
 		
 		appuser.user_annotations.append(uannotation)
-		user.annotations.append(uannotation)
+		#user.annotations.append(uannotation)
 		db.session.add(uannotation)
 
 		try:
@@ -391,8 +398,7 @@ def create_video_annotation(name: str):
 		except:
 			return make_response(jsonify(message="Something went wrong"), 500)
 
-	except Exception as e:
-		print(e)
+	except:
 		return make_response(jsonify(message="Something went wrong, please check your request"), 400)
 
 @api_bp.route("/video/<string:name>/annotation/<int:vaid>/", methods=["DELETE"])
