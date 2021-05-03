@@ -497,3 +497,59 @@ def get_stats():
 	stats["failed_annotations"] = failed_annotations.count()
 
 	return jsonify(stats)
+
+@api_bp.route("/task/runByName/", methods=["GET"])
+@require_level(9)
+def run_task():
+	try:
+		name = request.args.get("name", None)
+
+		username = get_jwt_identity()
+		appuser = AppUser.query.filter_by(username=username).scalar()
+
+		if name == "relations.expand_properties":
+			filename = request.args.get("filename")
+			result = appuser.launch_task(name, properties=current_app.config["EXTENDABLE_PROPERTIES"], filename=filename, path=current_app.config["GRAPH_PATH"])
+		elif name == "relations.create_graph":
+			filename = request.args.get("filename")
+			result = appuser.launch_task(name, path=current_app.config["GRAPH_PATH"], filename=filename)
+		elif name in ["tweets.just_sleep", "tweets.rank_tweets_first_time", "tweets.reset_rank"]:
+			result = appuser.launch_task(name)
+		else:
+			return make_response(jsonify(message="Something went wrong, please check your request. Is your taks registered?"), 400)
+		
+		return jsonify(dict(message="Task scheduled successfully", task=result.id)), 201
+	except:
+		return make_response(jsonify(message="Something went wrong, please check your request"), 400)
+
+@api_bp.route("/tasks/", methods=["GET"])
+@require_level(7)
+def get_tasks():
+	username = get_jwt_identity()
+	appuser = AppUser.query.filter_by(username=username).scalar()
+	tasks = appuser.get_completed_tasks()
+
+	return jsonify(task_schema.dump(tasks, many=True))
+
+@api_bp.route("/tasks/findByStatus", methods=["GET"])
+@require_level(7)
+def get_tasks_by_status():
+	try:
+		status = request.args.getlist("status")
+
+		username = get_jwt_identity()
+		appuser = AppUser.query.filter_by(username=username).scalar()
+
+		tasks = []
+		if "completed" in status:
+			tasks.extend(appuser.get_completed_tasks())
+
+		if "scheduled" in status:
+			tasks.extend(appuser.get_tasks_in_progress())
+		
+		if tasks:
+			return jsonify(task_schema.dump(tasks, many=True))
+		else:
+			return make_response(jsonify(message="There are not any tasks"), 404)
+	except:
+		return make_response(jsonify(message="Something went wrong, please check your request"), 400)
