@@ -85,8 +85,8 @@ function removeSegment(element)
     {
         $.ajax({
             beforeSend: setAuth,
-            type: "POST",
-            url: api + "video/" + videoname + "/annotation/" + element.data("id") + "/remove",
+            type: "DELETE",
+            url: api + "video/" + videoname + "/annotation/" + element.data("id") + "/",
             statusCode: {
                 403: function(xhr)
                 {
@@ -116,7 +116,7 @@ function saveVideoAnnotation(startTime, endTime, labels, callback)
     $.ajax({
 		beforeSend: setAuth,
 		type: "POST",
-		url: api + "video/" + videoname + "/annotation/create",
+		url: api + "video/" + videoname + "/annotation/",
 		statusCode: {
 			403: function(xhr)
 			{
@@ -165,9 +165,9 @@ function createSegmentComponent(id, startTime, endTime, selected)
 
 function createSegment(startTime, endTime, selected)
 {
-    //ajax bd
-    let element = createSegmentComponent(-1, startTime, endTime, selected);
-    saveVideoAnnotation(startTime, endTime, selected, (data) => element.data("id", data["id"]));
+    saveVideoAnnotation(startTime, endTime, selected, function(data) {
+        createSegmentComponent(data["id"], data["start_time"], data["end_time"], data["labels"]);
+    });
 }
 
 function endOpenSegment(element)
@@ -242,7 +242,7 @@ $(function()
     //Get labels and insert them in DOM
 	$.ajax({
 		beforeSend: setAuth,
-		url: api + "videolabels",
+		url: api + "video/labels",
 		success: (data) => labels = data,
 	});
 

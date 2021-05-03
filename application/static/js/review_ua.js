@@ -68,14 +68,14 @@ function getUserAnnotation(uid)
 			$.ajax({
 				beforeSend: setAuth,
 				type: "GET",
-				url: api + "user/annotation/unvalidated/rejected",
+				url: api + "userAnnotation/findByStatus/?status=unvalidated&decision=-1",
 				success: createRevisitUserAnnotationComponent
 			});
 		else
 			$.ajax({
 				beforeSend: setAuth,
 				type: "GET",
-				url: api + "user/annotation/unreviewed",
+				url: api + "userAnnotation/",
 				success: createUserAnnotationComponent
 			});
 }
@@ -101,8 +101,8 @@ function reviewAnnotation(decision)
 	
 		$.ajax({
 			beforeSend: setAuth,
-			type: "POST",
-			url: api + "user/annotation/review",
+			type: "PUT",
+			url: api + "userAnnotation/",
 			statusCode: {
 				403: function(xhr)
 				{
@@ -222,7 +222,7 @@ function createUserAnnotationComponent(ua)
 		$.ajax({
 			beforeSend: setAuth,
 			type: "GET",
-			url: api + "user/" + ua["user_id"] + "/tweets/10",
+			url: api + "user/" + ua["user_id"] + "/tweets/?limit=15",
 			success: function(tweets)
 			{
 				$.each(tweets, function(k, v)
@@ -321,7 +321,7 @@ function createRevisitUserAnnotationComponent(ua)
 		$.ajax({
 			beforeSend: setAuth,
 			type: "GET",
-			url: api + "user/" + ua["user_id"] + "/tweets/10",
+			url: api + "user/" + ua["user_id"] + "/tweets/?limit=15",
 			success: function(tweets)
 			{
 				$.each(tweets, function(k, v)

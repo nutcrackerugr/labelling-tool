@@ -43,11 +43,8 @@ class Tweet(db.Model):
 
 
 	@classmethod
-	def get_by_user(cls, uid, limit=None):
-		if limit:
-			return Tweet.query.filter_by(user_id=uid).limit(limit).all()
-		else:
-			return Tweet.query.filter_by(user_id=uid).all()
+	def get_by_user(cls, uid, limit=current_app.config["DEFAULT_PAGE_LENGTH"], page=1):
+		return Tweet.query.filter_by(user_id=uid).order_by(Tweet.id.desc()).paginate(page, per_page=limit).items
 	
 	@classmethod
 	def create_by_batch_json(cls, filename):
@@ -251,23 +248,32 @@ class UserAnnotation(db.Model):
 		return uannotation
 	
 	@classmethod
-	def get_last_unvalidated_rejected_annotation(cls):
+	def get_last_annotation_by_status(cls, reviewed=None, validated=None, decision=None):
 		maximum_timestamps = db.session.query(
 				UserAnnotation.user_id, 
 				UserAnnotation.appuser_id,
 				func.max(UserAnnotation.timestamp).label("timestamp")
 			).group_by(UserAnnotation.user_id).subquery()
 		
-		uannotations = db.session.query(UserAnnotation).join(
+		uannotation = db.session.query(UserAnnotation).join(
 			maximum_timestamps, and_(
 				maximum_timestamps.c.user_id == UserAnnotation.user_id, and_(
 					maximum_timestamps.c.appuser_id == UserAnnotation.appuser_id,
 					maximum_timestamps.c.timestamp == UserAnnotation.timestamp
 					)
 				)	
-			).filter(UserAnnotation.decision == -1).filter(UserAnnotation.validated == False).first()
+			)
 		
-		return uannotations
+		if reviewed:
+			uannotation = uannotation.filter(UserAnnotation.reviewed == reviewed)
+		
+		if validated:
+			uannotation = uannotation.filter(UserAnnotation.validated == validated)
+		
+		if decision:
+			uannotation = uannotation.filter(UserAnnotation.decision == decision)
+		
+		return uannotation.first()
 
 
 class Label(db.Model):
@@ -298,8 +304,8 @@ class VideoAnnotation(db.Model):
 	created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
 	@classmethod
-	def get_annotations_for_video(cls, video):
-		return VideoAnnotation.query.filter_by(video=video).order_by(VideoAnnotation.start_time).all()
+	def get_annotations_for_video(cls, video, page=1, limit=current_app.config["DEFAULT_PAGE_LENGTH"]):
+		return VideoAnnotation.query.filter_by(video=video).order_by(VideoAnnotation.start_time).paginate(page, per_page=limit).items
 
 
 class AppUser(db.Model):
@@ -312,6 +318,8 @@ class AppUser(db.Model):
 	permission_level = db.Column(db.Integer, nullable=False, default=0)
 	clearance = db.Column(db.Boolean, nullable=False, default=False)
 	annotations = db.relationship("Annotation", backref="appuser", lazy=True)
+	user_annotations = db.relationship("UserAnnotation", backref="appuser", lazy=True, primaryjoin=id==UserAnnotation.appuser_id)
+	video_annotations = db.relationship("VideoAnnotation", backref="appuser", lazy=True, primaryjoin=id==VideoAnnotation.appuser_id)
 	tasks = db.relationship("Task", backref="appuser", lazy=True)
 	
 	
