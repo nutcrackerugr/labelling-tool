@@ -47,12 +47,13 @@ def create_tweet():
 		if data:
 			u = db.session.query(User).filter_by(id_str=data["user"]["id_str"]).scalar()
 			
-			if not u and "user" in data.keys():
-				del data["user"]["id"]
-				u = user_schema.load(data["user"], unknown=EXCLUDE)
-				db.session.add(u)
-			else:
-				return make_response(jsonify(message="User does not exists and your request does not contain required information"), 400)
+			if not u:
+				if not "user" in data.keys():
+					return make_response(jsonify(message="User does not exists and your request does not contain required information"), 400)
+				else:
+					del data["user"]["id"]
+					u = user_schema.load(data["user"], unknown=EXCLUDE)
+					db.session.add(u)
 			
 			tweet = db.session.query(Tweet).filter_by(id_str=data["id_str"]).scalar()
 			
