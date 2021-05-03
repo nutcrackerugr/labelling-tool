@@ -152,6 +152,7 @@ class User(db.Model):
 	description = db.Column(db.Text, nullable=True)
 	protected = db.Column(db.Boolean, nullable=False)
 	profile_image_url_https = db.Column(db.Text, nullable=True)
+	origin = db.Column(db.PickleType, nullable=True)
 	tweets = db.relationship("Tweet", backref="user", lazy=True)
 	user_annotations = db.relationship("UserAnnotation", back_populates="user", lazy=True)
 
@@ -476,6 +477,8 @@ class VideoLabelSchema(ma.SQLAlchemyAutoSchema):
 		load_instance = True
 
 class UserSchema(ma.SQLAlchemyAutoSchema):
+	origin = fields.Dict(keys=fields.String(), attribute="labels")
+	
 	class Meta:
 		model = User
 		load_instance = True
