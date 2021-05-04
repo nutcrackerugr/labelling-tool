@@ -143,7 +143,7 @@ html, body
 	background-color: #cce8df;
 }
 
-body.arabic #tweet_content, body.arabic #othertweets li, body.arabic #user_description {
+body.arabic #tweet_content, body.arabic #othertweets li, body.arabic #user_description, body.arabic .tweetcard p {
 	direction: rtl;
 	text-align: right;
 	font-size: 1.2rem;
