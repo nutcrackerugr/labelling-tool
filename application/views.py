@@ -44,11 +44,6 @@ def search():
 def rank_tagging():
 	return render_template("ranktagging.html")
 
-@main_bp.route("/batchupload")
-@view_require_level(7)
-def batchupload():
-	return render_template("createbatch.html")
-
 @main_bp.route("/myprofile")
 @view_require_level(1)
 def myprofile():

@@ -57,7 +57,7 @@ def create_graph(filename = "default", path = ""):
 
 
 @rqjob
-def expand_properties(properties, filename = "default", path = "", steps = 1, alpha = .2, alpha_0_quantile=.1, alpha_1_quantile=.25):
+def expand_properties(properties, filename = "default", path = "", steps = 1, alpha = .2, alpha_0_quantile=.1, alpha_1_quantile=.25, authored_is_RT=False):
     # Load relations graph
     G = nx.read_gpickle("{}{}".format(path, filename))
 
@@ -108,9 +108,10 @@ def expand_properties(properties, filename = "default", path = "", steps = 1, al
                 dir_props[user_id_str][prop] += norm_label_value[prop](annotation.labels[prop]) / user_tweet_count
 
                 # Retweets should also be counted for p_direct as they have the same properties than the original tweet
-                users_rt = db.session.query(User.id_str).join(Tweet).filter(Tweet.is_retweet == True).filter(Tweet.parent_tweet == annotation.tweet.id_str).all()
-                for user in users_rt:
-                    dir_props[user[0]][prop] += norm_label_value[prop](annotation.labels[prop]) / user_tweet_count
+                if authored_is_RT:
+                    users_rt = db.session.query(User.id_str).join(Tweet).filter(Tweet.is_retweet == True).filter(Tweet.parent_tweet == annotation.tweet.id_str).all()
+                    for user in users_rt:
+                        dir_props[user[0]][prop] += norm_label_value[prop](annotation.labels[prop]) / user_tweet_count
 
 
     # Beware: not thread-safe
@@ -161,6 +162,8 @@ def expand_properties(properties, filename = "default", path = "", steps = 1, al
                             ext_props_aux[user]["alpha"] = alpha_current
                             ext_props_aux[user][prop] = alpha_current * symbol_confidence * sum_prop / n_neighbours
                             ext_props_aux[user][f"symbol_confidence_{prop}"] = symbol_confidence
+                        else:
+                            ext_props_aux[user][prop] = ext_props[user][prop]
                 
         
         # Prepare for next iteration

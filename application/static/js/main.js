@@ -98,7 +98,7 @@ function getReasons(n, callback)
 		success: function(data)
 		{
 			if ($.isEmptyObject(data))
-				alert("There are no reasons for this tweet");
+				alert("There are no suggestions for this tweet");
 			else
 			{
 				$("#reasons").empty();
@@ -184,7 +184,7 @@ function getOtherTweets(uid, callback)
 	$.ajax({
 		beforeSend: setAuth,
 		type: "GET",
-		url: api + "user/" + uid + "/tweets/5",
+		url: api + "user/" + uid + "/tweets/?limit=5",
 		success: function(data)
 		{
 			$("#othertweets").empty();
@@ -309,8 +309,8 @@ function create_tweet(data)
 function getTweet(n, callback)
 {
 	$("#logo").addClass("fa-spin");
-	//If no tweet was specified, get the first unlabelled by querying with tid=0
-	n = !n ? 0 : n;
+	
+	n = !n ? "" : n;
 	var url = api + "tweet/" + n;
 		
 	$.ajax({
@@ -331,7 +331,7 @@ function getTweet(n, callback)
 				alert("There was a problem loading the tweet " + n);
 			else
 			{
-				alert("There are not unlabelled tweets");
+				alert("There was some problem loading the tweet");
 				$("#page").val(1);
 				getTweet(1);
 			}
@@ -352,7 +352,7 @@ function getRankedTweet(callback)
 	{
 		$("#logo").addClass("fa-spin");
 		//If no tweet was specified, get the first unlabelled by querying with tid=0
-		var url = api + "tweet/nextinrank";
+		var url = api + "tweet/";
 			
 		$.ajax({
 			beforeSend: setAuth,
@@ -443,7 +443,7 @@ function save_all(callback)
 	$.ajax({
 		beforeSend: setAuth,
 		type: "POST",
-		url: url + "/annotation/create",
+		url: url + "/annotation/",
 		statusCode: {
 			403: function(xhr)
 			{
