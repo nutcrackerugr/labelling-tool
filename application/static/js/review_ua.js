@@ -61,7 +61,8 @@ function getUserAnnotation(uid)
 			beforeSend: setAuth,
 			type: "GET",
 			url: api + "user/" + uid + "/annotation",
-			success: createRevisitUserAnnotationComponent
+			success: createRevisitUserAnnotationComponent,
+			error: createNoMoreAnnotationsWarning
 		});
 	else
 		if (validate === 1) //html previous script global
@@ -69,14 +70,16 @@ function getUserAnnotation(uid)
 				beforeSend: setAuth,
 				type: "GET",
 				url: api + "userAnnotation/findByStatus/?status=unvalidated&decision=-1",
-				success: createRevisitUserAnnotationComponent
+				success: createRevisitUserAnnotationComponent,
+				error: createNoMoreAnnotationsWarning
 			});
 		else
 			$.ajax({
 				beforeSend: setAuth,
 				type: "GET",
 				url: api + "userAnnotation/",
-				success: createUserAnnotationComponent
+				success: createUserAnnotationComponent,
+				error: createNoMoreAnnotationsWarning
 			});
 }
 
@@ -202,6 +205,16 @@ function questionForStep(step)
 	return question;
 }
 
+function createNoMoreAnnotationsWarning()
+{
+	let html = "";
+	html += '<div class="card mt-4 p-3 rounded list-group-item-success">'
+	html += 'There are no more automatic annotations to check! Please come back tomorrow :)';
+	html += '</div>';
+	$("#ua_list").empty().append(html);
+	$("#logo").removeClass("fa-spin");
+}
+
 function createUserAnnotationComponent(ua)
 {
 	if (!$.isEmptyObject(ua))
@@ -291,14 +304,7 @@ function createUserAnnotationComponent(ua)
 		});
 	}
 	else
-	{
-		let html = "";
-		html += '<div class="card mt-4 p-3 rounded list-group-item-success">'
-		html += 'There are no more automatic annotations to check! Please come back tomorrow :)';
-		html += '</div>';
-		$("#ua_list").empty().append(html);
-		$("#logo").removeClass("fa-spin");
-	}
+		createNoMoreAnnotationsWarning()
 }
 
 function createRevisitUserAnnotationComponent(ua)
