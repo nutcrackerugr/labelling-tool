@@ -115,6 +115,7 @@ def view_require_level(level):
 def create_app(config="config"):
 	app = Flask(__name__, instance_relative_config=False)
 	app.config.from_object(config)
+	app.url_map.strict_slashes = False
 
 	app.redis = Redis.from_url(app.config["REDIS_URL"])
 	app.task_queue = Queue(name=app.config["REDIS_QUEUE"], connection=app.redis, default_timeout=app.config["RQ_TASK_DEFAULT_TIMEOUT"])
