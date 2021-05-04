@@ -477,8 +477,8 @@ class VideoLabelSchema(ma.SQLAlchemyAutoSchema):
 		load_instance = True
 
 class UserSchema(ma.SQLAlchemyAutoSchema):
-	origin = fields.Dict(keys=fields.String(), attribute="labels")
-	
+	origin = fields.Dict(keys=fields.String(), attribute="origin")
+
 	class Meta:
 		model = User
 		load_instance = True
