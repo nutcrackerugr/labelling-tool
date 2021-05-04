@@ -485,7 +485,7 @@ function toggleModalHelp(element)
 	$("#modal_long").modal();
 }
 
-function createLabelComponent(name, disclaimer, labeltag, options, bgcolorhex, help_text)
+function createLabelComponent(name, disclaimer, labeltag, options, bgcolorhex, help_text, disabled)
 {
 	if (!bgcolorhex)
 		bgcolorhex = "";
@@ -506,7 +506,7 @@ function createLabelComponent(name, disclaimer, labeltag, options, bgcolorhex, h
 	html += '<div class="row"><div class="col-auto"><i class="fa fa-question-circle cursor-pointer" onclick="toggleModalHelp(this);" data-title="' + name + ' help" data-help="' + help_text + '" /></div>';
 	html += '<div class="col-auto"><span class="font-weight-bold">' + labeltag + '</span></div>';
 	html += '<div class="col-auto"><div class="custom-control custom-switch align-middle">';
-	html += '<input type="checkbox" class="custom-control-input" id="label-' + name.replace(/ /g, '_') + '-switch" checked>';
+	html += '<input type="checkbox" class="custom-control-input" id="label-' + name.replace(/ /g, '_') + '-switch" checked' + (disabled? " disabled>":">");
 	html += '<label class="custom-control-label" for="label-' + name.replace(/ /g, '_') + '-switch">Save?</label></div></div></div>';
 	html += '<div class="row"><div class="col">';
 	html += options;
@@ -515,7 +515,7 @@ function createLabelComponent(name, disclaimer, labeltag, options, bgcolorhex, h
 	return html;
 }
 
-function createLabel(name, disclaimer, v)
+function createLabel(name, disclaimer, v, disabled)
 {
 	let labeltag = "", options = "";
 
@@ -534,7 +534,7 @@ function createLabel(name, disclaimer, v)
 	else
 	{
 		labeltag += '<label for="label-' + name.replace(/ /g, '_') + '-select">' + v["name"] + '</label>';
-		options += '<select class="custom-select" id="label-' + name.replace(/ /g, '_') + '-select">';
+		options += '<select class="custom-select" id="label-' + name.replace(/ /g, '_') + '-select"' + (disabled? " disabled>":">");
 		
 		let option_value = 0;
 		v["values"].split(",").forEach(function(item)
@@ -545,7 +545,7 @@ function createLabel(name, disclaimer, v)
 		options += '</select>';
 	}
 
-	return createLabelComponent(name, disclaimer, labeltag, options, v["bgcolorhex"], v["help_text"]);
+	return createLabelComponent(name, disclaimer, labeltag, options, v["bgcolorhex"], v["help_text"], disabled);
 }
 
 $(function(){
@@ -593,6 +593,12 @@ $(function(){
 
 						labels.push(v["name"].replace(/ /g, '_'));
 						labels.push((v["name"] + "2").replace(/ /g, '_'));
+						break;
+					
+					//Disabled labels
+					case 99:
+						$("#single-labels").append(createLabel(v["name"], undefined, v, true));
+						labels.push(v["name"].replace(/ /g, '_'));
 						break;
 				}
 			});

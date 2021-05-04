@@ -43,7 +43,12 @@ class Tweet(db.Model):
 
 
 	@classmethod
-	def get_by_user(cls, uid, limit=current_app.config["DEFAULT_PAGE_LENGTH"], page=1):
+	def get_by_user(cls, uid, limit=-1, page=1):
+		# If current_app is used as default parameter value there might
+		# be context-related errors when importing the module
+		if limit <= 0:
+			limit = current_app.config["DEFAULT_PAGE_LENGTH"]
+		
 		return Tweet.query.filter_by(user_id=uid).order_by(Tweet.id.desc()).paginate(page, per_page=limit).items
 	
 	@classmethod
@@ -305,7 +310,12 @@ class VideoAnnotation(db.Model):
 	created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
 	@classmethod
-	def get_annotations_for_video(cls, video, page=1, limit=current_app.config["DEFAULT_PAGE_LENGTH"]):
+	def get_annotations_for_video(cls, video, page=1, limit=-1):
+		# If current_app is used as default parameter value there might
+		# be context-related errors when importing the module
+		if limit <= 0:
+			limit = current_app.config["DEFAULT_PAGE_LENGTH"]
+
 		return VideoAnnotation.query.filter_by(video=video).order_by(VideoAnnotation.start_time).paginate(page, per_page=limit).items
 
 
