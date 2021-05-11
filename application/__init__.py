@@ -56,6 +56,7 @@ def add_claims_to_access_token(user):
 		"username": user.username,
 		"permission_level": user.permission_level,
 		"clearance": user.clearance,
+		"roles": user.roles.split(";"),
 	}
 
 @jwt.user_identity_loader
@@ -82,8 +83,34 @@ def require_level(level, clearance=False):
 					return function(*args, **kwargs)
 				
 			except (NoAuthorizationError, InvalidHeaderError, ExpiredSignatureError) as e:
-				sys.stderr.write("require_level Exception: {}\n".format(e))
 				return {"message": "Unauthorised or expired session. Log in again."}, 403
+			except Exception as e:
+				sys.stderr.write("require_level Exception: {}\n".format(e))
+				return {"message": "Hmm... something bad happend"}, 500
+
+		
+		return wrapper
+	return decorator
+
+def require_role(role, clearance=False):
+	def decorator(function):
+		@wraps(function)
+		def wrapper(*args, **kwargs):
+			try:
+				verify_jwt_in_request()
+				claims = get_jwt()
+
+				if (role not in claims["roles"] and "all" not in claims["roles"]) or (clearance and not claims["clearance"]):
+					return {"message": "You do not have enough privileges to access this resource."}, 403
+				else:
+					return function(*args, **kwargs)
+
+			except (NoAuthorizationError, InvalidHeaderError, ExpiredSignatureError) as e:
+				return {"message": "Unauthorised or expired session. Log in again."}, 403
+			except Exception as e:
+				sys.stderr.write("view_require_role Exception: {}\n".format(e))
+				return {"message": "Hmm... something bad happend"}, 500
+
 		
 		return wrapper
 	return decorator
@@ -102,13 +129,44 @@ def view_require_level(level):
 					return redirect(url_for("main.rank_tagging"))
 				else:
 					return function(*args, **kwargs)
+
 			except (NoAuthorizationError, InvalidHeaderError, ExpiredSignatureError) as e:
-				sys.stderr.write("view_require_level Exception: {}\n".format(e))
 				flash("Your session has expired. Please, log in again.")
+				return redirect(url_for("main.login"))
+			except Exception as e:
+				sys.stderr.write("view_require_level Exception: {}\n".format(e))
+				flash("Hmm... something bad happen. Check the time and tell the webmaster, please.")
 				return redirect(url_for("main.login"))
 		
 		return wrapper
 	return decorator
+
+
+def view_require_role(role):
+	def decorator(function):
+		@wraps(function)
+		def wrapper(*args, **kwargs):
+			try:
+				verify_jwt_in_request()
+				claims = get_jwt()
+
+				if role in claims["roles"] or "all" in claims["roles"]:
+					return function(*args, **kwargs)
+				else:
+					flash("You do not have enough privileges to access the requested resource.")
+					return redirect(url_for("main.myprofile"))
+
+			except (NoAuthorizationError, InvalidHeaderError, ExpiredSignatureError) as e:
+				flash("Your session has expired. Please, log in again.")
+				return redirect(url_for("main.login"))
+			except Exception as e:
+				sys.stderr.write("view_require_role Exception: {}\n".format(e))
+				flash("Hmm... something bad happen. Check the time and tell the webmaster, please.")
+				return redirect(url_for("main.login"))
+		
+		return wrapper
+	return decorator
+
 	
 
 

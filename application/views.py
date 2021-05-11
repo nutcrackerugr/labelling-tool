@@ -6,7 +6,7 @@ from application.models import Annotation, AppUser
 
 from sqlalchemy import func, and_
 
-from . import view_require_level
+from . import view_require_level, view_require_role
 
 main_bp = Blueprint("main", __name__)
 
@@ -15,32 +15,32 @@ def login():
 	return render_template("login.html")
 
 @main_bp.route("/review")
-@view_require_level(1)
+@view_require_role("annotator")
 def tagging():
 	return render_template("tagging.html")
 	
 @main_bp.route("/review/<tid>")
-@view_require_level(1)
+@view_require_role("annotator")
 def tagging_specific(tid):
 	return render_template("tagging.html", specific_tid=tid)
 
 @main_bp.route("/check_ua")
-@view_require_level(2)
+@view_require_role("auto-annotator")
 def review_ua():
 	return render_template("review_ua.html")
 
 @main_bp.route("/validate_ua")
-@view_require_level(5)
+@view_require_role("all")
 def validate_ua():
 	return render_template("review_ua.html", validate=1)
 
 @main_bp.route("/search")
-@view_require_level(1)
+@view_require_role("annotator")
 def search():
 	return render_template("search.html")
 
 @main_bp.route("/annotate")
-@view_require_level(1)
+@view_require_role("annotator")
 def rank_tagging():
 	return render_template("ranktagging.html")
 
@@ -76,7 +76,7 @@ def signup():
 	return render_template("signup.html")
 
 @main_bp.route("/video-tagging")
-@view_require_level(3)
+@view_require_role("video-annotator")
 def videotagging():
 	video = "debatea5noviembre"
 	return render_template("video-tagging.html", video=video)
