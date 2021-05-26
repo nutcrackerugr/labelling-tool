@@ -240,7 +240,7 @@ function createUserAnnotationComponent(ua)
 			{
 				$.each(tweets, function(k, v)
 				{
-					html += '<p class="p-2 rounded border border-dark">' + v["full_text"] + '</p>';
+					html += '<p class="p-2 rounded border border-dark">' + v["full_text"] + '<br /><a href="https://twitter.com/a/status/' + v["id_str"] + '">Link to original</a></p>';
 				});
 			},
 			complete: function()
@@ -283,6 +283,7 @@ function createUserAnnotationComponent(ua)
 				html += '<div class="btn-group" id="answers">';
 				html += '<button type="button" class="btn btn-outline-danger"  onclick="answerForCurrentStep(0)">No</button>';
 				html += '<button type="button" class="btn btn-outline-success" onclick="answerForCurrentStep(1)">Yes</button>';
+				html += '<button type="button" class="btn btn-outline-secondary" onclick="reviewAnnotation(-99)">Skip this one</button>';
 				html += '</div>';
 				$("#ua_list").append(html);
 
