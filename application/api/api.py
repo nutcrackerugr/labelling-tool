@@ -309,7 +309,7 @@ def get_unreviewed_user_annotation():
 
 @api_bp.route("/userAnnotation/<int:uaid>/", methods=["PUT"])
 @api_bp.route("/userAnnotation/", methods=["PUT"])
-@require_level(2)
+@require_level(1)
 def update_user_annotation(uaid: int=None):
 	#TODO: change UserAnnotation primary_key to uaid
 	try:
