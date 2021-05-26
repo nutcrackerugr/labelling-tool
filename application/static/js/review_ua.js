@@ -240,7 +240,7 @@ function createUserAnnotationComponent(ua)
 			{
 				$.each(tweets, function(k, v)
 				{
-					html += '<p class="p-2 rounded border border-dark">' + v["full_text"] + '<br /><a href="https://twitter.com/a/status/' + v["id_str"] + '">Link to original</a></p>';
+					html += '<p class="p-2 rounded border border-dark">' + v["full_text"] + '<br /><a href="https://twitter.com/a/status/' + v["id_str"] + '" class="link-to-original">Link to original</a></p>';
 				});
 			},
 			complete: function()
@@ -283,7 +283,7 @@ function createUserAnnotationComponent(ua)
 				html += '<div class="btn-group" id="answers">';
 				html += '<button type="button" class="btn btn-outline-danger"  onclick="answerForCurrentStep(0)">No</button>';
 				html += '<button type="button" class="btn btn-outline-success" onclick="answerForCurrentStep(1)">Yes</button>';
-				html += '<button type="button" class="btn btn-outline-secondary" onclick="reviewAnnotation(-99)">Skip this one</button>';
+				html += '<button type="button" class="btn btn-outline-secondary" onclick="reviewAnnotation(-99)">I do not know, skip</button>';
 				html += '</div>';
 				$("#ua_list").append(html);
 
@@ -297,6 +297,8 @@ function createUserAnnotationComponent(ua)
 						$("#user_info").append('<h5 class="mt-0">' + user["name"] + ' <span class="text-secondary">@' + user["screen_name"] + '</span></h5>');
 						$("#user_info").append('<h6 class="mt-0 text-secondary">User Description:</h6>');
 						$("#user_info").append('<p>' + user["description"] === null ? "Not available" : user["description"] + '</p>');
+
+						$(".link-to-original").show()
 					}
 				});
 

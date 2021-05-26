@@ -153,3 +153,7 @@ body.arabic #tweet_content, body.arabic #othertweets li, body.arabic #user_descr
 	font-size: 1.5em;
 	padding: 10px;
 }
+
+.link-to-original {
+	display: none;
+}
