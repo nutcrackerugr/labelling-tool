@@ -49,7 +49,8 @@
 									<h5 class="mt-0">Your details</h5>
 									<span class="card-text"><strong>Name: </strong> {{ user.name }}</span><br />
 									<span class="card-text"><strong>Email: </strong> {{ user.email }}</span><br />
-									<span class="card-text"><strong>How many tweets are annotated by me?: </strong> {{ stats["total"] }}</span><br />
+									<span class="card-text"><strong>No. tweets annotated: </strong> {{ stats["total"] }}</span><br />
+									<span class="card-text"><strong>No. auto-annotations revised: </strong> {{ stats["total_auto"] }}</span><br />
 									<h5 class="mt-4">Your last 100 annotations</h5>
 									<p>	
 										{% for tweet in annotations %}
