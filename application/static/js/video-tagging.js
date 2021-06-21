@@ -14,42 +14,39 @@ function stopPropagation(e)
 
 function setAuth(xhr)
 {
-	if (Math.floor((new Date() - last_time) / 60000) >= 5)
-	{
-		$.ajax({
-			async: false,
-			type: "GET",
-			url: api + "auth/token/valid",
-			error: function(xhr)
-			{
-				if (xhr.status == 403 || xhr.status == 401)
-				{
-					$.ajax({
-						async: false,
-						type: "POST",
-						url: api + "auth/token/refresh",
-						headers: {
-							"X-CSRF-TOKEN": Cookies.get("csrf_refresh_token")
-						},
-						success: function()
-						{
-							last_time = new Date();
-							console.info("Token renewed")
-						},
-						error: function()
-						{
-							alert("Your session has expired. Please log in again");
-							window.location.replace(baseurl);
-						}
-					});
-				}
-			},
-			success: function()
-			{
-				last_time = new Date();
-			}
-		});
-	}
+    $.ajax({
+        async: false,
+        type: "GET",
+        url: api + "auth/token/valid",
+        error: function(xhr)
+        {
+            if (xhr.status == 403 || xhr.status == 401)
+            {
+                $.ajax({
+                    async: false,
+                    type: "POST",
+                    url: api + "auth/token/refresh",
+                    headers: {
+                        "X-CSRF-TOKEN": Cookies.get("csrf_refresh_token")
+                    },
+                    success: function()
+                    {
+                        last_time = new Date();
+                        console.info("Token renewed")
+                    },
+                    error: function()
+                    {
+                        alert("Your session has expired. Please log in again");
+                        window.location.replace(baseurl);
+                    }
+                });
+            }
+        },
+        success: function()
+        {
+            last_time = new Date();
+        }
+    });
 
 	return true;
 }
@@ -249,7 +246,7 @@ $(function()
 
     $.ajax({
         beforeSend: setAuth,
-        url: api + "video/" + videoname + "/annotations",
+        url: api + "video/" + videoname + "/annotations?limit=30000000",
         success: (data) => {
             data.forEach((e) => createSegmentComponent(e["id"], e["start_time"], e["end_time"], e["labels"]));
         }
