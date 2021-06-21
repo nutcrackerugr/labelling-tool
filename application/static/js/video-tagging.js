@@ -12,14 +12,16 @@ function stopPropagation(e)
 	e.stopImmediatePropagation();
 }
 
-function setAuth(xhr)
+async function setAuth(xhr)
 {
-    $.ajax({
-        async: false,
+    console.log("Checking auth...")
+    await $.ajax({
+//        async: false,
         type: "GET",
         url: api + "auth/token/valid",
         error: function(xhr)
         {
+            console.log("Auth not valid. Renewing...")
             if (xhr.status == 403 || xhr.status == 401)
             {
                 $.ajax({
@@ -44,6 +46,7 @@ function setAuth(xhr)
         },
         success: function()
         {
+            console.log("Auth OK")
             last_time = new Date();
         }
     });
