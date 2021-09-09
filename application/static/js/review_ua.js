@@ -240,7 +240,7 @@ function createUserAnnotationComponent(ua)
 			{
 				$.each(tweets, function(k, v)
 				{
-					html += '<p class="p-2 rounded border border-dark">' + v["full_text"] + '<br /><a href="https://twitter.com/a/status/' + v["id_str"] + '" class="link-to-original">Link to original</a></p>';
+					html += '<p class="p-2 rounded border border-dark">' + v["full_text"] + '<br class="link-to-original" /><span class="mt-0 text-secondary link-to-original">Tweet ID: ' + v["id_str"] + '</span>&nbsp;&nbsp;<a href="https://twitter.com/a/status/' + v["id_str"] + '" class="link-to-original">Link to original</a></p>';
 				});
 			},
 			complete: function()
@@ -294,6 +294,7 @@ function createUserAnnotationComponent(ua)
 					success: function(user)
 					{
 						$("#user_image").append('<img class="mr-3 profile-pic float-left" alt="User Image" src="' + user["profile_image_url_https"] + '" />')
+						$("#user_info").append('<p class="text-secondary mt-0">User ID: ' + user["id_str"] + '</p>');
 						$("#user_info").append('<h5 class="mt-0">' + user["name"] + ' <span class="text-secondary">@' + user["screen_name"] + '</span></h5>');
 						$("#user_info").append('<h6 class="mt-0 text-secondary">User Description:</h6>');
 						$("#user_info").append('<p>' + user["description"] === null ? "Not available" : user["description"] + '</p>');
