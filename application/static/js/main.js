@@ -217,7 +217,7 @@ function create_tweet(data)
 			},
 			success: function(userdata)
 			{
-				$("#tweet_info").html("Tweet ID: " + data["id_str"] + "&nbsp;&nbps;User ID: " + userdata["id_str"]);
+				$("#tweet_info").html("Tweet ID: " + data["id_str"] + "&nbsp;&nbsp;User ID: " + userdata["id_str"]);
 				$("#user_description").html(userdata["description"]);
 				$("#user_profile_pic").attr("src", userdata["profile_image_url_https"]);
 				$("#user_name").html(userdata["name"] + ' <span class="text-secondary">@' + userdata["screen_name"] + '</span>');
