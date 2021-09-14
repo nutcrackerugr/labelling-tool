@@ -190,6 +190,31 @@ def get_tweet_by_keywords():
 	except KeyError:
 		return make_response(jsonify(message="Something went wrong, please check your request"), 400)
 
+
+@api_bp.route("/tweet/annotations/", methods=["GET"])
+@require_level(1)
+def get_annotations():
+	try:
+		tids = db.session.query(Annotation.tweet_id).group_by(Annotation.tweet_id).all()
+
+		todos = []
+		for tid in tids:
+			todos.append(db.session.query(Annotation).filter(Annotation.tweet_id == tid[0]).order_by(Annotation.timestamp.desc()).first())
+		
+		return jsonify(annotation_schema.dump(todos, many=True))
+
+		page = int(request.args["page"]) if "page" in request.args.keys() else 1
+		limit = int(request.args["limit"]) if "limit" in request.args.keys() else current_app.config["DEFAULT_PAGE_LENGTH"]
+
+		words = q.split(" ")
+		conditions = [Tweet.full_text.ilike(f"%{word}%") for word in words]
+		results = db.session.query(Tweet).filter(and_(*conditions)).order_by(Tweet.id).paginate(page, per_page=limit).items
+
+		return jsonify(tweet_schema.dump(results, many=True))
+	except KeyError:
+		return make_response(jsonify(message="Something went wrong, please check your request"), 400)
+
+
 @api_bp.route("/user/", methods=["POST"])
 @require_level(7)
 def create_user():
@@ -285,26 +310,30 @@ def get_unreviewed_user_annotation():
 
 @api_bp.route("/userAnnotation/<int:uaid>/", methods=["PUT"])
 @api_bp.route("/userAnnotation/", methods=["PUT"])
-@require_level(2)
+@require_level(1)
 def update_user_annotation(uaid: int=None):
 	#TODO: change UserAnnotation primary_key to uaid
 	try:
 		data = request.get_json()
 		username = get_jwt_identity()
+		decision = int(data["decision"])
 
 		ua = UserAnnotation.query.get((data["user_id"], data["appuser_id"], data["timestamp"]))
 
 		if not ua.reviewed:
 			appuser = AppUser.query.filter_by(username=username).scalar()
-			
-			ua.reviewed = True
-			ua.decision = int(data["decision"])
-			ua.reviewed_by = appuser.id
 
-			if ua.decision == -1:
-				for tweet in ua.user.tweets:
-					if not tweet.is_retweet:
-						tweet.rank = 99999 - abs(tweet.rank) # just to put them over the top without losing the real score
+			if decision == -99:
+				ua.reviewed_by = 2 # FIXME: skip function. Assign to admin in a decent way
+			else:
+				ua.reviewed = True
+				ua.decision = decision
+				ua.reviewed_by = appuser.id
+
+				if ua.decision == -1:
+					for tweet in ua.user.tweets:
+						if not tweet.is_retweet:
+							tweet.rank = 99999 - abs(tweet.rank) # just to put them over the top without losing the real score
 			
 			try:
 				db.session.commit()

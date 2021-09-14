@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, abort
 from flask_jwt_extended import get_jwt_identity
 
 from application import db
-from application.models import Annotation, AppUser
+from application.models import Annotation, UserAnnotation, AppUser
 
 from sqlalchemy import func, and_
 
@@ -60,8 +60,17 @@ def myprofile():
 		)).order_by(Annotation.timestamp.desc()).all()
 	
 	nonempty_annotations = list(filter(lambda a: not a.is_empty(), annotations))
+
+	maximum_timestamps = db.session.query(UserAnnotation.user_id, 
+			UserAnnotation.appuser_id, func.max(UserAnnotation.timestamp).label("timestamp")
+			).group_by(UserAnnotation.user_id).subquery()
+	uannotations = db.session.query(UserAnnotation).filter_by(reviewed_by=appuser.id, reviewed=True).join(maximum_timestamps, and_(
+		maximum_timestamps.c.user_id == UserAnnotation.user_id, and_(
+			maximum_timestamps.c.appuser_id == UserAnnotation.appuser_id,
+			maximum_timestamps.c.timestamp == UserAnnotation.timestamp)
+		)).count()
 	
-	stats = {"total": len(nonempty_annotations)}
+	stats = {"total": len(nonempty_annotations), "total_auto": uannotations}
 
 
 	return render_template("myprofile.html", user=appuser.__dict__, annotations=[a.tweet_id for a in annotations[:100]], stats=stats)

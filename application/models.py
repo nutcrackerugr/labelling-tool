@@ -521,6 +521,7 @@ class AnnotationSchema(ma.SQLAlchemyAutoSchema):
 		load_instance = True
 	
 	appuser = ma.Nested(AppUserSchema(only=("username",)))
+	tweet = ma.Nested(TweetSchema())
 
 class VideoAnnotationSchema(ma.SQLAlchemyAutoSchema):
 	labels = fields.Dict(keys=fields.String(), values=fields.List(fields.String()), attribute="labels")
