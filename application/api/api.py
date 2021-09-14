@@ -87,7 +87,8 @@ def create_tweet():
 					is_retweet=is_retweet,
 					parent_tweet=parent_tweet,
 					retweeted=data["retweeted"],
-					favorited=data["favorited"]
+					favorited=data["favorited"],
+					rank=data["retweet_count"],
 				)
 		
 				u.tweets.append(tweet)
