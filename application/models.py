@@ -526,10 +526,10 @@ class TweetSchema(ma.SQLAlchemyAutoSchema):
 		include_relationships = True
 
 class AnnotationSchema(ma.SQLAlchemyAutoSchema):
-	highlights = fields.List(fields.String(), attribute="highlights")
-	aihighlights = fields.List(fields.String())
-	tags = fields.List(fields.String(), attribute="tags")
-	labels = fields.Dict(keys=fields.String(), attribute="labels")
+	highlights = fields.List(fields.String(), attribute="highlights", allow_none=True)
+	aihighlights = fields.List(fields.String(), allow_none=True)
+	tags = fields.List(fields.String(), attribute="tags", allow_none=True)
+	labels = fields.Dict(keys=fields.String(), attribute="labels", allow_none=True)
 	
 	class Meta:
 		model = Annotation

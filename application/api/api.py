@@ -89,6 +89,7 @@ def create_tweet():
 					retweeted=data["retweeted"],
 					favorited=data["favorited"],
 					rank=data["proposed_rank"] if "proposed_rank" in data.keys() else data["retweet_count"] if not is_retweet else -1,
+				)
 		
 				u.tweets.append(tweet)
 				db.session.add(tweet)
@@ -163,7 +164,10 @@ def create_specific_tweet_annotation(tid: int):
 			return make_response(jsonify(message="Something went wrong"), 500)
 
 	except Exception as e:
-		return make_response(jsonify(message=f"Something went wrong, please check your request {e}"), 400)
+		import traceback
+		traceback.print_stack()
+		print(traceback.format_exc())
+		return make_response(jsonify(message=f"Something went wrong, please check your request {e} {''.join(traceback.format_stack())}"), 400)
 
 @api_bp.route("/tweet/<int:tid>/suggestions/", methods=["GET"])
 @require_level(1)
