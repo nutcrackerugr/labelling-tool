@@ -88,8 +88,7 @@ def create_tweet():
 					parent_tweet=parent_tweet,
 					retweeted=data["retweeted"],
 					favorited=data["favorited"],
-					rank=data["proposed_rank"] if "proposed_rank" in data.keys() else 1,
-				)
+					rank=data["proposed_rank"] if "proposed_rank" in data.keys() else data["retweet_count"] if not is_retweet else -1,
 		
 				u.tweets.append(tweet)
 				db.session.add(tweet)
