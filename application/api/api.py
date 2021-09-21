@@ -133,7 +133,7 @@ def create_specific_tweet_annotation(tid: int):
 		username = get_jwt_identity()
 
 		tweet = Tweet.query.get(tid)
-		if tweet.rank > 0:
+		if tweet.rank > 0 and username != "tracker":
 			tweet.rank *= -1
 
 		appuser = AppUser.query.filter_by(username=username).scalar()
