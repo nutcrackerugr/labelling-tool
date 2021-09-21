@@ -87,7 +87,8 @@ def create_tweet():
 					is_retweet=is_retweet,
 					parent_tweet=parent_tweet,
 					retweeted=data["retweeted"],
-					favorited=data["favorited"]
+					favorited=data["favorited"],
+					rank=data["proposed_rank"] if "proposed_rank" in data.keys() else 1,
 				)
 		
 				u.tweets.append(tweet)
@@ -162,8 +163,8 @@ def create_specific_tweet_annotation(tid: int):
 		except:
 			return make_response(jsonify(message="Something went wrong"), 500)
 
-	except:
-		return make_response(jsonify(message="Something went wrong, please check your request"), 400)
+	except Exception as e:
+		return make_response(jsonify(message=f"Something went wrong, please check your request {e}"), 400)
 
 @api_bp.route("/tweet/<int:tid>/suggestions/", methods=["GET"])
 @require_level(1)
@@ -539,6 +540,11 @@ def run_task():
 		if name == "relations.expand_properties":
 			filename = request.args.get("filename")
 			result = appuser.launch_task(name, properties=current_app.config["EXTENDABLE_PROPERTIES"], filename=filename, path=current_app.config["GRAPH_PATH"])
+		elif name == "relations.eval_expand_properties":
+			filename = request.args.get("filename")
+			limit = int(request.args.get("limit"))
+			steps = int(request.args.get("steps"))
+			result = appuser.launch_task(name, properties=current_app.config["EXTENDABLE_PROPERTIES"], filename=filename, path=current_app.config["GRAPH_PATH"], annotations_limit=limit, steps=steps)
 		elif name == "relations.create_graph":
 			filename = request.args.get("filename")
 			result = appuser.launch_task(name, path=current_app.config["GRAPH_PATH"], filename=filename)

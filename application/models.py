@@ -193,6 +193,22 @@ class UserAnnotation(db.Model):
 		return uannotations
 	
 	@classmethod
+	def get_last_set_of_rejected_annotations(cls):
+		maximum_timestamps = db.session.query(UserAnnotation.user_id, 
+			UserAnnotation.appuser_id, func.max(UserAnnotation.timestamp).label("timestamp")
+			).group_by(UserAnnotation.user_id).subquery()
+		uannotations = db.session.query(UserAnnotation).join(maximum_timestamps, and_(
+			maximum_timestamps.c.user_id == UserAnnotation.user_id, and_(
+				maximum_timestamps.c.appuser_id == UserAnnotation.appuser_id,
+				and_(
+					maximum_timestamps.c.timestamp == UserAnnotation.timestamp),
+					UserAnnotation.decision == -1
+				)
+			)).all()
+		
+		return uannotations
+	
+	@classmethod
 	def get_unreviewed_annotations(cls, limit=20):
 		maximum_timestamps = db.session.query(
 			UserAnnotation.user_id, 
