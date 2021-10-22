@@ -163,11 +163,8 @@ def create_specific_tweet_annotation(tid: int):
 		except:
 			return make_response(jsonify(message="Something went wrong"), 500)
 
-	except Exception as e:
-		import traceback
-		traceback.print_stack()
-		print(traceback.format_exc())
-		return make_response(jsonify(message=f"Something went wrong, please check your request {e} {''.join(traceback.format_stack())}"), 400)
+	except:
+		return make_response(jsonify(message="Something went wrong, please check your request"), 400)
 
 @api_bp.route("/tweet/<int:tid>/suggestions/", methods=["GET"])
 @require_level(1)
@@ -498,18 +495,16 @@ def get_stats():
 			Annotation.appuser_id, func.max(Annotation.timestamp).label("timestamp")
 			).group_by(Annotation.tweet_id).subquery()
 		annotations = db.session.query(Annotation).filter_by(appuser_id=appuser.id).join(maximum_timestamps, and_(
-			maximum_timestamps.c.tweet_id == Annotation.tweet_id, and_(
-				maximum_timestamps.c.appuser_id == Annotation.appuser_id,
-				maximum_timestamps.c.timestamp == Annotation.timestamp)
+			maximum_timestamps.c.tweet_id == Annotation.tweet_id,
+				maximum_timestamps.c.timestamp == Annotation.timestamp
 			)).all()
 
 		maximum_timestamps = db.session.query(UserAnnotation.user_id, 
 			UserAnnotation.appuser_id, func.max(UserAnnotation.timestamp).label("timestamp")
 			).group_by(UserAnnotation.user_id).subquery()
 		uannotations = db.session.query(UserAnnotation).filter_by(reviewed_by=appuser.id, reviewed=True).join(maximum_timestamps, and_(
-			maximum_timestamps.c.user_id == UserAnnotation.user_id, and_(
-				maximum_timestamps.c.appuser_id == UserAnnotation.appuser_id,
-				maximum_timestamps.c.timestamp == UserAnnotation.timestamp)
+			maximum_timestamps.c.user_id == UserAnnotation.user_id,
+				maximum_timestamps.c.timestamp == UserAnnotation.timestamp
 			)).count()
 
 		nonempty_annotations = len(list(filter(lambda a: not a.is_empty(), annotations)))

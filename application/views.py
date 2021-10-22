@@ -54,9 +54,8 @@ def myprofile():
 		Annotation.appuser_id, func.max(Annotation.timestamp).label("timestamp")
 		).group_by(Annotation.tweet_id).subquery()
 	annotations = db.session.query(Annotation).filter_by(appuser_id=appuser.id).join(maximum_timestamps, and_(
-		maximum_timestamps.c.tweet_id == Annotation.tweet_id, and_(
-			maximum_timestamps.c.appuser_id == Annotation.appuser_id,
-			maximum_timestamps.c.timestamp == Annotation.timestamp)
+		maximum_timestamps.c.tweet_id == Annotation.tweet_id,
+			maximum_timestamps.c.timestamp == Annotation.timestamp
 		)).order_by(Annotation.timestamp.desc()).all()
 	
 	nonempty_annotations = list(filter(lambda a: not a.is_empty(), annotations))
@@ -65,9 +64,8 @@ def myprofile():
 			UserAnnotation.appuser_id, func.max(UserAnnotation.timestamp).label("timestamp")
 			).group_by(UserAnnotation.user_id).subquery()
 	uannotations = db.session.query(UserAnnotation).filter_by(reviewed_by=appuser.id, reviewed=True).join(maximum_timestamps, and_(
-		maximum_timestamps.c.user_id == UserAnnotation.user_id, and_(
-			maximum_timestamps.c.appuser_id == UserAnnotation.appuser_id,
-			maximum_timestamps.c.timestamp == UserAnnotation.timestamp)
+		maximum_timestamps.c.user_id == UserAnnotation.user_id,
+			maximum_timestamps.c.timestamp == UserAnnotation.timestamp
 		)).count()
 	
 	stats = {"total": len(nonempty_annotations), "total_auto": uannotations}
