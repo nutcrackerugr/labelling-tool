@@ -538,11 +538,6 @@ def run_task():
 		if name == "relations.expand_properties":
 			filename = request.args.get("filename")
 			result = appuser.launch_task(name, properties=current_app.config["EXTENDABLE_PROPERTIES"], filename=filename, path=current_app.config["GRAPH_PATH"])
-		elif name == "relations.eval_expand_properties":
-			filename = request.args.get("filename")
-			limit = int(request.args.get("limit"))
-			steps = int(request.args.get("steps"))
-			result = appuser.launch_task(name, properties=current_app.config["EXTENDABLE_PROPERTIES"], filename=filename, path=current_app.config["GRAPH_PATH"], annotations_limit=limit, steps=steps)
 		elif name == "relations.create_graph":
 			filename = request.args.get("filename")
 			result = appuser.launch_task(name, path=current_app.config["GRAPH_PATH"], filename=filename)
