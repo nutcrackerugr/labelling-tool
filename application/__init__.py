@@ -195,6 +195,7 @@ def create_app(config="config"):
 	EXTENDED_PROPERTIES_assistant = ExtendedPropertiesAssistant("Extended Properties")
 	assistant_manager.add_assistant(ARMAS_ontology)
 	assistant_manager.add_assistant(PARTIDOS_ontology)
+	assistant_manager.add_assistant(EMOTIONS_ontology)
 	assistant_manager.add_assistant(EXTENDED_PROPERTIES_assistant)
 
 	# @app.errorhandler(404)
