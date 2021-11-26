@@ -191,6 +191,7 @@ def create_app(config="config"):
 	# Assistants
 	ARMAS_ontology = OntologyAssistant("ARMAS", app=app)
 	PARTIDOS_ontology = OntologyAssistant("PARTIDOS", app=app)
+	EMOTIONS_ontology = OntologyAssistant("EMOTIONS", app=app)
 	EXTENDED_PROPERTIES_assistant = ExtendedPropertiesAssistant("Extended Properties")
 	assistant_manager.add_assistant(ARMAS_ontology)
 	assistant_manager.add_assistant(PARTIDOS_ontology)
