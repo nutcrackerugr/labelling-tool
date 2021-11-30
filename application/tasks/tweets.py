@@ -1,5 +1,5 @@
 from application import db
-from application.models import Annotation, Tweet, Task
+from application.models import Annotation, Tweet, Task, Label
 
 from collections import Counter
 import glob
@@ -152,3 +152,94 @@ def just_sleep():
     time.sleep(10)
 
     return "OK"
+
+
+#@rqjob
+def annotate_emotions():
+    import json
+    from collections import defaultdict, Counter
+
+    with open(f"{current_app.config['TAXONOMIES_PATH']}/emotions/words.json", 'r') as f:
+        words = json.load(f)
+    
+    with open(f"{current_app.config['TAXONOMIES_PATH']}/emotions/regex.json", 'r') as f:
+        expressions = json.load(f)
+
+        processed_exprs = defaultdict(lambda: defaultdict(list))
+        for label, values in expressions.items():
+            for value, exprlist in values.items():
+                for expr in exprlist:
+                    processed_exprs[label][value].append([e.strip() for e in expr.split("*") if e])
+    
+    labels = Label.query.all()
+    labelmap = {}
+    for l in labels:
+        labelmap[l.name] = {
+            "multiple": l.multiple,
+            "values": l.values.split(",")
+        }
+
+
+    tweets = Tweet.query.all()
+    
+    for t in tweets:
+        text = t.full_text
+
+        found = defaultdict(list)
+        highlights = []
+        comment = ""
+        for label, values in words.items():
+            for value, terms in values.items():
+                for term in terms:
+                    if term in text:
+                        comment += f"Found {label.upper()}:{value}::{term}\n"
+                        found[label].append(value)
+                        highlights.append(term)
+        
+        for label, values in processed_exprs.items():
+            for value, exprs in values.items():
+                for expr in exprs:
+                    last_index = -1
+
+                    for subexpr in expr:
+                        i = text.find(subexpr)
+
+                        if i == -1:
+                            last_index = -1
+                            break
+                        elif i > last_index:
+                            last_index = i
+                    
+                    if last_index != -1:
+                        found[label].append(value)
+                        highlights.extend(expr)
+                        comment += f"Found expression for {label.upper()}:{value}::{expr}\n"
+
+
+        anns = {}
+        for key, values in found.items():
+            if len(values) > 1 and labelmap[key]["multiple"]:
+                anns[key] = [labelmap[key]["values"].index(v) for v in set(values)]
+            elif len (values) > 1:
+                c = Counter(values).most_common(1)[0][0]
+                anns[key] = labelmap[key]["values"].index(c)
+            else:
+                anns[key] = labelmap[key]["values"].index(values[0])
+        
+        if anns:
+            a = Annotation(
+                tweet_id=t.id,
+                appuser_id=0,
+                labels=anns,
+                highlights=list(set(highlights)),
+                comment=comment,
+                )
+            
+            db.session.add(a)
+        
+    try:
+        db.session.commit()
+        return {"message": "Emotions annotated successfully"}
+    except:
+        return {"message": "Something went wrong in async task", "error": 500}, 500
+

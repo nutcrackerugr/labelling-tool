@@ -581,3 +581,9 @@ def get_tasks_by_status():
 			return make_response(jsonify(message="There are not any tasks"), 404)
 	except:
 		return make_response(jsonify(message="Something went wrong, please check your request"), 400)
+
+
+@api_bp.route("/aa")
+def asfd():
+	from application.tasks.tweets import annotate_emotions
+	annotate_emotions()
