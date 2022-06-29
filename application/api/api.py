@@ -541,10 +541,10 @@ def run_task():
 		elif name == "relations.create_graph":
 			filename = request.args.get("filename")
 			result = appuser.launch_task(name, path=current_app.config["GRAPH_PATH"], filename=filename)
-		elif name in ["tweets.just_sleep", "tweets.rank_tweets_first_time", "tweets.reset_rank"]:
+		elif name in ["tweets.just_sleep", "tweets.rank_tweets_first_time", "tweets.reset_rank", "tweets.annotate_emotions"]:
 			result = appuser.launch_task(name)
 		else:
-			return make_response(jsonify(message="Something went wrong, please check your request. Is your taks registered?"), 400)
+			return make_response(jsonify(message="Something went wrong, please check your request. Is your task registered?"), 400)
 		
 		return jsonify(dict(message="Task scheduled successfully", task=result.id)), 201
 	except:
@@ -582,8 +582,3 @@ def get_tasks_by_status():
 	except:
 		return make_response(jsonify(message="Something went wrong, please check your request"), 400)
 
-
-@api_bp.route("/aa")
-def asfd():
-	from application.tasks.tweets import annotate_emotions
-	annotate_emotions()

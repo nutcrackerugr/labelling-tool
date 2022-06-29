@@ -154,7 +154,7 @@ def just_sleep():
     return "OK"
 
 
-#@rqjob
+@rqjob
 def annotate_emotions():
     import json
     from collections import defaultdict, Counter
