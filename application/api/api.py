@@ -543,6 +543,9 @@ def run_task():
 			result = appuser.launch_task(name, path=current_app.config["GRAPH_PATH"], filename=filename)
 		elif name in ["tweets.just_sleep", "tweets.rank_tweets_first_time", "tweets.reset_rank", "tweets.annotate_emotions"]:
 			result = appuser.launch_task(name)
+		elif name in ["tweets.upload_from_file"]:
+			filename = request.args.get("filename")
+			result = appuser.launch_task(name, filename=filename)
 		else:
 			return make_response(jsonify(message="Something went wrong, please check your request. Is your task registered?"), 400)
 		
